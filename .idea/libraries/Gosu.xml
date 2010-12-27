@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gosu">
+    <CLASSES>
+      <root url="jar://$GOSU_HOME$/jars/gw-gosu-core-api.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

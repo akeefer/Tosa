@@ -8,4 +8,11 @@ package tosa.loader.data;
  * To change this template use File | Settings | File Templates.
  */
 public class ArrayData {
+  private String _name;
+  private String _otherTable;
+
+  public ArrayData(String name, String otherTable) {
+    _name = name;
+    _otherTable = otherTable;
+  }
 }
