@@ -11,31 +11,13 @@ public interface SQLParserConstants {
 
   public static final String CLOSE_PAREN = ")";
   public static final String COMMA = ",";
+  public static final String EQUALS = "=";
   public static final String OPEN_PAREN = "(";
   public static final String SEMI_COLON = ";";
 
-  /*ENGINE [=] engine_name
-  | AUTO_INCREMENT [=] value
-  | AVG_ROW_LENGTH [=] value
-  | [DEFAULT] CHARACTER SET [=] charset_name
-  | CHECKSUM [=] {0 | 1}
-  | [DEFAULT] COLLATE [=] collation_name
-  | COMMENT [=] 'string'
-  | CONNECTION [=] 'connect_string'
-  | DATA DIRECTORY [=] 'absolute path to directory'
-  | DELAY_KEY_WRITE [=] {0 | 1}
-  | INDEX DIRECTORY [=] 'absolute path to directory'
-  | INSERT_METHOD [=] { NO | FIRST | LAST }
-  | KEY_BLOCK_SIZE [=] value
-  | MAX_ROWS [=] value
-  | MIN_ROWS [=] value
-  | PACK_KEYS [=] {0 | 1 | DEFAULT}
-  | PASSWORD [=] 'string'
-  | ROW_FORMAT [=] {DEFAULT|DYNAMIC|FIXED|COMPRESSED|REDUNDANT|COMPACT}
-  | TABLESPACE tablespace_name [STORAGE {*/
-
   public static final String AUTO_INCREMENT = "AUTO_INCREMENT";
   public static final String AVG_ROW_LENGTH = "AVG_ROW_LENGTH";
+  public static final String BY = "BY";
   public static final String CHARACTER = "CHARACTER";
   public static final String CHECK = "CHECK";
   public static final String CHECKSUM = "CHECKSUM";
@@ -51,29 +33,48 @@ public interface SQLParserConstants {
   public static final String DIRECTORY = "DIRECTORY";
   public static final String ENGINE = "ENGINE";
   public static final String EXISTS = "EXISTS";
+  public static final String FOREIGN = "FOREIGN";
+  public static final String FULLTEXT = "FULLTEXT";
   public static final String GLOBAL = "GLOBAL";
+  public static final String HASH = "HASH";
   public static final String IF = "IF";
+  public static final String IN = "IN";
   public static final String INDEX = "INDEX";
   public static final String INSERT_METHOD = "INSERT_METHOD";
   public static final String KEY = "KEY";
   public static final String KEY_BLOCK_SIZE = "KEY_BLOCK_SIZE";
+  public static final String LESS = "LESS";
   public static final String LIKE = "LIKE";
+  public static final String LINEAR = "LINEAR";
+  public static final String LIST = "LIST";
   public static final String LOCAL = "LOCAL";
   public static final String MAX_ROWS = "MAX_ROWS";
+  public static final String MAXVALUE = "MAXVALUE";
   public static final String MIN_ROWS = "MIN_ROWS";
-  public static final String NULL = "NULL";
+  public static final String NODEGROUP = "NODEGROUP";
   public static final String NOT = "NOT";
+  public static final String NULL = "NULL";
   public static final String PACK_KEYS = "PACK_KEYS";
+  public static final String PARTITION = "PARTITION";
+  public static final String PARTITIONS = "PARTITIONS";
   public static final String PASSWORD = "PASSWORD";
   public static final String PRIMARY = "PRIMARY";
+  public static final String RANGE = "RANGE";
   public static final String REFERENCES = "REFERENCES";
   public static final String ROW_FORMAT = "ROW_FORMAT";
   public static final String SET = "SET";
+  public static final String SPATIAL = "SPATIAL";
+  public static final String STORAGE = "STORAGE";
+  public static final String SUBPARTITION = "SUBPARTITION";
+  public static final String SUBPARTITIONS = "SUBPARTITIONS";
   public static final String TABLE = "TABLE";
   public static final String TABLESPACE = "TABLESPACE";
   public static final String TEMP = "TEMP";
   public static final String TEMPORARY = "TEMPORARY";
+  public static final String THAN = "THAN";
+  public static final String UNION = "UNION";
   public static final String UNIQUE = "UNIQUE";
+  public static final String VALUES = "VALUES";
 
   public static final String bigint = "bigint";
   public static final String int8 = "int8";

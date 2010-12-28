@@ -89,7 +89,6 @@ index_parameters in UNIQUE and PRIMARY KEY constraints are:
 
   public DBData parseFile(String fileContents) {
     _tokenizer = new SQLTokenizer(fileContents);
-    nextToken();
     List<TableData> tables = new ArrayList<TableData>();
     // TODO - AHK - Other Create calls?  Other stuff?  Closing semi-colon?
     TableData table = parseCreate();
@@ -116,8 +115,7 @@ index_parameters in UNIQUE and PRIMARY KEY constraints are:
   }
 
   private String parseTableName() {
-    String tableName = _tokenizer.token();
-    nextToken();
+    String tableName = consumeToken();
     return tableName;
   }
 
@@ -161,8 +159,7 @@ index_parameters in UNIQUE and PRIMARY KEY constraints are:
   }
 
   private String parseColumnName() {
-    String name = _tokenizer.token();
-    nextToken();
+    String name = consumeToken();
     return name;
   }
 
@@ -269,8 +266,7 @@ index_parameters in UNIQUE and PRIMARY KEY constraints are:
   private Integer parseOptionalSize() {
     Integer size = null;
     if (accept(OPEN_PAREN)) {
-      size = Integer.valueOf(_tokenizer.token());
-      nextToken();
+      size = Integer.valueOf(consumeToken());
       expect(CLOSE_PAREN);
     }
     return size;
@@ -278,8 +274,7 @@ index_parameters in UNIQUE and PRIMARY KEY constraints are:
 
   private int parseSize() {
     expect(OPEN_PAREN);
-    int size = Integer.parseInt(_tokenizer.token());
-    nextToken();
+    int size = Integer.parseInt(consumeToken());
     expect(CLOSE_PAREN);
     return size;
   }
@@ -360,8 +355,8 @@ index_parameters in UNIQUE and PRIMARY KEY constraints are:
 
   private void parseConstraintName() {
     if (accept(CONSTRAINT)) {
-      System.out.println("Constraint name is " + _tokenizer.token());
-      nextToken();
+      String constraintName = consumeToken();
+      System.out.println("Constraint name is " + constraintName);
     }
   }
 
@@ -401,15 +396,15 @@ index_parameters in UNIQUE and PRIMARY KEY constraints are:
     // TODO - AHK
   }
 
-  private void nextToken() {
-    _tokenizer.nextToken();
-  }
-
-  private boolean accept(String potentialMatch) {
-    return _tokenizer.acceptIgnoreCase(potentialMatch);
+  private boolean accept(String... potentialMatches) {
+    return _tokenizer.acceptIgnoreCase(potentialMatches);
   }
 
   private void expect(String expected) {
     _tokenizer.expectIgnoreCase(expected);
+  }
+
+  private String consumeToken() {
+    return _tokenizer.consumeToken();
   }
 }

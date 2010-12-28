@@ -1,5 +1,7 @@
 package tosa.loader.parser;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.StringTokenizer;
 
 /**
@@ -11,41 +13,68 @@ import java.util.StringTokenizer;
  */
 public class SQLTokenizer {
 
-  private StringTokenizer _tokenizer;
-  private String _lastToken;
+  private int _currentToken;
+  private List<String> _tokens;
 
   public SQLTokenizer(String contents) {
-    _tokenizer = new StringTokenizer(contents, " \n\t\r,;()", true);
+    _currentToken = 0;
+    _tokens = fillTokenBuffer(contents);
+  }
+
+  private List<String> fillTokenBuffer(String contents) {
+    StringTokenizer tokenizer = new StringTokenizer(contents, " \n\t\r,;()", true);
+    List<String> tokens = new ArrayList<String>();
+    while(tokenizer.hasMoreTokens()) {
+      String token = tokenizer.nextToken();
+      // Ignore white space
+      if (!token.trim().isEmpty()) {
+        tokens.add(token);
+      }
+    }
+    return tokens;
   }
 
   public String token() {
-    return _lastToken;
+    // TODO - AHK - Throw if current token is too large?
+    return _tokens.get(_currentToken);
   }
 
   public String consumeToken() {
-    String result = _lastToken;
-    nextToken();
+    String result = _tokens.get(_currentToken);
+    _currentToken++;
     return result;
   }
 
-  public void nextToken() {
-    if (!_tokenizer.hasMoreTokens()) {
-      // TODO - AHK - Error handling
-      throw new IllegalStateException();
-    }
-
-    _lastToken = _tokenizer.nextToken();
-
-    // Skip white space
-    if (_lastToken.trim().isEmpty()) {
-      nextToken();
+  public boolean acceptIgnoreCase(String... tokens) {
+    if (matchIgnoreCase(tokens)) {
+      _currentToken += tokens.length;
+      return true;
+    } else {
+      return false;
     }
   }
 
-  public boolean acceptIgnoreCase(String potentialMatch) {
-    // TODO - AHK - verify potentialMatch is non-null
-    if (potentialMatch.equalsIgnoreCase(_lastToken)) {
-      nextToken();
+  public boolean peekIgnoreCase(String... tokens) {
+    return matchIgnoreCase(tokens);
+  }
+
+  private boolean matchIgnoreCase(String... tokens) {
+    if (tokens == null) {
+      throw new IllegalArgumentException();
+    }
+    for (String token : tokens) {
+      if (token == null) {
+        throw new IllegalArgumentException();
+      }
+    }
+
+    if (_currentToken < _tokens.size() - tokens.length) {
+      for (int i = 0; i < tokens.length; i++) {
+        if (!tokens[i].equalsIgnoreCase(_tokens.get(_currentToken + i))) {
+          return false;
+        }
+      }
+
       return true;
     } else {
       return false;
@@ -54,10 +83,10 @@ public class SQLTokenizer {
 
   public void expectIgnoreCase(String expected) {
     // TODO - AHK - Verify expected is non-null
-    if (!expected.equalsIgnoreCase(_lastToken)) {
+    if (!expected.equalsIgnoreCase(token())) {
       throw new IllegalStateException();
     } else {
-      nextToken();
+      _currentToken++;
     }
   }
 }
