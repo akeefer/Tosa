@@ -136,7 +136,7 @@
       <file leaf-file-name="MySQL51SQLParser.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/tosa/loader/parser/mysql/MySQL51SQLParser.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="152" column="105" selection-start="4410" selection-end="4410" vertical-scroll-proportion="1.0543364">
+            <state line="122" column="88" selection-start="3585" selection-end="3585" vertical-scroll-proportion="0.58411705">
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -728,7 +728,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/tosa/loader/parser/mysql/MySQL51SQLParser.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="152" column="105" selection-start="4410" selection-end="4410" vertical-scroll-proportion="1.0543364">
+        <state line="122" column="88" selection-start="3585" selection-end="3585" vertical-scroll-proportion="0.58411705">
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
