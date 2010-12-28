@@ -5,10 +5,14 @@ import tosa.loader.data.*;
 import tosa.loader.parser.SQLParserConstants;
 import tosa.loader.parser.SQLTokenizer;
 
+import javax.management.ObjectName;
+import javax.swing.text.StringContent;
 import java.awt.*;
 import java.awt.image.ImageFilter;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 
 /**
  * Created by IntelliJ IDEA.
@@ -46,6 +50,8 @@ public class MySQL51SQLParser implements SQLParserConstants {
     _tokenizer.expectIgnoreCase(expected);
   }
 
+
+  // The grammar for this parser is based on the documentation at http://dev.mysql.com/doc/refman/5.1/en/create-table.html
 
   //================================== Parsing Methods ========================
 
@@ -149,6 +155,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       parseIndexColumnNames();
       parseIndexOptions();
     } else if (accept(UNIQUE)) {
+      // TODO - AHK
       if (!accept(INDEX)) {
         expect(KEY);
       }
@@ -170,30 +177,70 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
     } else if (accept(CHECK)) {
       parseParenthesizedExpression();
     } else {
-      String columnName = consumeToken();
-      ColumnType columnType = parseColumnDefinition();
+      return parseColumnDefinition();
     }
 
     return null;
   }
 
   private void parseIndexName() {
-    // TODO - AHK
+    if (!(peek(USING) || peek(OPEN_PAREN))) {
+      String name = consumeToken();
+    }
   }
 
   private void parseIndexType() {
-    // TODO - AHK
+    if (accept(USING)) {
+      if (!accept(BTREE)) {
+        expect(HASH);
+      }
+    }
   }
 
   private void parseIndexOptions() {
-    // TODO - AHK
+    if (accept(KEY_BLOCK_SIZE)) {
+      accept(EQUALS);
+      String value = consumeToken();
+      parseIndexOptions();
+    } else if (accept(USING)) {
+      // TODO - AHK - Sould there be an expect() variant for an OR situation like this?
+      if (!accept(BTREE)) {
+        expect(HASH);
+      }
+      parseIndexOptions();
+    } else if (accept(WITH, PARSER)) {
+      String parserName = consumeToken();
+    }
   }
 
   private void parseReferenceDefinition() {
-    // TODO - AHK
+    if (accept(REFERENCES)) {
+      String tableName = consumeToken();
+      expect(OPEN_PAREN);
+      String columnName = consumeToken();
+      while (accept(COMMA)) {
+        columnName = consumeToken();
+      }
+      expect(CLOSE_PAREN);
+      if (accept(MATCH, FULL) || accept(MATCH, PARTIAL) || accept(MATCH, SIMPLE)) {
+        // Just eat it
+      }
+      if (accept(ON, DELETE)) {
+        parseReferenceOption();
+      }
+      if (accept(ON, UPDATE)) {
+        parseReferenceOption();
+      }
+    }
   }
 
-
+  private void parseReferenceOption() {
+    if (accept(RESTRICT) || accept(CASCADE) || accept(SET, NULL) || accept(NO, ACTION)) {
+      // Just eat it
+    } else {
+      // Error case
+    }
+  }
 
   private void parseIndexColumnNames() {
     expect(OPEN_PAREN);
@@ -205,24 +252,325 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
   }
 
   private void parseIndexColName() {
-    // TODO - AK
+    String columnName = consumeToken();
+    if (accept(OPEN_PAREN)) {
+      String length = consumeToken();
+      expect(CLOSE_PAREN);
+    }
+    if (accept(ASC)) {
+      // Just eat it
+    } else if (accept(DESC)) {
+      // Just eat it
+    }
   }
 
-  private ColumnType parseColumnDefinition() {
+  /*column_definition:
+    data_type [NOT NULL | NULL] [DEFAULT default_value]
+      [AUTO_INCREMENT] [UNIQUE [KEY] | [PRIMARY] KEY]
+      [COMMENT 'string']
+      [COLUMN_FORMAT {FIXED|DYNAMIC|DEFAULT}]
+      [STORAGE {DISK|MEMORY|DEFAULT}]
+      [reference_definition]*/
+  private ColumnData parseColumnDefinition() {
+    // Note:  In the syntax defined in the MySQL docs they don't include the name as part of the column_definition
+    // production, but I'm moving it in there for the sake of sanity
+    String name = consumeToken();
+    ColumnType columnType = parseDataType();
+    if (accept(NOT, NULL)) {
+
+    } else if (accept(NULL)) {
+
+    }
+
+    if (accept(DEFAULT)) {
+      String defaultValue = consumeToken();
+    }
+
+    accept(AUTO_INCREMENT);
+    if (accept(UNIQUE)) {
+      accept(KEY);
+    } else if (accept(PRIMARY)) {
+      expect(KEY);
+    } else if (accept(KEY)) {
+
+    }
+
+    if (accept(COMMENT)) {
+      String comment = parseQuotedString();
+    }
+
+    if (accept(COLUMN_FORMAT)) {
+      if (accept(FIXED) || accept(DYNAMIC) || accept(DEFAULT)) {
+
+      } else {
+        // TODO - AHK - Error case
+      }
+    }
+
+    if (accept(STORAGE)) {
+      if (accept(DISK) || accept(MEMORY) || accept(DEFAULT)) {
+
+      } else {
+        // TODO - AHK - Error case
+      }
+    }
+
+    parseReferenceDefinition();
+
     // TODO - AHK
+    return new ColumnData(name, columnType);
+  }
+
+  /*
+  data_type:
+    BIT[(length)]
+  | TINYINT[(length)] [UNSIGNED] [ZEROFILL]
+  | SMALLINT[(length)] [UNSIGNED] [ZEROFILL]
+  | MEDIUMINT[(length)] [UNSIGNED] [ZEROFILL]
+  | INT[(length)] [UNSIGNED] [ZEROFILL]
+  | INTEGER[(length)] [UNSIGNED] [ZEROFILL]
+  | BIGINT[(length)] [UNSIGNED] [ZEROFILL]
+  | REAL[(length,decimals)] [UNSIGNED] [ZEROFILL]
+  | DOUBLE[(length,decimals)] [UNSIGNED] [ZEROFILL]
+  | FLOAT[(length,decimals)] [UNSIGNED] [ZEROFILL]
+  | DECIMAL[(length[,decimals])] [UNSIGNED] [ZEROFILL]
+  | NUMERIC[(length[,decimals])] [UNSIGNED] [ZEROFILL]
+  | DATE
+  | TIME
+  | TIMESTAMP
+  | DATETIME
+  | YEAR
+  | CHAR[(length)]
+      [CHARACTER SET charset_name] [COLLATE collation_name]
+  | VARCHAR(length)
+      [CHARACTER SET charset_name] [COLLATE collation_name]
+  | BINARY[(length)]
+  | VARBINARY(length)
+  | TINYBLOB
+  | BLOB
+  | MEDIUMBLOB
+  | LONGBLOB
+  | TINYTEXT [BINARY]
+      [CHARACTER SET charset_name] [COLLATE collation_name]
+  | TEXT [BINARY]
+      [CHARACTER SET charset_name] [COLLATE collation_name]
+  | MEDIUMTEXT [BINARY]
+      [CHARACTER SET charset_name] [COLLATE collation_name]
+  | LONGTEXT [BINARY]
+      [CHARACTER SET charset_name] [COLLATE collation_name]
+  | ENUM(value1,value2,value3,...)
+      [CHARACTER SET charset_name] [COLLATE collation_name]
+  | SET(value1,value2,value3,...)
+      [CHARACTER SET charset_name] [COLLATE collation_name]
+  | spatial_type
+   */
+  private ColumnType parseDataType() {
+    // TODO - Handle Serial
+    if (accept(BIT)) {
+      Integer length = parseLength();
+      if (length == null || length == 1) {
+        return new ColumnType(Types.BIT, BIT, ColumnType.BOOLEAN_ITYPE);
+      } else {
+        // TODO - AHK
+      }
+    } else if (accept(TINYINT)) {
+      Integer length = parseLength();
+      boolean signed = parseNumericModifiers();
+      if (length != null && length == 1) {
+        // Treat TINYINT(1) as a boolean type
+        return new ColumnType(Types.TINYINT, TINYINT, ColumnType.BOOLEAN_ITYPE);
+      } else if (signed) {
+        return new ColumnType(Types.TINYINT, TINYINT, ColumnType.BYTE_ITYPE);
+      } else {
+        // TODO - AHK
+      }
+      // TODO - AHK
+    } else if (accept(BOOL) || accept(BOOLEAN)) {
+
+    } else if (accept(SMALLINT)) {
+      Integer length = parseLength();
+      boolean signed = parseNumericModifiers();
+      // TODO - AHK
+    } else if (accept(MEDIUMINT)) {
+      Integer length = parseLength();
+      boolean signed = parseNumericModifiers();
+      // TODO - AHK
+    } else if (accept(INT)) {
+      Integer length = parseLength();
+      boolean signed = parseNumericModifiers();
+      // TODO - AHK
+    } else if (accept(INTEGER)) {
+      Integer length = parseLength();
+      boolean signed = parseNumericModifiers();
+      // TODO - AHK
+    } else if (accept(BIGINT)) {
+      Integer length = parseLength();
+      boolean signed = parseNumericModifiers();
+      // TODO - AHK
+    } else if (accept(REAL)) {
+      parseLengthAndDecimals();
+      boolean signed = parseNumericModifiers();
+      // TODO - AHK
+    } else if (accept(DOUBLE)) {
+      parseLengthAndDecimals();
+      boolean signed = parseNumericModifiers();
+      // TODO - AHK
+    } else if (accept(FLOAT)) {
+      parseLengthAndDecimals();
+      accept(UNSIGNED);
+      accept(ZEROFILL);
+      // TODO - AHK
+    } else if (accept(DECIMAL)) {
+      parseLengthAndDecimals();
+      accept(UNSIGNED);
+      accept(ZEROFILL);
+      // TODO - AHK
+    } else if (accept(NUMERIC)) {
+      parseLengthAndDecimals();
+      accept(UNSIGNED);
+      accept(ZEROFILL);
+      // TODO - AHK
+    } else if (accept(DATE)) {
+      // TODO - AHK
+    } else if (accept(TIME)) {
+      // TODO - AHK
+    } else if (accept(TIMESTAMP)) {
+      // TODO - AHK
+    } else if (accept(DATETIME)) {
+      // TODO - AHK
+    } else if (accept(YEAR)) {
+      // TODO - AHK
+    } else if (accept(CHAR)) {
+      Integer length = parseLength();
+      String charSetName = parseCharSet();
+      String collation = parseCollation();
+      // TODO - AHK
+    } else if (accept(VARCHAR)) {
+      Integer length = parseLength();
+      String charSetName = parseCharSet();
+      String collation = parseCollation();
+      // TODO - AHK
+    } else if (accept(BINARY)) {
+      Integer length = parseLength();
+      // TODO - AHK
+    } else if (accept(VARBINARY)) {
+      Integer length = parseLength();
+      // TODO - AHK
+    } else if (accept(TINYBLOB)) {
+
+    } else if (accept(BLOB)) {
+
+    } else if (accept(MEDIUMBLOB)) {
+
+    } else if (accept(LONGBLOB)) {
+
+    } else if (accept(TINYTEXT)) {
+      accept(BINARY);
+      String charSetName = parseCharSet();
+      String collation = parseCollation();
+    } else if (accept(TEXT)) {
+      accept(BINARY);
+      String charSetName = parseCharSet();
+      String collation = parseCollation();
+    } else if (accept(MEDIUMTEXT)) {
+      accept(BINARY);
+      String charSetName = parseCharSet();
+      String collation = parseCollation();
+    } else if (accept(LONGTEXT)) {
+      accept(BINARY);
+      String charSetName = parseCharSet();
+      String collation = parseCollation();
+    } else if (accept(ENUM)) {
+      List<String> values = parseEnumOrSetValueList();
+      String charSetName = parseCharSet();
+      String collation = parseCollation();
+    } else if (accept(SET)) {
+      List<String> values = parseEnumOrSetValueList();
+      String charSetName = parseCharSet();
+      String collation = parseCollation();
+    }
     return null;
+  }
+
+  // TODO - AHK - Maybe return an int instead?
+  private Integer parseLength() {
+    if (accept(OPEN_PAREN)) {
+      String length = consumeToken();
+      expect(CLOSE_PAREN);
+      return Integer.valueOf(length);
+    } else {
+      return null;
+    }
+  }
+
+  private boolean parseNumericModifiers() {
+    boolean signed = true;
+    if (accept(SIGNED)) {
+      signed = true;
+    } else if (accept(UNSIGNED)) {
+      signed = false;
+    }
+
+    // Zerofill columns are automatically treated as unsigned
+    if (accept(ZEROFILL)) {
+      signed = false;
+    }
+
+    return signed;
+  }
+
+  private void parseLengthAndDecimals() {
+    // TODO - AHK - Sometimes the comma isn't optional, but I don't think that matters here
+    if (accept(OPEN_PAREN)) {
+      String length = consumeToken();
+      if (accept(COMMA)) {
+        String decimals = consumeToken();
+      }
+      expect(CLOSE_PAREN);
+    }
+  }
+
+  private String parseCharSet() {
+    if (accept(CHARACTER, SET)) {
+      return consumeToken();
+    } else {
+      return null;
+    }
+  }
+
+  private String parseCollation() {
+    if (accept(COLLATE)) {
+      return consumeToken();
+    } else {
+      return null;
+    }
+  }
+
+  private List<String> parseEnumOrSetValueList() {
+    List<String> values = new ArrayList<String>();
+    expect(OPEN_PAREN);
+    values.add(consumeToken());
+    while(accept(COMMA)) {
+      values.add(consumeToken());
+    }
+    expect(CLOSE_PAREN);
+    return values;
   }
 
   /*table_options:
     table_option [[,] table_option] ...*/
   private void parseTableOptions() {
     parseTableOption();
+    // TODO - AHK - Are the commas required?  If not, we'll need to see if a table option was
+    // actually parsed or not
     while (accept(COMMA)) {
       parseTableOption();
     }
   }
 
-  /*ENGINE [=] engine_name
+  /*
+  table_option:
+    ENGINE [=] engine_name
   | AUTO_INCREMENT [=] value
   | AVG_ROW_LENGTH [=] value
   | [DEFAULT] CHARACTER SET [=] charset_name
@@ -368,7 +716,11 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
 
   private void parseParenthesizedExpression() {
     expect(OPEN_PAREN);
-    // TODO - AHK
+    // TODO - AHK - Deal with escaping and such at some point, but for now just
+    // eat tokens until we hit the closing )
+    while (!_tokenizer.token().equalsIgnoreCase(CLOSE_PAREN)) {
+      consumeToken();
+    }
     expect(CLOSE_PAREN);
   }
 

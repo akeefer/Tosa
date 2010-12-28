@@ -10,17 +10,18 @@ import java.sql.Types;
  * To change this template use File | Settings | File Templates.
  */
 public class ColumnType {
-  private static final String BOOLEAN_TYPE = "java.lang.Boolean";
-  private static final String STRING_TYPE = "java.lang.String";
+  public static final String BOOLEAN_ITYPE = "java.lang.Boolean";
+  public static final String BYTE_ITYPE = "java.lang.Byte";
+  public static final String STRING_ITYPE = "java.lang.String";
 
   //  ARRAY(Types.ARRAY, TODO),
   public static final ColumnType BIGINT = new ColumnType(Types.BIGINT, "java.lang.Long");
   public static final ColumnType BINARY = new ColumnType(Types.BINARY, "byte[]");
-  public static final ColumnType BIT = new ColumnType(Types.BIT, BOOLEAN_TYPE);
+  public static final ColumnType BIT = new ColumnType(Types.BIT, BOOLEAN_ITYPE);
   public static final ColumnType BLOB = new ColumnType(Types.BLOB, "java.lang.Object");
-  public static final ColumnType BOOLEAN = new ColumnType(Types.BOOLEAN, BOOLEAN_TYPE);
-  public static final ColumnType CHAR = new ColumnType(Types.CHAR, STRING_TYPE);
-  public static final ColumnType CLOB = new ColumnType(Types.CLOB, STRING_TYPE);
+  public static final ColumnType BOOLEAN = new ColumnType(Types.BOOLEAN, BOOLEAN_ITYPE);
+  public static final ColumnType CHAR = new ColumnType(Types.CHAR, STRING_ITYPE);
+  public static final ColumnType CLOB = new ColumnType(Types.CLOB, STRING_ITYPE);
 //  DATALINK(),
   public static final ColumnType DATE = new ColumnType(Types.DATE, "java.sql.Date");
   public static final ColumnType DECIMAL = new ColumnType(Types.DECIMAL, "java.math.BigDecimal");
@@ -48,12 +49,17 @@ public class ColumnType {
   public static final ColumnType TIMESTAMP = new ColumnType(Types.TIMESTAMP, "java.sql.Timestamp");
   public static final ColumnType TINYINT = new ColumnType(Types.TINYINT, "java.lang.Byte");
   public static final ColumnType VARBINARY = new ColumnType(Types.VARBINARY, "byte[]");
-  public static final ColumnType VARCHAR = new ColumnType(Types.VARCHAR, STRING_TYPE);
+  public static final ColumnType VARCHAR = new ColumnType(Types.VARCHAR, STRING_ITYPE);
 
   private final int _jdbcTypeNumber;
   private final String _gosuTypeName;
 
-  private ColumnType(int jdbcTypeNumber, String gosuTypeName) {
+  public ColumnType(int jdbcTypeNumber, String gosuTypeName) {
+    _jdbcTypeNumber = jdbcTypeNumber;
+    _gosuTypeName = gosuTypeName;
+  }
+
+  public ColumnType(int jdbcTypeNumber, String dbTypeName, String gosuTypeName) {
     _jdbcTypeNumber = jdbcTypeNumber;
     _gosuTypeName = gosuTypeName;
   }
