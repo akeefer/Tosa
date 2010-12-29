@@ -10,8 +10,14 @@ import java.sql.Types;
  * To change this template use File | Settings | File Templates.
  */
 public class ColumnType {
+  public static final String BIG_DECIMAL_ITYPE = "java.math.BigDecimal";
   public static final String BOOLEAN_ITYPE = "java.lang.Boolean";
   public static final String BYTE_ITYPE = "java.lang.Byte";
+  public static final String DOUBLE_ITYPE = "java.lang.Double";
+  public static final String FLOAT_ITYPE = "java.lang.Float";
+  public static final String INTEGER_ITYPE = "java.lang.Integer";
+  public static final String LONG_ITYPE = "java.lang.Long";
+  public static final String SHORT_ITYPE = "java.lang.Short";
   public static final String STRING_ITYPE = "java.lang.String";
 
   //  ARRAY(Types.ARRAY, TODO),

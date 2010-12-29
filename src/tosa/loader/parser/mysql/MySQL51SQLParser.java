@@ -23,14 +23,45 @@ import java.util.regex.Matcher;
  */
 public class MySQL51SQLParser implements SQLParserConstants {
 
+  public static void main(String[] args) {
+    String testSQL =
+        "CREATE TABLE \"BlogInfo\"(\n" +
+        "    \"id\" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,\n" +
+        "    \"Title\" VARCHAR(255)\n" +
+        ");\n" +
+        "CREATE TABLE \"Post\"(\n" +
+        "    \"id\" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,\n" +
+        "    \"Title\" TEXT,\n" +
+        "    \"Body\" TEXT,\n" +
+        "    \"Posted\" TIMESTAMP\n" +
+        ");\n" +
+        "CREATE TABLE \"User\"(\n" +
+        "    \"id\" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,\n" +
+        "    \"Name\" VARCHAR(64),\n" +
+        "    \"Hash\" VARCHAR(128),\n" +
+        "    \"Salt\" VARCHAR(32)\n" +
+        ");\n" +
+        "CREATE TABLE \"Comment\"(\n" +
+        "    \"id\" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,\n" +
+        "    \"Post_id\" BIGINT,\n" +
+        "    \"Name\" VARCHAR(255),\n" +
+        "    \"Text\" TEXT,\n" +
+        "    \"Posted\" TIMESTAMP\n" +
+        ");\n";
+
+    DBData data = new MySQL51SQLParser().parseFile(testSQL);
+    System.out.println("Done");
+  }
+
   private SQLTokenizer _tokenizer;
 
   public DBData parseFile(String fileContents) {
     _tokenizer = new SQLTokenizer(fileContents);
     List<TableData> tables = new ArrayList<TableData>();
     // TODO - AHK - Other Create calls?  Other stuff?  Closing semi-colon?
-    TableData table = parseCreate();
-    tables.add(table);
+    for (TableData table = parseCreate(); table != null; table = parseCreate()) {
+      tables.add(table);
+    }
     return new DBData(tables);
   }
 
@@ -213,7 +244,8 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
     }
   }
 
-  private void parseReferenceDefinition() {
+  // TODO - AHK - This needs to be order-independent
+  private boolean parseReferenceDefinition() {
     if (accept(REFERENCES)) {
       String tableName = consumeToken();
       expect(OPEN_PAREN);
@@ -231,7 +263,11 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       if (accept(ON, UPDATE)) {
         parseReferenceOption();
       }
+
+      return true;
     }
+
+    return false;
   }
 
   private void parseReferenceOption() {
@@ -276,49 +312,74 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
     // production, but I'm moving it in there for the sake of sanity
     String name = consumeToken();
     ColumnType columnType = parseDataType();
+    while(parseColumnOption()) {
+      // Keep looping to consume all the options
+    }
+    // TODO - AHK
+    return new ColumnData(name, columnType);
+  }
+
+  /*
+    [NOT NULL | NULL] [DEFAULT default_value]
+      [AUTO_INCREMENT] [UNIQUE [KEY] | [PRIMARY] KEY]
+      [COMMENT 'string']
+      [COLUMN_FORMAT {FIXED|DYNAMIC|DEFAULT}]
+      [STORAGE {DISK|MEMORY|DEFAULT}]
+      [reference_definition]*/
+  private boolean parseColumnOption() {
     if (accept(NOT, NULL)) {
-
+      return true;
     } else if (accept(NULL)) {
-
+      return true;
     }
 
     if (accept(DEFAULT)) {
       String defaultValue = consumeToken();
+      return true;
     }
 
-    accept(AUTO_INCREMENT);
+    if (accept(AUTO_INCREMENT)) {
+      return true;
+    }
+
     if (accept(UNIQUE)) {
       accept(KEY);
+      return true;
     } else if (accept(PRIMARY)) {
       expect(KEY);
+      return true;
     } else if (accept(KEY)) {
-
+      return true;
     }
 
     if (accept(COMMENT)) {
       String comment = parseQuotedString();
+      return true;
     }
 
     if (accept(COLUMN_FORMAT)) {
       if (accept(FIXED) || accept(DYNAMIC) || accept(DEFAULT)) {
-
+        return true;
       } else {
         // TODO - AHK - Error case
+        return true;
       }
     }
 
     if (accept(STORAGE)) {
       if (accept(DISK) || accept(MEMORY) || accept(DEFAULT)) {
-
+        return true;
       } else {
         // TODO - AHK - Error case
+        return true;
       }
     }
 
-    parseReferenceDefinition();
+    if (parseReferenceDefinition()) {
+      return true;
+    }
 
-    // TODO - AHK
-    return new ColumnData(name, columnType);
+    return false;
   }
 
   /*
@@ -384,52 +445,57 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       } else {
         // TODO - AHK
       }
-      // TODO - AHK
     } else if (accept(BOOL) || accept(BOOLEAN)) {
-
+      // BOOL and BOOLEAN are equivalent to TINYINT(1)
+      return new ColumnType(Types.TINYINT, TINYINT, ColumnType.BOOLEAN_ITYPE);
     } else if (accept(SMALLINT)) {
       Integer length = parseLength();
       boolean signed = parseNumericModifiers();
-      // TODO - AHK
+      if (signed) {
+        return new ColumnType(Types.SMALLINT, SMALLINT, ColumnType.SHORT_ITYPE);
+      } else {
+        // TODO - AHK
+      }
     } else if (accept(MEDIUMINT)) {
       Integer length = parseLength();
       boolean signed = parseNumericModifiers();
-      // TODO - AHK
-    } else if (accept(INT)) {
+      if (signed) {
+        return new ColumnType(Types.INTEGER, MEDIUMINT, ColumnType.INTEGER_ITYPE);
+      } else {
+        // TODO - AHK
+      }
+    } else if (accept(INT) || accept(INTEGER)) {
       Integer length = parseLength();
       boolean signed = parseNumericModifiers();
-      // TODO - AHK
-    } else if (accept(INTEGER)) {
-      Integer length = parseLength();
-      boolean signed = parseNumericModifiers();
-      // TODO - AHK
+      if (signed) {
+        return new ColumnType(Types.INTEGER, INT, ColumnType.INTEGER_ITYPE);
+      } else {
+        // TODO - AHK
+      }
     } else if (accept(BIGINT)) {
       Integer length = parseLength();
       boolean signed = parseNumericModifiers();
-      // TODO - AHK
-    } else if (accept(REAL)) {
+      if (signed) {
+        return new ColumnType(Types.BIGINT, BIGINT, ColumnType.LONG_ITYPE);
+      } else {
+        // TODO - AHK
+      }
+    } else if (accept(DOUBLE) || accept(DOUBLE, PRECISION) || accept(REAL)) {
+      // TODO - AHK - If the REAL_AS_FLOAT mode is set on the DB, this will be incorrect
       parseLengthAndDecimals();
       boolean signed = parseNumericModifiers();
-      // TODO - AHK
-    } else if (accept(DOUBLE)) {
-      parseLengthAndDecimals();
-      boolean signed = parseNumericModifiers();
-      // TODO - AHK
+      return new ColumnType(Types.DOUBLE, DOUBLE, ColumnType.DOUBLE_ITYPE);
     } else if (accept(FLOAT)) {
+      // TODO - AHK - It's a different deal if there's a length and a precision versus just a single number
       parseLengthAndDecimals();
-      accept(UNSIGNED);
-      accept(ZEROFILL);
-      // TODO - AHK
-    } else if (accept(DECIMAL)) {
+      boolean signed = parseNumericModifiers();
+      return new ColumnType(Types.FLOAT, FLOAT, ColumnType.FLOAT_ITYPE);
+    } else if (accept(DECIMAL) || accept(DEC) || accept(NUMERIC) || accept(FIXED)) {
       parseLengthAndDecimals();
-      accept(UNSIGNED);
-      accept(ZEROFILL);
-      // TODO - AHK
-    } else if (accept(NUMERIC)) {
-      parseLengthAndDecimals();
-      accept(UNSIGNED);
-      accept(ZEROFILL);
-      // TODO - AHK
+      boolean signed = parseNumericModifiers();
+      // TODO - AHK - The precision and size are probably important here
+      // TODO - AHK - If there precision is 0, should this be a BigInteger?
+      return new ColumnType(Types.DECIMAL, DECIMAL, ColumnType.BIG_DECIMAL_ITYPE);
     } else if (accept(DATE)) {
       // TODO - AHK
     } else if (accept(TIME)) {
@@ -440,54 +506,62 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       // TODO - AHK
     } else if (accept(YEAR)) {
       // TODO - AHK
-    } else if (accept(CHAR)) {
+    } else if (accept(CHAR) || accept(CHARACTER) || accept(NATIONAL, CHAR) || accept(NCHAR)) {
+      // TODO - AHK - If the charSetName is "binary", then it's really a binary column . . . ugh
       Integer length = parseLength();
       String charSetName = parseCharSet();
       String collation = parseCollation();
-      // TODO - AHK
+      return new ColumnType(Types.CHAR, CHAR, ColumnType.STRING_ITYPE);
     } else if (accept(VARCHAR)) {
+      // TODO - AHK - If the charSetName is "binary", then it's really a binary column . . . ugh
       Integer length = parseLength();
       String charSetName = parseCharSet();
       String collation = parseCollation();
-      // TODO - AHK
-    } else if (accept(BINARY)) {
+      return new ColumnType(Types.VARCHAR, VARCHAR, ColumnType.STRING_ITYPE);
+    } else if (accept(BINARY) || accept(CHAR, BYTE)) {
       Integer length = parseLength();
       // TODO - AHK
     } else if (accept(VARBINARY)) {
       Integer length = parseLength();
       // TODO - AHK
     } else if (accept(TINYBLOB)) {
-
+      // TODO - AHK
     } else if (accept(BLOB)) {
-
+      // TODO - AHK
     } else if (accept(MEDIUMBLOB)) {
-
+      // TODO - AHK
     } else if (accept(LONGBLOB)) {
-
+      // TODO - AHK
     } else if (accept(TINYTEXT)) {
       accept(BINARY);
       String charSetName = parseCharSet();
       String collation = parseCollation();
+      // TODO - AHK
     } else if (accept(TEXT)) {
       accept(BINARY);
       String charSetName = parseCharSet();
       String collation = parseCollation();
+      // TODO - AHK
     } else if (accept(MEDIUMTEXT)) {
       accept(BINARY);
       String charSetName = parseCharSet();
       String collation = parseCollation();
+      // TODO - AHK
     } else if (accept(LONGTEXT)) {
       accept(BINARY);
       String charSetName = parseCharSet();
       String collation = parseCollation();
+      // TODO - AHK
     } else if (accept(ENUM)) {
       List<String> values = parseEnumOrSetValueList();
       String charSetName = parseCharSet();
       String collation = parseCollation();
+      // TODO - AHK
     } else if (accept(SET)) {
       List<String> values = parseEnumOrSetValueList();
       String charSetName = parseCharSet();
       String collation = parseCollation();
+      // TODO - AHK
     }
     return null;
   }

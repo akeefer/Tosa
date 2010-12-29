@@ -27,6 +27,7 @@ public interface SQLParserConstants {
   public static final String BOOLEAN = "BOOLEAN";
   public static final String BTREE = "BTREE";
   public static final String BY = "BY";
+  public static final String BYTE =  "BYTE";
   public static final String CASCADE = "CASCADE";
   public static final String CHAR = "CHAR";
   public static final String CHARACTER = "CHARACTER";
@@ -41,6 +42,7 @@ public interface SQLParserConstants {
   public static final String DATA = "DATA";
   public static final String DATE = "DATE";
   public static final String DATETIME = "DATETIME";
+  public static final String DEC = "DEC";
   public static final String DECIMAL = "DECIMAL";
   public static final String DEFAULT = "DEFAULT";
   public static final String DELAY_KEY_WRITE = "DELAY_KEY_WRITE";
@@ -84,6 +86,8 @@ public interface SQLParserConstants {
   public static final String MEDIUMTEXT = "MEDIUMTEXT";
   public static final String MEMORY = "MEMORY";
   public static final String MIN_ROWS = "MIN_ROWS";
+  public static final String NATIONAL = "NATIONAL";
+  public static final String NCHAR = "NCHAR";
   public static final String NODEGROUP = "NODEGROUP";
   public static final String NO = "NO";
   public static final String NOT = "NOT";
@@ -96,6 +100,7 @@ public interface SQLParserConstants {
   public static final String PARTITION = "PARTITION";
   public static final String PARTITIONS = "PARTITIONS";
   public static final String PASSWORD = "PASSWORD";
+  public static final String PRECISION = "PRECISION";
   public static final String PRIMARY = "PRIMARY";
   public static final String RANGE = "RANGE";
   public static final String REAL = "REAL";
