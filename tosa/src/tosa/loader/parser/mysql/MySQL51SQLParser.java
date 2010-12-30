@@ -4,6 +4,7 @@ import tosa.loader.data.ColumnData;
 import tosa.loader.data.ColumnType;
 import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
+import tosa.loader.parser.ISQLParser;
 import tosa.loader.parser.SQLParserConstants;
 import tosa.loader.parser.SQLTokenizer;
 
@@ -18,7 +19,7 @@ import java.util.List;
  * Time: 6:14 PM
  * To change this template use File | Settings | File Templates.
  */
-public class MySQL51SQLParser implements SQLParserConstants {
+public class MySQL51SQLParser implements SQLParserConstants, ISQLParser {
 
   public static void main(String[] args) {
     String testSQL =
@@ -46,13 +47,14 @@ public class MySQL51SQLParser implements SQLParserConstants {
             "    \"Posted\" TIMESTAMP\n" +
             ");\n";
 
-    DBData data = new MySQL51SQLParser().parseFile(testSQL);
+    DBData data = new MySQL51SQLParser().parseDDLFile(testSQL);
     System.out.println("Done");
   }
 
   private SQLTokenizer _tokenizer;
 
-  public DBData parseFile(String fileContents) {
+  @Override
+  public DBData parseDDLFile(String fileContents) {
     _tokenizer = new SQLTokenizer(fileContents);
     List<TableData> tables = new ArrayList<TableData>();
     // TODO - AHK - Other Create calls?  Other stuff?  Closing semi-colon?
