@@ -1,0 +1,23 @@
+CREATE TABLE "BlogInfo"(
+    "id" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    "Title" VARCHAR(255)
+);
+CREATE TABLE "Post"(
+    "id" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    "Title" TEXT,
+    "Body" TEXT,
+    "Posted" TIMESTAMP
+);
+CREATE TABLE "User"(
+    "id" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    "Name" VARCHAR(64),
+    "Hash" VARCHAR(128),
+    "Salt" VARCHAR(32)
+);
+CREATE TABLE "Comment"(
+    "id" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    "Post_id" BIGINT,
+    "Name" VARCHAR(255),
+    "Text" TEXT,
+    "Posted" TIMESTAMP
+);

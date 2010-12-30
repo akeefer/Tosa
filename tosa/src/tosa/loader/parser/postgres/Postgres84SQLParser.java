@@ -103,7 +103,7 @@ index_parameters in UNIQUE and PRIMARY KEY constraints are:
     List<ColumnData> columns = parseColumns();
     expect(CLOSE_PAREN);
 
-    return new TableData(name, columns, null, null);
+    return new TableData(name, columns);
   }
 
   private void parseTableModifiers() {

@@ -12,13 +12,17 @@ import java.util.List;
 public class TableData {
   private final String _name;
   private final List<ColumnData> _columns;
-  private final List<ArrayData> _arrays;
-  private final List<ForeignKeyData> _foreignKeys;
 
-  public TableData(String name, List<ColumnData> columns, List<ArrayData> arrays, List<ForeignKeyData> foreignKeys) {
+  public TableData(String name, List<ColumnData> columns) {
     _name = name;
     _columns = columns;
-    _arrays = arrays;
-    _foreignKeys = foreignKeys;
+  }
+
+  public String getName() {
+    return _name;
+  }
+
+  public List<ColumnData> getColumns() {
+    return _columns;
   }
 }

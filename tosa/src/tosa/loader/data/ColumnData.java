@@ -15,4 +15,12 @@ public class ColumnData {
     _name = name;
     _columnType = columnType;
   }
+
+  public String getName() {
+    return _name;
+  }
+
+  public ColumnType getColumnType() {
+    return _columnType;
+  }
 }

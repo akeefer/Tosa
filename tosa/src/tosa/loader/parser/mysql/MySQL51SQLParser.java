@@ -129,7 +129,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
 
       expect(SEMI_COLON);
 
-      return new TableData(tableName, columns, null, null);
+      return new TableData(tableName, columns);
     } else {
       return null;
     }

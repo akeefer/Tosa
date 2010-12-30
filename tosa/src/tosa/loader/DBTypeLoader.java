@@ -9,8 +9,10 @@ import gw.lang.reflect.java.IJavaClassInfo;
 import gw.lang.reflect.module.IExecutionEnvironment;
 import gw.lang.reflect.module.IModule;
 import gw.util.Pair;
+import gw.util.concurrent.LazyVar;
 import tosa.CachedDBObject;
 import tosa.DBConnection;
+import tosa.loader.data.DBData;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -39,6 +41,7 @@ public class DBTypeLoader implements IExtendedTypeLoader {
   private Map<String, TransactionType> _transactionTypes;
   private Set<String> _initializedDrivers = new HashSet<String>();
   private Map<String, DBConnection> _connInfos = new HashMap<String, DBConnection>();
+
 
   public DBTypeLoader() {
     this(TypeSystem.getExecutionEnvironment(), new HashMap<String, String>());
