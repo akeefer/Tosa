@@ -29,14 +29,14 @@ public class ColumnType {
   public static final ColumnType BOOLEAN = new ColumnType(Types.BOOLEAN, BOOLEAN_ITYPE);
   public static final ColumnType CHAR = new ColumnType(Types.CHAR, STRING_ITYPE);
   public static final ColumnType CLOB = new ColumnType(Types.CLOB, STRING_ITYPE);
-//  DATALINK(),
+  //  DATALINK(),
   public static final ColumnType DATE = new ColumnType(Types.DATE, "java.sql.Date");
   public static final ColumnType DECIMAL = new ColumnType(Types.DECIMAL, "java.math.BigDecimal");
-//  DISTINCT(),
+  //  DISTINCT(),
   public static final ColumnType DOUBLE = new ColumnType(Types.DOUBLE, "java.lang.Double");
   public static final ColumnType FLOAT = new ColumnType(Types.FLOAT, "java.lang.Double"); // TODO - AHK - Is that correct?
   public static final ColumnType INTEGER = new ColumnType(Types.INTEGER, "java.lang.Integer");
-//  JAVA_OBJECT(),
+  //  JAVA_OBJECT(),
 //  LONGNVARCHAR(Types.LONGNVARCHAR, TODO),
 //  LONGNBINARY(Types.LONGNBINARY, TODO),
 //  LONGVARCHAR(Types.LONGVARCHAR, TODO),
@@ -44,13 +44,13 @@ public class ColumnType {
 //  NCLOB(Types.NCLOB, TODO),
   public static final ColumnType NULL = new ColumnType(Types.NULL, "void");
   public static final ColumnType NUMERIC = new ColumnType(Types.NUMERIC, "java.math.BigDecimal");
-//  NVARCHAR(Types.NVARCHAR, TODO),
+  //  NVARCHAR(Types.NVARCHAR, TODO),
 //  OTHER(Types.OTHER, TODO),
   public static final ColumnType REAL = new ColumnType(Types.REAL, "java.lang.Float");
-//  REF(Types.REF, TODO),
+  //  REF(Types.REF, TODO),
 //  ROWID(Types.ROWID, TODO),
   public static final ColumnType SMALLINT = new ColumnType(Types.SMALLINT, "java.lang.Short");
-//  SQLXML(),
+  //  SQLXML(),
 //  STRUCT(),
   public static final ColumnType TIME = new ColumnType(Types.TIME, "java.sql.Time");
   public static final ColumnType TIMESTAMP = new ColumnType(Types.TIMESTAMP, "java.sql.Timestamp");

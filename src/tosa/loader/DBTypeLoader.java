@@ -12,9 +12,18 @@ import gw.util.Pair;
 import tosa.CachedDBObject;
 import tosa.DBConnection;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by IntelliJ IDEA.
@@ -48,7 +57,7 @@ public class DBTypeLoader implements IExtendedTypeLoader {
 
   private Set<String> getAllFullNamespaces() {
     Set<String> allFullNamespaces = new HashSet<String>();
-    for(Pair<String, IFile> dbcFile : _module.getResourceAccess().findAllFilesByExtension(".dbc")) {
+    for (Pair<String, IFile> dbcFile : _module.getResourceAccess().findAllFilesByExtension(".dbc")) {
       String fileName = dbcFile.getFirst();
       allFullNamespaces.add(fileName.substring(0, fileName.length() - ".dbc".length()).replace("/", "."));
     }
@@ -57,13 +66,13 @@ public class DBTypeLoader implements IExtendedTypeLoader {
 
   private DBConnection getConnInfo(String namespace) throws IOException {
     DBConnection connInfo = _connInfos.get(namespace);
-    if(connInfo == null && getAllFullNamespaces().contains(namespace)) {
+    if (connInfo == null && getAllFullNamespaces().contains(namespace)) {
       URL connRsrc = _module.getResource(namespace.replace('.', '/') + ".dbc");
       InputStream connRsrcStream = connRsrc.openStream();
       StringBuilder connUrlBuilder = new StringBuilder();
       String line;
       BufferedReader reader = new BufferedReader(new InputStreamReader(connRsrcStream));
-      while((line = reader.readLine()) != null) {
+      while ((line = reader.readLine()) != null) {
         connUrlBuilder.append(line);
       }
       String connUrl = connUrlBuilder.toString();
@@ -86,14 +95,14 @@ public class DBTypeLoader implements IExtendedTypeLoader {
   @Override
   public IType getType(String fullyQualifiedName) {
     int lastDot = fullyQualifiedName.lastIndexOf('.');
-    if(lastDot == -1) {
+    if (lastDot == -1) {
       return null;
     }
     String namespace = fullyQualifiedName.substring(0, lastDot);
     String relativeName = fullyQualifiedName.substring(lastDot + 1);
-    if("Transaction".equals(relativeName)) {
+    if ("Transaction".equals(relativeName)) {
       TransactionType type = _transactionTypes.get(namespace);
-      if(type == null) {
+      if (type == null) {
         try {
           DBConnection dbConnection = getConnInfo(namespace);
           if (dbConnection == null) {
@@ -108,18 +117,18 @@ public class DBTypeLoader implements IExtendedTypeLoader {
       return type;
     }
     IType type = _types.get(fullyQualifiedName);
-    if(type == null || ((ITypeRef)type)._shouldReload()) {
+    if (type == null || ((ITypeRef) type)._shouldReload()) {
       TypeSystem.lock();
       try {
         type = _types.get(fullyQualifiedName);
-        if(type == null || ((ITypeRef)type)._shouldReload()) {
+        if (type == null || ((ITypeRef) type)._shouldReload()) {
           DBConnection connInfo;
           try {
             connInfo = getConnInfo(namespace);
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
-          if(connInfo != null && connInfo.getAllTypeNames().contains(fullyQualifiedName)) {
+          if (connInfo != null && connInfo.getAllTypeNames().contains(fullyQualifiedName)) {
             type = TypeSystem.getOrCreateTypeReference(new DBType(relativeName, this, connInfo));
             _types.put(fullyQualifiedName, type);
           }
@@ -134,7 +143,7 @@ public class DBTypeLoader implements IExtendedTypeLoader {
   @Override
   public Set<? extends CharSequence> getAllTypeNames() {
     Set<String> typeNames = new HashSet<String>();
-    for(String namespace : getAllFullNamespaces()) {
+    for (String namespace : getAllFullNamespaces()) {
       typeNames.add(namespace + ".Transaction");
       try {
         typeNames.addAll(getConnInfo(namespace).getAllTypeNames());
@@ -150,10 +159,10 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     Set<String> allNamespaces = new HashSet<String>();
     for (String namespace : getAllFullNamespaces()) {
       String[] nsComponentsArr = namespace.split("\\.");
-      for(int i = 0; i < nsComponentsArr.length; i++) {
+      for (int i = 0; i < nsComponentsArr.length; i++) {
         String nsName = "";
-        for(int n = 0; n < i + 1; n++) {
-          if(n > 0) {
+        for (int n = 0; n < i + 1; n++) {
+          if (n > 0) {
             nsName += ".";
           }
           nsName += nsComponentsArr[n];
@@ -192,7 +201,7 @@ public class DBTypeLoader implements IExtendedTypeLoader {
   @Override
   public boolean isNamespaceOfTypeHandled(String fullyQualifiedTypeName) {
     int lastDot = fullyQualifiedTypeName.lastIndexOf('.');
-    if(lastDot == -1) {
+    if (lastDot == -1) {
       return false;
     }
     return getAllFullNamespaces().contains(fullyQualifiedTypeName.substring(0, lastDot));
@@ -205,7 +214,7 @@ public class DBTypeLoader implements IExtendedTypeLoader {
 
   @Override
   public IType getIntrinsicTypeFromObject(Object object) {
-    if(object instanceof CachedDBObject) {
+    if (object instanceof CachedDBObject) {
       CachedDBObject dbObj = (CachedDBObject) object;
       return getType(dbObj.getConnection().getNamespace() + "." + dbObj.getTableName());
     } else {

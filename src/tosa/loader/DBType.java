@@ -25,7 +25,7 @@ public class DBType extends TypeBase implements IDBType {
   private DBConnection _conn;
 
   public DBType(String relativeName, DBTypeLoader dbTypeLoader,
-      DBConnection connInfo) {
+                DBConnection connInfo) {
     _tableName = relativeName;
     _typeLoader = dbTypeLoader;
     _conn = connInfo;

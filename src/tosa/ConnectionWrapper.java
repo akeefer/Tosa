@@ -1,6 +1,20 @@
 package tosa;
 
-import java.sql.*;
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.NClob;
+import java.sql.PreparedStatement;
+import java.sql.SQLClientInfoException;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
+import java.sql.SQLXML;
+import java.sql.Savepoint;
+import java.sql.Statement;
+import java.sql.Struct;
 import java.util.Map;
 import java.util.Properties;
 
@@ -21,7 +35,7 @@ public class ConnectionWrapper implements Connection {
 
   @Override
   public void close() throws SQLException {
-    if(_conn.getAutoCommit()) {
+    if (_conn.getAutoCommit()) {
       _conn.close();
     }
   }
@@ -134,13 +148,13 @@ public class ConnectionWrapper implements Connection {
 
   @Override
   public PreparedStatement prepareStatement(String sql, int resultSetType,
-      int resultSetConcurrency) throws SQLException {
+                                            int resultSetConcurrency) throws SQLException {
     return _conn.prepareStatement(sql, resultSetType, resultSetConcurrency);
   }
 
   @Override
   public CallableStatement prepareCall(String sql, int resultSetType,
-      int resultSetConcurrency) throws SQLException {
+                                       int resultSetConcurrency) throws SQLException {
     return _conn.prepareCall(sql, resultSetType, resultSetConcurrency);
   }
 
@@ -186,21 +200,21 @@ public class ConnectionWrapper implements Connection {
 
   @Override
   public Statement createStatement(int resultSetType, int resultSetConcurrency,
-      int resultSetHoldability) throws SQLException {
+                                   int resultSetHoldability) throws SQLException {
     return _conn.createStatement(resultSetType, resultSetConcurrency,
         resultSetHoldability);
   }
 
   @Override
   public PreparedStatement prepareStatement(String sql, int resultSetType,
-      int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+                                            int resultSetConcurrency, int resultSetHoldability) throws SQLException {
     return _conn.prepareStatement(sql, resultSetType, resultSetConcurrency,
         resultSetHoldability);
   }
 
   @Override
   public CallableStatement prepareCall(String sql, int resultSetType,
-      int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+                                       int resultSetConcurrency, int resultSetHoldability) throws SQLException {
     return _conn.prepareCall(sql, resultSetType, resultSetConcurrency,
         resultSetHoldability);
   }

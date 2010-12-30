@@ -27,7 +27,7 @@ public interface SQLParserConstants {
   public static final String BOOLEAN = "BOOLEAN";
   public static final String BTREE = "BTREE";
   public static final String BY = "BY";
-  public static final String BYTE =  "BYTE";
+  public static final String BYTE = "BYTE";
   public static final String CASCADE = "CASCADE";
   public static final String CHAR = "CHAR";
   public static final String CHARACTER = "CHARACTER";

@@ -1,6 +1,10 @@
 package tosa.loader;
 
-import gw.lang.reflect.*;
+import gw.lang.reflect.IAnnotationInfo;
+import gw.lang.reflect.IPropertyAccessor;
+import gw.lang.reflect.IType;
+import gw.lang.reflect.ITypeInfo;
+import gw.lang.reflect.PropertyInfoBase;
 import tosa.CachedDBObject;
 
 import java.sql.SQLException;
@@ -23,9 +27,9 @@ public class DBPropertyInfo extends PropertyInfoBase {
 
   public DBPropertyInfo(ITypeInfo container, String propName, int type) {
     super(container);
-    if(propName.endsWith("_id")) {
+    if (propName.endsWith("_id")) {
       String typeName;
-      if(propName.substring(0, propName.length() - 3).contains("_")) {
+      if (propName.substring(0, propName.length() - 3).contains("_")) {
         int underscorePos = propName.lastIndexOf('_', propName.length() - 4);
         _name = propName.substring(0, underscorePos);
         typeName = propName.substring(underscorePos + 1, propName.length() - 3);
@@ -34,7 +38,7 @@ public class DBPropertyInfo extends PropertyInfoBase {
         _name = propName.substring(0, propName.length() - 3);
         typeName = _name;
       }
-      String namespace = ((IDBType)container.getOwnersType()).getConnection().getNamespace();
+      String namespace = ((IDBType) container.getOwnersType()).getConnection().getNamespace();
       _type = container.getOwnersType().getTypeLoader().getType(namespace + "." + typeName);
       _fk = true;
     } else {
@@ -63,18 +67,19 @@ public class DBPropertyInfo extends PropertyInfoBase {
     return new IPropertyAccessor() {
       @Override
       public void setValue(Object ctx, Object value) {
-        if(_fk && value != null) {
-          ((CachedDBObject)ctx).getColumns().put(getColumnName(), ((CachedDBObject)value).getColumns().get("id"));
+        if (_fk && value != null) {
+          ((CachedDBObject) ctx).getColumns().put(getColumnName(), ((CachedDBObject) value).getColumns().get("id"));
         } else {
-          ((CachedDBObject)ctx).getColumns().put(getColumnName(), value);
+          ((CachedDBObject) ctx).getColumns().put(getColumnName(), value);
         }
       }
+
       @Override
       public Object getValue(Object ctx) {
         Object columnValue = ((CachedDBObject) ctx).getColumns().get(getColumnName());
-        if(_fk && columnValue != null) {
+        if (_fk && columnValue != null) {
           try {
-            return ((DBTypeInfo)_type.getTypeInfo()).selectById(columnValue);
+            return ((DBTypeInfo) _type.getTypeInfo()).selectById(columnValue);
           } catch (SQLException e) {
             throw new RuntimeException(e);
           }
@@ -101,8 +106,8 @@ public class DBPropertyInfo extends PropertyInfoBase {
   }
 
   public String getColumnName() {
-    if(_fk) {
-      if(_named) {
+    if (_fk) {
+      if (_named) {
         return getName() + "_" + _type.getRelativeName() + "_id";
       } else {
         return getName() + "_id";

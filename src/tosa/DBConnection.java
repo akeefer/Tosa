@@ -42,10 +42,10 @@ public class DBConnection {
 
   public Connection connect() throws SQLException {
     Connection trans = _transaction.get();
-    if(trans == null) {
+    if (trans == null) {
       try {
         Class driverClass = Class.forName(getDriverName(_connectURL), true, _typeLoader.getModule().getClassLoader());
-        Driver driver = (Driver)(driverClass.newInstance());
+        Driver driver = (Driver) (driverClass.newInstance());
         return driver.connect(_connectURL, null);
       } catch (Exception e) {
         throw GosuExceptionUtil.forceThrow(e);
@@ -67,7 +67,7 @@ public class DBConnection {
 
   public Set<String> getFKs(String table) {
     Set<String> fks = _fks.get(table);
-    if(fks == null) {
+    if (fks == null) {
       fks = new HashSet<String>();
       _fks.put(table, fks);
     }
@@ -76,7 +76,7 @@ public class DBConnection {
 
   public Set<Join> getJoins(String table) {
     Set<Join> joins = _joins.get(table);
-    if(joins == null) {
+    if (joins == null) {
       joins = new HashSet<Join>();
       _joins.put(table, joins);
     }
@@ -84,19 +84,19 @@ public class DBConnection {
   }
 
   public Set<String> getAllTypeNames() {
-    if(_typeNames == null) {
+    if (_typeNames == null) {
       _typeNames = new HashSet<String>();
       try {
         Connection conn = connect();
         try {
           ResultSet resultSet = conn.getMetaData().getColumns(null, null, null, null);
           try {
-            if(resultSet.first()) {
-              while(!resultSet.isAfterLast()) {
+            if (resultSet.first()) {
+              while (!resultSet.isAfterLast()) {
                 String tableName = resultSet.getString("TABLE_NAME");
-                if(tableName.contains("join_")) {
+                if (tableName.contains("join_")) {
                   String joinName = null;
-                  if(!tableName.startsWith("join_")) {
+                  if (!tableName.startsWith("join_")) {
                     joinName = tableName.substring(0, tableName.indexOf('_'));
                   }
                   int lastUnderscore = tableName.lastIndexOf('_');
@@ -105,18 +105,18 @@ public class DBConnection {
                   String secondTable = tableName.substring(lastUnderscore + 1);
                   getJoins(firstTable).add(new Join(joinName == null ? secondTable + "s" : joinName,
                       secondTable, tableName));
-                  if(!firstTable.equals(secondTable)) {
+                  if (!firstTable.equals(secondTable)) {
                     getJoins(secondTable).add(new Join(joinName == null ? firstTable + "s" : joinName,
                         firstTable, tableName));
                   }
                   String colName = resultSet.getString("COLUMN_NAME");
-                  if(colName.equals("id")) {
+                  if (colName.equals("id")) {
                     _joinsWithId.add(tableName);
                   }
                 } else {
                   _typeNames.add(_namespace + "." + tableName);
                   String colName = resultSet.getString("COLUMN_NAME");
-                  if(colName.endsWith("_id") && !colName.substring(0, colName.length() - 3).contains("_")) {
+                  if (colName.endsWith("_id") && !colName.substring(0, colName.length() - 3).contains("_")) {
                     getFKs(colName.substring(0, colName.length() - 3)).add(tableName);
                   }
                 }

@@ -27,7 +27,7 @@ public class JoinResult implements List<CachedDBObject> {
   private String _id;
 
   public JoinResult(List<CachedDBObject> result, DBConnection conn, String joinTableName,
-      String srcTableName, String targetTableName, String id) {
+                    String srcTableName, String targetTableName, String id) {
     _result = result;
     _conn = conn;
     _joinTableName = joinTableName;
@@ -60,11 +60,11 @@ public class JoinResult implements List<CachedDBObject> {
   public boolean addAll(Collection<? extends CachedDBObject> objs) {
     StringBuilder query = new StringBuilder("insert into \"");
     query.append(_joinTableName).append("\" (\"").append(_srcTableName).append("_id\", \"").append(_targetTableName).append("_id\") values ");
-    for(CachedDBObject obj : objs) {
+    for (CachedDBObject obj : objs) {
       query.append("(").append(_id).append(", ").append(obj.getColumns().get("id")).append(")");
       query.append(", ");
     }
-    if(!objs.isEmpty()) {
+    if (!objs.isEmpty()) {
       query.setLength(query.length() - 2);
     }
     try {
@@ -87,17 +87,17 @@ public class JoinResult implements List<CachedDBObject> {
 
   @Override
   public boolean remove(Object o) {
-    if(o instanceof CachedDBObject) {
+    if (o instanceof CachedDBObject) {
       CachedDBObject obj = (CachedDBObject) o;
       try {
         Connection conn = _conn.connect();
         try {
           Statement stmt = conn.createStatement();
           try {
-            if(_conn.joinTableHasId(_joinTableName)) {
+            if (_conn.joinTableHasId(_joinTableName)) {
               ResultSet results = stmt.executeQuery("select * from \"" + _joinTableName + "\" where \"" + _srcTableName + "_id\" = " + _id + " and \"" + _targetTableName + "_id\" = " + obj.getColumns().get("id") + " limit 1");
               try {
-                if(results.first()) {
+                if (results.first()) {
                   Object id = results.getObject("id");
                   stmt.executeUpdate("delete from \"" + _joinTableName + "\" where \"id\" = '" + id.toString().replace("'", "''") + "'");
                   return true;
@@ -139,7 +139,6 @@ public class JoinResult implements List<CachedDBObject> {
       throw new RuntimeException(e);
     }
   }
-
 
 
   @Override

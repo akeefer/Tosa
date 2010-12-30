@@ -24,7 +24,7 @@ public class SQLTokenizer {
   private List<String> fillTokenBuffer(String contents) {
     StringTokenizer tokenizer = new StringTokenizer(contents, " \n\t\r,;()", true);
     List<String> tokens = new ArrayList<String>();
-    while(tokenizer.hasMoreTokens()) {
+    while (tokenizer.hasMoreTokens()) {
       String token = tokenizer.nextToken();
       // Ignore white space
       if (!token.trim().isEmpty()) {

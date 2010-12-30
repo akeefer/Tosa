@@ -1,7 +1,19 @@
 package tosa.loader;
 
 import gw.config.CommonServices;
-import gw.lang.reflect.*;
+import gw.lang.reflect.BaseTypeInfo;
+import gw.lang.reflect.ConstructorInfoBuilder;
+import gw.lang.reflect.IConstructorHandler;
+import gw.lang.reflect.IConstructorInfo;
+import gw.lang.reflect.IMethodCallHandler;
+import gw.lang.reflect.IMethodInfo;
+import gw.lang.reflect.IPropertyAccessor;
+import gw.lang.reflect.IPropertyInfo;
+import gw.lang.reflect.IType;
+import gw.lang.reflect.MethodInfoBuilder;
+import gw.lang.reflect.ParameterInfoBuilder;
+import gw.lang.reflect.PropertyInfoBuilder;
+import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.features.PropertyReference;
 import gw.lang.reflect.java.IJavaType;
 import gw.util.GosuStringUtil;
@@ -12,8 +24,17 @@ import tosa.JoinResult;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.sql.*;
-import java.util.*;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -26,13 +47,13 @@ public class DBTypeInfo extends BaseTypeInfo {
 
   private Map<String, IPropertyInfo> _properties;
   private List<IMethodInfo> _methods;
-  private LazyVar<Map<String, IPropertyInfo>> _arrayProperties = new LazyVar<Map<String,IPropertyInfo>>() {
+  private LazyVar<Map<String, IPropertyInfo>> _arrayProperties = new LazyVar<Map<String, IPropertyInfo>>() {
     @Override
     protected Map<String, IPropertyInfo> init() {
       return makeArrayProperties();
     }
   };
-  private LazyVar<Map<String, IMethodInfo>> _joinArrayMethods = new LazyVar<Map<String,IMethodInfo>>() {
+  private LazyVar<Map<String, IMethodInfo>> _joinArrayMethods = new LazyVar<Map<String, IMethodInfo>>() {
     @Override
     protected Map<String, IMethodInfo> init() {
       return makeJoinArrayMethods();
@@ -57,160 +78,161 @@ public class DBTypeInfo extends BaseTypeInfo {
     super(dbType);
 
     _getMethod = new MethodInfoBuilder().withName("fromID").withStatic()
-      .withParameters(new ParameterInfoBuilder().withName("id").withType(IJavaType.pLONG))
-      .withReturnType(dbType)
-      .withCallHandler(new IMethodCallHandler() {
-        @Override
-        public Object handleCall(Object ctx, Object... args) {
-          try {
-            return selectById(args[0]);
-          } catch (SQLException e) {
-            throw new RuntimeException(e);
+        .withParameters(new ParameterInfoBuilder().withName("id").withType(IJavaType.pLONG))
+        .withReturnType(dbType)
+        .withCallHandler(new IMethodCallHandler() {
+          @Override
+          public Object handleCall(Object ctx, Object... args) {
+            try {
+              return selectById(args[0]);
+            } catch (SQLException e) {
+              throw new RuntimeException(e);
+            }
           }
-        }
-      }).build(this);
+        }).build(this);
     _idMethod = new MethodInfoBuilder().withName("toID")
-      .withReturnType(IJavaType.pLONG)
-      .withCallHandler(new IMethodCallHandler() {
-        @Override
-        public Object handleCall(Object ctx, Object... args) {
-          return ((CachedDBObject)ctx).getColumns().get("id");
-        }
-      }).build(this);
+        .withReturnType(IJavaType.pLONG)
+        .withCallHandler(new IMethodCallHandler() {
+          @Override
+          public Object handleCall(Object ctx, Object... args) {
+            return ((CachedDBObject) ctx).getColumns().get("id");
+          }
+        }).build(this);
     _updateMethod = new MethodInfoBuilder().withName("update")
-      .withCallHandler(new IMethodCallHandler() {
-        @Override
-        public Object handleCall(Object ctx, Object... args) {
-          try {
-            ((CachedDBObject)ctx).update();
-          } catch (SQLException e) {
-            throw new RuntimeException(e);
+        .withCallHandler(new IMethodCallHandler() {
+          @Override
+          public Object handleCall(Object ctx, Object... args) {
+            try {
+              ((CachedDBObject) ctx).update();
+            } catch (SQLException e) {
+              throw new RuntimeException(e);
+            }
+            return null;
           }
-          return null;
-        }
-      }).build(this);
+        }).build(this);
     _deleteMethod = new MethodInfoBuilder().withName("delete")
-      .withCallHandler(new IMethodCallHandler() {
-        @Override
-        public Object handleCall(Object ctx, Object... args) {
-          try {
-            ((CachedDBObject)ctx).delete();
-          } catch (SQLException e) {
-            throw new RuntimeException(e);
+        .withCallHandler(new IMethodCallHandler() {
+          @Override
+          public Object handleCall(Object ctx, Object... args) {
+            try {
+              ((CachedDBObject) ctx).delete();
+            } catch (SQLException e) {
+              throw new RuntimeException(e);
+            }
+            return null;
           }
-          return null;
-        }
-      }).build(this);
+        }).build(this);
     _countWithSqlMethod = new MethodInfoBuilder().withName("countWithSql").withStatic()
-      .withParameters(new ParameterInfoBuilder().withName("sql").withType(IJavaType.STRING))
-      .withReturnType(IJavaType.pINT)
-      .withCallHandler(new IMethodCallHandler() {
-        @Override
-        public Object handleCall(Object ctx, Object... args) {
-          try {
-            return countFromSql((String)args[0]);
-          } catch (SQLException e) {
-            throw new RuntimeException(e);
+        .withParameters(new ParameterInfoBuilder().withName("sql").withType(IJavaType.STRING))
+        .withReturnType(IJavaType.pINT)
+        .withCallHandler(new IMethodCallHandler() {
+          @Override
+          public Object handleCall(Object ctx, Object... args) {
+            try {
+              return countFromSql((String) args[0]);
+            } catch (SQLException e) {
+              throw new RuntimeException(e);
+            }
           }
-        }
-      }).build(this);
+        }).build(this);
     _countMethod = new MethodInfoBuilder().withName("count").withStatic()
-      .withParameters(new ParameterInfoBuilder().withName("template").withType(dbType))
-      .withReturnType(IJavaType.pINT)
-      .withCallHandler(new IMethodCallHandler() {
-        @Override
-        public Object handleCall(Object ctx, Object... args) {
-          try {
-            return countFromTemplate((CachedDBObject)args[0]);
-          } catch (SQLException e) {
-            throw new RuntimeException(e);
+        .withParameters(new ParameterInfoBuilder().withName("template").withType(dbType))
+        .withReturnType(IJavaType.pINT)
+        .withCallHandler(new IMethodCallHandler() {
+          @Override
+          public Object handleCall(Object ctx, Object... args) {
+            try {
+              return countFromTemplate((CachedDBObject) args[0]);
+            } catch (SQLException e) {
+              throw new RuntimeException(e);
+            }
           }
-        }
-      }).build(this);
+        }).build(this);
     _findWithSqlMethod = new MethodInfoBuilder().withName("findWithSql").withStatic()
-      .withParameters(new ParameterInfoBuilder().withName("sql").withType(IJavaType.STRING))
-      .withReturnType(IJavaType.LIST.getGenericType().getParameterizedType(dbType))
-      .withCallHandler(new IMethodCallHandler() {
-        @Override
-        public Object handleCall(Object ctx, Object... args) {
-          try {
-            return findFromSql((String)args[0]);
-          } catch (SQLException e) {
-            throw new RuntimeException(e);
+        .withParameters(new ParameterInfoBuilder().withName("sql").withType(IJavaType.STRING))
+        .withReturnType(IJavaType.LIST.getGenericType().getParameterizedType(dbType))
+        .withCallHandler(new IMethodCallHandler() {
+          @Override
+          public Object handleCall(Object ctx, Object... args) {
+            try {
+              return findFromSql((String) args[0]);
+            } catch (SQLException e) {
+              throw new RuntimeException(e);
+            }
           }
-        }
-      }).build(this);
+        }).build(this);
     _findMethod = new MethodInfoBuilder().withName("find").withStatic()
-      .withParameters(new ParameterInfoBuilder().withName("template").withType(dbType))
-      .withReturnType(IJavaType.LIST.getGenericType().getParameterizedType(dbType))
-      .withCallHandler(new IMethodCallHandler() {
-        @Override
-        public Object handleCall(Object ctx, Object... args) {
-          try {
-            return findFromTemplate((CachedDBObject)args[0], null, false, -1, -1);
-          } catch (SQLException e) {
-            throw new RuntimeException(e);
+        .withParameters(new ParameterInfoBuilder().withName("template").withType(dbType))
+        .withReturnType(IJavaType.LIST.getGenericType().getParameterizedType(dbType))
+        .withCallHandler(new IMethodCallHandler() {
+          @Override
+          public Object handleCall(Object ctx, Object... args) {
+            try {
+              return findFromTemplate((CachedDBObject) args[0], null, false, -1, -1);
+            } catch (SQLException e) {
+              throw new RuntimeException(e);
+            }
           }
-        }
-      }).build(this);
+        }).build(this);
     _findSortedMethod = new MethodInfoBuilder().withName("findSorted").withStatic()
-      .withParameters(new ParameterInfoBuilder().withName("template").withType(dbType),
-          new ParameterInfoBuilder().withName("sortProperty").withType(TypeSystem.get(PropertyReference.class).getParameterizedType(dbType, IJavaType.OBJECT)),
-          new ParameterInfoBuilder().withName("ascending").withType(IJavaType.pBOOLEAN))
-      .withReturnType(IJavaType.LIST.getGenericType().getParameterizedType(dbType))
-      .withCallHandler(new IMethodCallHandler() {
-        @Override
-        public Object handleCall(Object ctx, Object... args) {
-          try {
-            return findFromTemplate((CachedDBObject)args[0], (PropertyReference)args[1], (Boolean)args[2], -1, -1);
-          } catch (SQLException e) {
-            throw new RuntimeException(e);
+        .withParameters(new ParameterInfoBuilder().withName("template").withType(dbType),
+            new ParameterInfoBuilder().withName("sortProperty").withType(TypeSystem.get(PropertyReference.class).getParameterizedType(dbType, IJavaType.OBJECT)),
+            new ParameterInfoBuilder().withName("ascending").withType(IJavaType.pBOOLEAN))
+        .withReturnType(IJavaType.LIST.getGenericType().getParameterizedType(dbType))
+        .withCallHandler(new IMethodCallHandler() {
+          @Override
+          public Object handleCall(Object ctx, Object... args) {
+            try {
+              return findFromTemplate((CachedDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2], -1, -1);
+            } catch (SQLException e) {
+              throw new RuntimeException(e);
+            }
           }
-        }
-      }).build(this);
+        }).build(this);
     _findPagedMethod = new MethodInfoBuilder().withName("findPaged").withStatic()
-      .withParameters(new ParameterInfoBuilder().withName("template").withType(dbType),
-          new ParameterInfoBuilder().withName("pageSize").withType(IJavaType.pINT),
-          new ParameterInfoBuilder().withName("offset").withType(IJavaType.pINT))
-      .withReturnType(IJavaType.LIST.getGenericType().getParameterizedType(dbType))
-      .withCallHandler(new IMethodCallHandler() {
-        @Override
-        public Object handleCall(Object ctx, Object... args) {
-          try {
-            return findFromTemplate((CachedDBObject)args[0], null, false, (Integer)args[1], (Integer)args[2]);
-          } catch (SQLException e) {
-            throw new RuntimeException(e);
+        .withParameters(new ParameterInfoBuilder().withName("template").withType(dbType),
+            new ParameterInfoBuilder().withName("pageSize").withType(IJavaType.pINT),
+            new ParameterInfoBuilder().withName("offset").withType(IJavaType.pINT))
+        .withReturnType(IJavaType.LIST.getGenericType().getParameterizedType(dbType))
+        .withCallHandler(new IMethodCallHandler() {
+          @Override
+          public Object handleCall(Object ctx, Object... args) {
+            try {
+              return findFromTemplate((CachedDBObject) args[0], null, false, (Integer) args[1], (Integer) args[2]);
+            } catch (SQLException e) {
+              throw new RuntimeException(e);
+            }
           }
-        }
-      }).build(this);
+        }).build(this);
     _findSortedPagedMethod = new MethodInfoBuilder().withName("findSortedPaged").withStatic()
-      .withParameters(new ParameterInfoBuilder().withName("template").withType(dbType),
-          new ParameterInfoBuilder().withName("sortProperty").withType(TypeSystem.get(PropertyReference.class).getParameterizedType(dbType, IJavaType.OBJECT)),
-          new ParameterInfoBuilder().withName("ascending").withType(IJavaType.pBOOLEAN),
-          new ParameterInfoBuilder().withName("pageSize").withType(IJavaType.pINT),
-          new ParameterInfoBuilder().withName("offset").withType(IJavaType.pINT))
-      .withReturnType(IJavaType.LIST.getGenericType().getParameterizedType(dbType))
-      .withCallHandler(new IMethodCallHandler() {
-        @Override
-        public Object handleCall(Object ctx, Object... args) {
-          try {
-            return findFromTemplate((CachedDBObject)args[0], (PropertyReference)args[1], (Boolean)args[2], (Integer)args[3], (Integer)args[4]);
-          } catch (SQLException e) {
-            throw new RuntimeException(e);
+        .withParameters(new ParameterInfoBuilder().withName("template").withType(dbType),
+            new ParameterInfoBuilder().withName("sortProperty").withType(TypeSystem.get(PropertyReference.class).getParameterizedType(dbType, IJavaType.OBJECT)),
+            new ParameterInfoBuilder().withName("ascending").withType(IJavaType.pBOOLEAN),
+            new ParameterInfoBuilder().withName("pageSize").withType(IJavaType.pINT),
+            new ParameterInfoBuilder().withName("offset").withType(IJavaType.pINT))
+        .withReturnType(IJavaType.LIST.getGenericType().getParameterizedType(dbType))
+        .withCallHandler(new IMethodCallHandler() {
+          @Override
+          public Object handleCall(Object ctx, Object... args) {
+            try {
+              return findFromTemplate((CachedDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2], (Integer) args[3], (Integer) args[4]);
+            } catch (SQLException e) {
+              throw new RuntimeException(e);
+            }
           }
-        }
-      }).build(this);
+        }).build(this);
 
     _newProperty = new PropertyInfoBuilder().withName("_New").withType(IJavaType.pBOOLEAN)
-      .withWritable(false).withAccessor(new IPropertyAccessor() {
-        @Override
-        public void setValue(Object ctx, Object value) {
-        }
-        @Override
-        public Object getValue(Object ctx) {
-          return ((CachedDBObject)ctx).isNew();
-        }
-      }).build(this);
+        .withWritable(false).withAccessor(new IPropertyAccessor() {
+          @Override
+          public void setValue(Object ctx, Object value) {
+          }
+
+          @Override
+          public Object getValue(Object ctx) {
+            return ((CachedDBObject) ctx).isNew();
+          }
+        }).build(this);
     _properties = new HashMap<String, IPropertyInfo>();
     try {
       Connection conn = connect();
@@ -218,7 +240,7 @@ public class DBTypeInfo extends BaseTypeInfo {
         ResultSet cols = conn.getMetaData().getColumns(null, null, dbType.getRelativeName(), null);
         try {
           cols.first();
-          while(!cols.isAfterLast()) {
+          while (!cols.isAfterLast()) {
             String col = cols.getString("COLUMN_NAME");
             int colType = cols.getInt("DATA_TYPE");
             IPropertyInfo prop = makeProperty(col, colType);
@@ -236,12 +258,12 @@ public class DBTypeInfo extends BaseTypeInfo {
     }
 
     _ctor = new ConstructorInfoBuilder()
-      .withConstructorHandler(new IConstructorHandler() {
-        @Override
-        public Object newInstance(Object... args) {
-          return create();
-        }
-      }).build(this);
+        .withConstructorHandler(new IConstructorHandler() {
+          @Override
+          public Object newInstance(Object... args) {
+            return create();
+          }
+        }).build(this);
 
     _methods = new ArrayList<IMethodInfo>(Arrays.asList(_getMethod, _idMethod, _updateMethod, _deleteMethod, _countWithSqlMethod,
         _countMethod, _findWithSqlMethod, _findMethod, _findSortedMethod, _findPagedMethod,
@@ -261,11 +283,11 @@ public class DBTypeInfo extends BaseTypeInfo {
 
   @Override
   public IPropertyInfo getProperty(CharSequence propName) {
-    if(propName.equals("_New")) {
+    if (propName.equals("_New")) {
       return _newProperty;
     }
     IPropertyInfo prop = _properties.get(propName.toString());
-    if(prop == null) {
+    if (prop == null) {
       prop = _arrayProperties.get().get(propName.toString());
     }
     return prop;
@@ -273,13 +295,13 @@ public class DBTypeInfo extends BaseTypeInfo {
 
   @Override
   public CharSequence getRealPropertyName(CharSequence propName) {
-    for(String key : _properties.keySet()) {
-      if(key.equalsIgnoreCase(propName.toString())) {
+    for (String key : _properties.keySet()) {
+      if (key.equalsIgnoreCase(propName.toString())) {
         return key;
       }
     }
-    for(String key : _arrayProperties.get().keySet()) {
-      if(key.equalsIgnoreCase(propName.toString())) {
+    for (String key : _arrayProperties.get().keySet()) {
+      if (key.equalsIgnoreCase(propName.toString())) {
         return key;
       }
     }
@@ -293,37 +315,37 @@ public class DBTypeInfo extends BaseTypeInfo {
 
   @Override
   public IMethodInfo getMethod(CharSequence methodName, IType... params) {
-    if("fromID".equals(methodName) && params != null && params.length == 1 && params[0].equals(IJavaType.pLONG)) {
+    if ("fromID".equals(methodName) && params != null && params.length == 1 && params[0].equals(IJavaType.pLONG)) {
       return _getMethod;
     }
-    if("toID".equals(methodName) && (params == null || params.length == 0)) {
+    if ("toID".equals(methodName) && (params == null || params.length == 0)) {
       return _idMethod;
     }
-    if("update".equals(methodName) && (params == null || params.length == 0)) {
+    if ("update".equals(methodName) && (params == null || params.length == 0)) {
       return _updateMethod;
     }
-    if("delete".equals(methodName) && (params == null || params.length == 0)) {
+    if ("delete".equals(methodName) && (params == null || params.length == 0)) {
       return _deleteMethod;
     }
-    if("findWithSql".equals(methodName) && params != null && params.length == 1 && params[0].equals(IJavaType.STRING)) {
+    if ("findWithSql".equals(methodName) && params != null && params.length == 1 && params[0].equals(IJavaType.STRING)) {
       return _findWithSqlMethod;
     }
-    if("find".equals(methodName) && params != null && params.length == 1 && params[0].equals(getOwnersType())) {
+    if ("find".equals(methodName) && params != null && params.length == 1 && params[0].equals(getOwnersType())) {
       return _findMethod;
     }
-    if("findSorted".equals(methodName) && params != null && params.length == 3 && params[0].equals(getOwnersType()) && TypeSystem.get(PropertyReference.class).isAssignableFrom(params[1]) && params[2].equals(IJavaType.pBOOLEAN)) {
+    if ("findSorted".equals(methodName) && params != null && params.length == 3 && params[0].equals(getOwnersType()) && TypeSystem.get(PropertyReference.class).isAssignableFrom(params[1]) && params[2].equals(IJavaType.pBOOLEAN)) {
       return _findSortedMethod;
     }
-    if("findPaged".equals(methodName) && params != null && params.length == 3 && params[0].equals(getOwnersType()) && params[1].equals(IJavaType.pINT) && params[2].equals(IJavaType.pINT)) {
+    if ("findPaged".equals(methodName) && params != null && params.length == 3 && params[0].equals(getOwnersType()) && params[1].equals(IJavaType.pINT) && params[2].equals(IJavaType.pINT)) {
       return _findPagedMethod;
     }
-    if("findSortedPaged".equals(methodName) && params != null && params.length == 5 && params[0].equals(getOwnersType()) && TypeSystem.get(PropertyReference.class).isAssignableFrom(params[1]) && params[2].equals(IJavaType.pBOOLEAN) && params[3].equals(IJavaType.pINT) && params[4].equals(IJavaType.pINT)) {
+    if ("findSortedPaged".equals(methodName) && params != null && params.length == 5 && params[0].equals(getOwnersType()) && TypeSystem.get(PropertyReference.class).isAssignableFrom(params[1]) && params[2].equals(IJavaType.pBOOLEAN) && params[3].equals(IJavaType.pINT) && params[4].equals(IJavaType.pINT)) {
       return _findSortedPagedMethod;
     }
-    if("count".equals(methodName) && params != null && params.length == 1 && params[0].equals(getOwnersType())) {
+    if ("count".equals(methodName) && params != null && params.length == 1 && params[0].equals(getOwnersType())) {
       return _countMethod;
     }
-    if("countWithSql".equals(methodName) && params != null && params.length == 1 && params[0].equals(IJavaType.STRING)) {
+    if ("countWithSql".equals(methodName) && params != null && params.length == 1 && params[0].equals(IJavaType.STRING)) {
       return _countWithSqlMethod;
     }
     return null;
@@ -341,7 +363,7 @@ public class DBTypeInfo extends BaseTypeInfo {
 
   @Override
   public IConstructorInfo getConstructor(IType... params) {
-    if(params == null || params.length == 0) {
+    if (params == null || params.length == 0) {
       return _ctor;
     }
     return null;
@@ -365,7 +387,7 @@ public class DBTypeInfo extends BaseTypeInfo {
         stmt.executeQuery("select * from \"" + getOwnersType().getRelativeName() + "\" where \"id\" = '" + id.toString().replace("'", "''") + "'");
         ResultSet result = stmt.getResultSet();
         try {
-          if(result.first()) {
+          if (result.first()) {
             obj = buildObject(result);
           }
         } finally {
@@ -384,12 +406,12 @@ public class DBTypeInfo extends BaseTypeInfo {
     StringBuilder query = new StringBuilder("select * from \"");
     query.append(getOwnersType().getRelativeName()).append("\" where ");
     addWhereClause(query, template);
-    if(sortColumn != null) {
+    if (sortColumn != null) {
       query.append(" order by \"").append(sortColumn.getPropertyInfo().getName()).append("\" ").append(ascending ? "ASC" : "DESC").append(", \"id\" ASC");
     } else {
       query.append(" order by \"id\" ASC");
     }
-    if(limit != -1) {
+    if (limit != -1) {
       query.append(" limit ").append(limit).append(" offset ").append(offset);
     }
     return findFromSql(query.toString());
@@ -409,7 +431,7 @@ public class DBTypeInfo extends BaseTypeInfo {
         stmt.executeQuery(query);
         ResultSet result = stmt.getResultSet();
         try {
-          if(result.first()) {
+          if (result.first()) {
             return result.getInt("count");
           } else {
             return 0;
@@ -427,14 +449,14 @@ public class DBTypeInfo extends BaseTypeInfo {
 
   private void addWhereClause(StringBuilder query, CachedDBObject template) {
     List<String> whereClause = new ArrayList<String>();
-    if(template != null) {
-      for(Map.Entry<String, Object> column : template.getColumns().entrySet()) {
-        if(column.getValue() != null) {
+    if (template != null) {
+      for (Map.Entry<String, Object> column : template.getColumns().entrySet()) {
+        if (column.getValue() != null) {
           String value = "'" + column.getValue().toString().replace("'", "''") + "'";
           whereClause.add("\"" + column.getKey() + "\" = " + value);
         }
       }
-      if(!whereClause.isEmpty()) {
+      if (!whereClause.isEmpty()) {
         query.append(GosuStringUtil.join(whereClause, " and "));
       } else {
         query.append("true");
@@ -446,13 +468,13 @@ public class DBTypeInfo extends BaseTypeInfo {
 
   List<CachedDBObject> findInDb(List<IPropertyInfo> props, Object... args) throws SQLException {
     List<String> whereClause = new ArrayList<String>();
-    for(int i = 0; i < props.size(); i++) {
+    for (int i = 0; i < props.size(); i++) {
       IPropertyInfo p = props.get(i);
-      if(p instanceof DBPropertyInfo) {
+      if (p instanceof DBPropertyInfo) {
         DBPropertyInfo dbProperty = (DBPropertyInfo) p;
         String value;
-        if(dbProperty.getColumnName().endsWith("_id")) {
-          value = ((CachedDBObject)args[i]).getColumns().get("id").toString();
+        if (dbProperty.getColumnName().endsWith("_id")) {
+          value = ((CachedDBObject) args[i]).getColumns().get("id").toString();
         } else {
           value = "'" + args[i].toString().replace("'", "''") + "'";
         }
@@ -471,7 +493,7 @@ public class DBTypeInfo extends BaseTypeInfo {
         stmt.executeQuery(query);
         ResultSet result = stmt.getResultSet();
         try {
-          if(result.first()) {
+          if (result.first()) {
             objs = buildObjects(result);
           }
         } finally {
@@ -488,7 +510,7 @@ public class DBTypeInfo extends BaseTypeInfo {
 
   private ArrayList<CachedDBObject> buildObjects(ResultSet result) throws SQLException {
     ArrayList<CachedDBObject> objs = new ArrayList<CachedDBObject>();
-    while(!result.isAfterLast()) {
+    while (!result.isAfterLast()) {
       objs.add(buildObject(result));
       result.next();
     }
@@ -497,13 +519,13 @@ public class DBTypeInfo extends BaseTypeInfo {
 
   private CachedDBObject buildObject(ResultSet result) throws SQLException {
     CachedDBObject obj = new CachedDBObject(getOwnersType().getRelativeName(), (DBTypeLoader) getOwnersType().getTypeLoader(), getOwnersType().getConnection(), false);
-    for(IPropertyInfo prop : getProperties()) {
-      if(prop instanceof DBPropertyInfo) {
+    for (IPropertyInfo prop : getProperties()) {
+      if (prop instanceof DBPropertyInfo) {
         DBPropertyInfo dbProp = (DBPropertyInfo) prop;
         Object resultObject = result.getObject(getOwnersType().getRelativeName() + "." + dbProp.getColumnName());
-        if(resultObject instanceof BufferedReader) {
-          obj.getColumns().put(dbProp.getColumnName(), readAll((BufferedReader)resultObject));
-        } else if(resultObject instanceof Clob) {
+        if (resultObject instanceof BufferedReader) {
+          obj.getColumns().put(dbProp.getColumnName(), readAll((BufferedReader) resultObject));
+        } else if (resultObject instanceof Clob) {
           obj.getColumns().put(dbProp.getColumnName(), readAll(new BufferedReader(((Clob) resultObject).getCharacterStream())));
         } else if (dbProp.getFeatureType().equals(IJavaType.pBOOLEAN) && resultObject == null) {
           obj.getColumns().put(dbProp.getColumnName(), Boolean.FALSE);
@@ -519,11 +541,11 @@ public class DBTypeInfo extends BaseTypeInfo {
     try {
       StringBuilder b = new StringBuilder();
       String line = r.readLine();
-      while(line != null) {
+      while (line != null) {
         b.append(line).append("\n");
         line = r.readLine();
       }
-      if(b.length() > 0) {
+      if (b.length() > 0) {
         b.setLength(b.length() - 1);
       }
       return b.toString();
@@ -533,16 +555,16 @@ public class DBTypeInfo extends BaseTypeInfo {
   }
 
   CachedDBObject create() {
-    return new CachedDBObject(getOwnersType().getRelativeName(), (DBTypeLoader)getOwnersType().getTypeLoader(), getOwnersType().getConnection(), true);
+    return new CachedDBObject(getOwnersType().getRelativeName(), (DBTypeLoader) getOwnersType().getTypeLoader(), getOwnersType().getConnection(), true);
   }
 
   private Map<String, IPropertyInfo> makeArrayProperties() {
     Map<String, IPropertyInfo> arrayProps = new HashMap<String, IPropertyInfo>();
-    for(String fkTable : getOwnersType().getConnection().getFKs(getOwnersType().getRelativeName())) {
+    for (String fkTable : getOwnersType().getConnection().getFKs(getOwnersType().getRelativeName())) {
       IPropertyInfo arrayProp = makeArrayProperty(fkTable);
       arrayProps.put(arrayProp.getName(), arrayProp);
     }
-    for(Join joinTable : getOwnersType().getConnection().getJoins(getOwnersType().getRelativeName())) {
+    for (Join joinTable : getOwnersType().getConnection().getJoins(getOwnersType().getRelativeName())) {
       IPropertyInfo joinProp = makeJoinProperty(joinTable);
       arrayProps.put(joinProp.getName(), joinProp);
     }
@@ -561,49 +583,51 @@ public class DBTypeInfo extends BaseTypeInfo {
     String namespace = getOwnersType().getConnection().getNamespace();
     final IType fkType = getOwnersType().getTypeLoader().getType(namespace + "." + fkTable);
     return new PropertyInfoBuilder().withName(fkTable + "s").withType(IJavaType.LIST.getGenericType().getParameterizedType(fkType))
-      .withWritable(false).withAccessor(new IPropertyAccessor() {
-        @Override
-        public void setValue(Object ctx, Object value) {
-        }
-        @Override
-        public Object getValue(Object ctx) {
-          try {
-            return ((DBTypeInfo)fkType.getTypeInfo()).findInDb(Arrays.asList(fkType.getTypeInfo().getProperty(getOwnersType().getRelativeName())), ctx);
-          } catch (SQLException e) {
-            throw new RuntimeException(e);
+        .withWritable(false).withAccessor(new IPropertyAccessor() {
+          @Override
+          public void setValue(Object ctx, Object value) {
           }
-        }
-      }).build(this);
+
+          @Override
+          public Object getValue(Object ctx) {
+            try {
+              return ((DBTypeInfo) fkType.getTypeInfo()).findInDb(Arrays.asList(fkType.getTypeInfo().getProperty(getOwnersType().getRelativeName())), ctx);
+            } catch (SQLException e) {
+              throw new RuntimeException(e);
+            }
+          }
+        }).build(this);
   }
 
   private IPropertyInfo makeJoinProperty(final Join join) {
     String namespace = getOwnersType().getConnection().getNamespace();
     final IType fkType = getOwnersType().getTypeLoader().getType(namespace + "." + join.getTargetTable());
     return new PropertyInfoBuilder().withName(join.getPropName()).withType(IJavaType.LIST.getGenericType().getParameterizedType(fkType))
-      .withWritable(false).withAccessor(new IPropertyAccessor() {
-        @Override
-        public void setValue(Object ctx, Object value) {
-        }
-        @Override
-        public Object getValue(Object ctx) {
-          String j = join.getJoinTable();
-          String t = join.getTargetTable();
-          String o = getOwnersType().getRelativeName();
-          if(GosuStringUtil.equals(t, o)) {
-            o += "_src";
-            t += "_dest";
+        .withWritable(false).withAccessor(new IPropertyAccessor() {
+          @Override
+          public void setValue(Object ctx, Object value) {
           }
-          String id = ((CachedDBObject)ctx).getColumns().get("id").toString();
-          try {
-            List<CachedDBObject> result = ((DBTypeInfo)fkType.getTypeInfo()).findFromSql(
-                "select * from \"" + join.getTargetTable() + "\", \"" + j + "\" as j where j.\"" + t + "_id\" = \"" + join.getTargetTable() + "\".\"id\" and j.\"" + o + "_id\" = " + id
-            );
-            return new JoinResult(result, getOwnersType().getConnection(), j, o, t, id);
-          } catch (SQLException e) {
-            throw new RuntimeException(e);
+
+          @Override
+          public Object getValue(Object ctx) {
+            String j = join.getJoinTable();
+            String t = join.getTargetTable();
+            String o = getOwnersType().getRelativeName();
+            if (GosuStringUtil.equals(t, o)) {
+              o += "_src";
+              t += "_dest";
+            }
+            String id = ((CachedDBObject) ctx).getColumns().get("id").toString();
+            try {
+              List<CachedDBObject> result = ((DBTypeInfo) fkType.getTypeInfo()).findFromSql(
+                  "select * from \"" + join.getTargetTable() + "\", \"" + j + "\" as j where j.\"" + t + "_id\" = \"" + join.getTargetTable() + "\".\"id\" and j.\"" + o + "_id\" = " + id
+              );
+              return new JoinResult(result, getOwnersType().getConnection(), j, o, t, id);
+            } catch (SQLException e) {
+              throw new RuntimeException(e);
+            }
           }
-        }
-      }).build(this);
+        }).build(this);
   }
 
   @Override

@@ -62,8 +62,6 @@ index_parameters in UNIQUE and PRIMARY KEY constraints are:
 [ USING INDEX TABLESPACE tablespace ]*/
 
 
-
-
   private SQLTokenizer _tokenizer;
 
   public static void main(String[] args) {
@@ -119,9 +117,11 @@ index_parameters in UNIQUE and PRIMARY KEY constraints are:
     return tableName;
   }
 
-  /**{ column_name data_type [ DEFAULT default_expr ] [ column_constraint [ ... ] ]
-    | table_constraint
-    | LIKE parent_table [ { INCLUDING | EXCLUDING } { DEFAULTS | CONSTRAINTS | INDEXES } ] ... }*/
+  /**
+   * { column_name data_type [ DEFAULT default_expr ] [ column_constraint [ ... ] ]
+   * | table_constraint
+   * | LIKE parent_table [ { INCLUDING | EXCLUDING } { DEFAULTS | CONSTRAINTS | INDEXES } ] ... }
+   */
   private List<ColumnData> parseColumns() {
     List<ColumnData> columns = new ArrayList<ColumnData>();
     if (accept(LIKE)) {
@@ -203,7 +203,7 @@ index_parameters in UNIQUE and PRIMARY KEY constraints are:
     } else if (accept(date)) {
       return ColumnType.DATE;
     } else if ((accept(_double) && accept(precision)) || accept(float8)) {
-       return ColumnType.DOUBLE;
+      return ColumnType.DOUBLE;
     } else if (accept(inet)) {
 
     } else if (accept(integer) || accept(_int) || accept(int4)) {

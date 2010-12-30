@@ -1,18 +1,15 @@
 package tosa.loader.parser.mysql;
 
-import com.sun.xml.internal.ws.api.addressing.AddressingVersion;
-import tosa.loader.data.*;
+import tosa.loader.data.ColumnData;
+import tosa.loader.data.ColumnType;
+import tosa.loader.data.DBData;
+import tosa.loader.data.TableData;
 import tosa.loader.parser.SQLParserConstants;
 import tosa.loader.parser.SQLTokenizer;
 
-import javax.management.ObjectName;
-import javax.swing.text.StringContent;
-import java.awt.*;
-import java.awt.image.ImageFilter;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
 
 /**
  * Created by IntelliJ IDEA.
@@ -26,28 +23,28 @@ public class MySQL51SQLParser implements SQLParserConstants {
   public static void main(String[] args) {
     String testSQL =
         "CREATE TABLE \"BlogInfo\"(\n" +
-        "    \"id\" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,\n" +
-        "    \"Title\" VARCHAR(255)\n" +
-        ");\n" +
-        "CREATE TABLE \"Post\"(\n" +
-        "    \"id\" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,\n" +
-        "    \"Title\" TEXT,\n" +
-        "    \"Body\" TEXT,\n" +
-        "    \"Posted\" TIMESTAMP\n" +
-        ");\n" +
-        "CREATE TABLE \"User\"(\n" +
-        "    \"id\" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,\n" +
-        "    \"Name\" VARCHAR(64),\n" +
-        "    \"Hash\" VARCHAR(128),\n" +
-        "    \"Salt\" VARCHAR(32)\n" +
-        ");\n" +
-        "CREATE TABLE \"Comment\"(\n" +
-        "    \"id\" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,\n" +
-        "    \"Post_id\" BIGINT,\n" +
-        "    \"Name\" VARCHAR(255),\n" +
-        "    \"Text\" TEXT,\n" +
-        "    \"Posted\" TIMESTAMP\n" +
-        ");\n";
+            "    \"id\" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,\n" +
+            "    \"Title\" VARCHAR(255)\n" +
+            ");\n" +
+            "CREATE TABLE \"Post\"(\n" +
+            "    \"id\" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,\n" +
+            "    \"Title\" TEXT,\n" +
+            "    \"Body\" TEXT,\n" +
+            "    \"Posted\" TIMESTAMP\n" +
+            ");\n" +
+            "CREATE TABLE \"User\"(\n" +
+            "    \"id\" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,\n" +
+            "    \"Name\" VARCHAR(64),\n" +
+            "    \"Hash\" VARCHAR(128),\n" +
+            "    \"Salt\" VARCHAR(32)\n" +
+            ");\n" +
+            "CREATE TABLE \"Comment\"(\n" +
+            "    \"id\" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,\n" +
+            "    \"Post_id\" BIGINT,\n" +
+            "    \"Name\" VARCHAR(255),\n" +
+            "    \"Text\" TEXT,\n" +
+            "    \"Posted\" TIMESTAMP\n" +
+            ");\n";
 
     DBData data = new MySQL51SQLParser().parseFile(testSQL);
     System.out.println("Done");
@@ -312,7 +309,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
     // production, but I'm moving it in there for the sake of sanity
     String name = consumeToken();
     ColumnType columnType = parseDataType();
-    while(parseColumnOption()) {
+    while (parseColumnOption()) {
       // Keep looping to consume all the options
     }
     // TODO - AHK
@@ -667,7 +664,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
     List<String> values = new ArrayList<String>();
     expect(OPEN_PAREN);
     values.add(consumeToken());
-    while(accept(COMMA)) {
+    while (accept(COMMA)) {
       values.add(consumeToken());
     }
     expect(CLOSE_PAREN);
@@ -918,7 +915,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       }
 
       parseSubpartitionDefinition();
-      while(accept(COMMA)) {
+      while (accept(COMMA)) {
         parseSubpartitionDefinition();
       }
     }
