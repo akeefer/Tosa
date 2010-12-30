@@ -433,6 +433,8 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
         return new ColumnType(Types.BIT, BIT, ColumnType.BOOLEAN_ITYPE);
       } else {
         // TODO - AHK
+        System.out.println("***Unhandled column type " + BIT);
+        return null;
       }
     } else if (accept(TINYINT)) {
       Integer length = parseLength();
@@ -444,6 +446,8 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
         return new ColumnType(Types.TINYINT, TINYINT, ColumnType.BYTE_ITYPE);
       } else {
         // TODO - AHK
+        System.out.println("***Unhandled column type UNSIGNED " + TINYINT);
+        return null;
       }
     } else if (accept(BOOL) || accept(BOOLEAN)) {
       // BOOL and BOOLEAN are equivalent to TINYINT(1)
@@ -455,6 +459,8 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
         return new ColumnType(Types.SMALLINT, SMALLINT, ColumnType.SHORT_ITYPE);
       } else {
         // TODO - AHK
+        System.out.println("***Unhandled column type UNSIGNED " + SMALLINT);
+        return null;
       }
     } else if (accept(MEDIUMINT)) {
       Integer length = parseLength();
@@ -463,6 +469,8 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
         return new ColumnType(Types.INTEGER, MEDIUMINT, ColumnType.INTEGER_ITYPE);
       } else {
         // TODO - AHK
+        System.out.println("***Unhandled column type UNSIGNED " + MEDIUMINT);
+        return null;
       }
     } else if (accept(INT) || accept(INTEGER)) {
       Integer length = parseLength();
@@ -471,6 +479,8 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
         return new ColumnType(Types.INTEGER, INT, ColumnType.INTEGER_ITYPE);
       } else {
         // TODO - AHK
+        System.out.println("***Unhandled column type UNSIGNED " + INTEGER);
+        return null;
       }
     } else if (accept(BIGINT)) {
       Integer length = parseLength();
@@ -479,6 +489,8 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
         return new ColumnType(Types.BIGINT, BIGINT, ColumnType.LONG_ITYPE);
       } else {
         // TODO - AHK
+        System.out.println("***Unhandled column type UNSIGNED " + BIGINT);
+        return null;
       }
     } else if (accept(DOUBLE) || accept(DOUBLE, PRECISION) || accept(REAL)) {
       // TODO - AHK - If the REAL_AS_FLOAT mode is set on the DB, this will be incorrect
@@ -498,14 +510,19 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       return new ColumnType(Types.DECIMAL, DECIMAL, ColumnType.BIG_DECIMAL_ITYPE);
     } else if (accept(DATE)) {
       // TODO - AHK
+      return new ColumnType(Types.DATE, DATE, ColumnType.DATE_ITYPE);
     } else if (accept(TIME)) {
       // TODO - AHK
+      return new ColumnType(Types.TIME, TIME, ColumnType.DATE_ITYPE);
     } else if (accept(TIMESTAMP)) {
       // TODO - AHK
+      return new ColumnType(Types.TIMESTAMP, TIMESTAMP, ColumnType.DATE_ITYPE);
     } else if (accept(DATETIME)) {
       // TODO - AHK
+      return new ColumnType(Types.TIMESTAMP, DATETIME, ColumnType.DATE_ITYPE);
     } else if (accept(YEAR)) {
       // TODO - AHK
+      return new ColumnType(Types.INTEGER, YEAR, ColumnType.INTEGER_ITYPE);
     } else if (accept(CHAR) || accept(CHARACTER) || accept(NATIONAL, CHAR) || accept(NCHAR)) {
       // TODO - AHK - If the charSetName is "binary", then it's really a binary column . . . ugh
       Integer length = parseLength();
@@ -521,49 +538,75 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
     } else if (accept(BINARY) || accept(CHAR, BYTE)) {
       Integer length = parseLength();
       // TODO - AHK
+      System.out.println("***Unhandled column type " + BINARY);
+      return null;
     } else if (accept(VARBINARY)) {
       Integer length = parseLength();
       // TODO - AHK
+      System.out.println("***Unhandled column type " + VARBINARY);
+      return null;
     } else if (accept(TINYBLOB)) {
       // TODO - AHK
+      System.out.println("***Unhandled column type " + TINYBLOB);
+      return null;
     } else if (accept(BLOB)) {
       // TODO - AHK
+      System.out.println("***Unhandled column type " + BLOB);
+      return null;
     } else if (accept(MEDIUMBLOB)) {
       // TODO - AHK
+      System.out.println("***Unhandled column type " + MEDIUMBLOB);
+      return null;
     } else if (accept(LONGBLOB)) {
       // TODO - AHK
+      System.out.println("***Unhandled column type " + LONGBLOB);
+      return null;
     } else if (accept(TINYTEXT)) {
       accept(BINARY);
       String charSetName = parseCharSet();
       String collation = parseCollation();
       // TODO - AHK
+      System.out.println("***Unhandled column type " + TINYTEXT);
+      return null;
     } else if (accept(TEXT)) {
       accept(BINARY);
       String charSetName = parseCharSet();
       String collation = parseCollation();
       // TODO - AHK
+      System.out.println("***Unhandled column type " + TEXT);
+      return null;
     } else if (accept(MEDIUMTEXT)) {
       accept(BINARY);
       String charSetName = parseCharSet();
       String collation = parseCollation();
       // TODO - AHK
+      System.out.println("***Unhandled column type " + MEDIUMTEXT);
+      return null;
     } else if (accept(LONGTEXT)) {
       accept(BINARY);
       String charSetName = parseCharSet();
       String collation = parseCollation();
       // TODO - AHK
+      System.out.println("***Unhandled column type " + LONGTEXT);
+      return null;
     } else if (accept(ENUM)) {
       List<String> values = parseEnumOrSetValueList();
       String charSetName = parseCharSet();
       String collation = parseCollation();
       // TODO - AHK
+      System.out.println("***Unhandled column type " + ENUM);
+      return null;
     } else if (accept(SET)) {
       List<String> values = parseEnumOrSetValueList();
       String charSetName = parseCharSet();
       String collation = parseCollation();
       // TODO - AHK
+      System.out.println("***Unhandled column type " + SET);
+      return null;
+    } else {
+      System.out.println("***Unexpected column type");
+      return null;
     }
-    return null;
   }
 
   // TODO - AHK - Maybe return an int instead?
