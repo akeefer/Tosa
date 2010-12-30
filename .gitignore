@@ -1,0 +1,6 @@
+# Compilation artifacts #
+build/*
+out/*
+
+# IntelliJ Workspace - This will differ per user#
+.idea/workspace.xml
