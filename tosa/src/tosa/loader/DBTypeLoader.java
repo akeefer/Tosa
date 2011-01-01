@@ -41,7 +41,7 @@ public class DBTypeLoader implements IExtendedTypeLoader {
   private Map<String, TransactionType> _transactionTypes;
   private Set<String> _initializedDrivers = new HashSet<String>();
   private Map<String, DBConnection> _connInfos = new HashMap<String, DBConnection>();
-
+  private Map<String, DBTypeData> _typeDataByNamespace = new HashMap<String, DBTypeData>();
 
   public DBTypeLoader() {
     this(TypeSystem.getExecutionEnvironment(), new HashMap<String, String>());
@@ -131,9 +131,13 @@ public class DBTypeLoader implements IExtendedTypeLoader {
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
-          if (connInfo != null && connInfo.getAllTypeNames().contains(fullyQualifiedName)) {
-            type = TypeSystem.getOrCreateTypeReference(new DBType(relativeName, this, connInfo));
-            _types.put(fullyQualifiedName, type);
+          DBTypeData typeData = _typeDataByNamespace.get(namespace);
+          if (typeData != null) {
+            TableTypeData tableTypeData = typeData.getTable(relativeName);
+            if (tableTypeData != null && connInfo != null && connInfo.getAllTypeNames().contains(fullyQualifiedName)) {
+              type = TypeSystem.getOrCreateTypeReference(new DBType(relativeName, this, connInfo, tableTypeData));
+              _types.put(fullyQualifiedName, type);
+            }
           }
         }
       } finally {

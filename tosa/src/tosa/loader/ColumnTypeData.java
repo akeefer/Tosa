@@ -1,5 +1,7 @@
 package tosa.loader;
 
+import gw.lang.reflect.IType;
+import gw.lang.reflect.TypeSystem;
 import tosa.loader.data.ColumnData;
 
 /**
@@ -46,5 +48,9 @@ public class ColumnTypeData {
   public boolean isIdColumn() {
     // TODO - AHK - Some day, this should perhaps check to make sure that the column has the right attributes
     return getColumnName().equals("id");
+  }
+
+  public IType getType() {
+    return TypeSystem.getByFullName(_columnData.getColumnType().getGosuTypeName());
   }
 }

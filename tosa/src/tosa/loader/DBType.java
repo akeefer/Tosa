@@ -23,11 +23,13 @@ public class DBType extends TypeBase implements IDBType {
   private DBTypeLoader _typeLoader;
   private LazyVar<DBTypeInfo> _typeInfo;
   private DBConnection _conn;
+  private TableTypeData _typeData;
 
   public DBType(String relativeName, DBTypeLoader dbTypeLoader,
-                DBConnection connInfo) {
+                DBConnection connInfo, TableTypeData typeData) {
     _tableName = relativeName;
     _typeLoader = dbTypeLoader;
+    _typeData = typeData;
     _conn = connInfo;
     _typeInfo = new LazyVar<DBTypeInfo>() {
       @Override
@@ -35,6 +37,10 @@ public class DBType extends TypeBase implements IDBType {
         return new DBTypeInfo(DBType.this);
       }
     };
+  }
+
+  TableTypeData getTypeData() {
+    return _typeData;
   }
 
   @Override

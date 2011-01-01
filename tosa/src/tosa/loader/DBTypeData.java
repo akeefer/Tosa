@@ -31,6 +31,10 @@ public class DBTypeData {
     processDBData();
   }
 
+  public TableTypeData getTable(String tableName) {
+    return _tables.get(tableName);
+  }
+
   private void processDBData() {
     _typeNames = new HashSet<String>();
 

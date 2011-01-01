@@ -24,9 +24,12 @@ public class DBPropertyInfo extends PropertyInfoBase {
   private IType _type;
   private boolean _fk;
   private boolean _named;
+  private ColumnTypeData _column;
 
-  public DBPropertyInfo(ITypeInfo container, String propName, int type) {
+  public DBPropertyInfo(ITypeInfo container, ColumnTypeData column) {
     super(container);
+    _column = column;
+    String propName = column.getColumnName();
     if (propName.endsWith("_id")) {
       String typeName;
       if (propName.substring(0, propName.length() - 3).contains("_")) {
@@ -43,7 +46,7 @@ public class DBPropertyInfo extends PropertyInfoBase {
       _fk = true;
     } else {
       _name = propName;
-      _type = Util.getJavaType(type);
+      _type = column.getType();
     }
   }
 

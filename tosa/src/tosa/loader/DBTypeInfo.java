@@ -234,27 +234,9 @@ public class DBTypeInfo extends BaseTypeInfo {
           }
         }).build(this);
     _properties = new HashMap<String, IPropertyInfo>();
-    try {
-      Connection conn = connect();
-      try {
-        ResultSet cols = conn.getMetaData().getColumns(null, null, dbType.getRelativeName(), null);
-        try {
-          cols.first();
-          while (!cols.isAfterLast()) {
-            String col = cols.getString("COLUMN_NAME");
-            int colType = cols.getInt("DATA_TYPE");
-            IPropertyInfo prop = makeProperty(col, colType);
-            _properties.put(prop.getName(), prop);
-            cols.next();
-          }
-        } finally {
-          cols.close();
-        }
-      } finally {
-        conn.close();
-      }
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
+    for (ColumnTypeData column : dbType.getTypeData().getColumns()) {
+      IPropertyInfo prop = makeProperty(column);
+      _properties.put(prop.getName(), prop);
     }
 
     _ctor = new ConstructorInfoBuilder()
@@ -575,8 +557,8 @@ public class DBTypeInfo extends BaseTypeInfo {
     return new HashMap<String, IMethodInfo>();
   }
 
-  private DBPropertyInfo makeProperty(String propName, int type) {
-    return new DBPropertyInfo(this, propName, type);
+  private DBPropertyInfo makeProperty(ColumnTypeData column) {
+    return new DBPropertyInfo(this, column);
   }
 
   private IPropertyInfo makeArrayProperty(String fkTable) {
