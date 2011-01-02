@@ -13,6 +13,8 @@ import gw.util.concurrent.LazyVar;
 import tosa.CachedDBObject;
 import tosa.DBConnection;
 import tosa.loader.data.DBData;
+import tosa.loader.data.IDBDataSource;
+import tosa.loader.parser.DDLDBDataSource;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -37,20 +39,28 @@ import java.util.Set;
 public class DBTypeLoader implements IExtendedTypeLoader {
 
   private IModule _module;
-  private Map<String, IType> _types;
-  private Map<String, TransactionType> _transactionTypes;
-  private Set<String> _initializedDrivers = new HashSet<String>();
-  private Map<String, DBConnection> _connInfos = new HashMap<String, DBConnection>();
-  private Map<String, DBTypeData> _typeDataByNamespace = new HashMap<String, DBTypeData>();
+//  private Set<String> _initializedDrivers = new HashSet<String>();
+//  private Map<String, DBConnection> _connInfos = new HashMap<String, DBConnection>();
+
+  private LazyVar<Map<String, DBTypeData>> _typeDataByNamespace = new LazyVar<Map<String, DBTypeData>>() {
+    protected Map<String, DBTypeData> init() { return initializeDBTypeData(); }
+  };
+
+  private LazyVar<Set<String>> _namespaces = new LazyVar<Set<String>>() {
+    protected Set<String> init() { return initializeNamespaces(); }
+  };
+
+  private LazyVar<Set<String>> _typeNames = new LazyVar<Set<String>>() {
+    protected Set<String> init() { return initializeTypeNames(); }
+  };
 
   public DBTypeLoader() {
     this(TypeSystem.getExecutionEnvironment(), new HashMap<String, String>());
   }
 
+  // TODO - AHK - This should take a module and a moduleresourceaccess instead
   public DBTypeLoader(IExecutionEnvironment env, Map<String, String> args) {
     _module = env.getCurrentModule();
-    _types = new HashMap<String, IType>();
-    _transactionTypes = new HashMap<String, TransactionType>();
   }
 
   @Override
@@ -58,32 +68,32 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     return _module;
   }
 
-  private Set<String> getAllFullNamespaces() {
-    Set<String> allFullNamespaces = new HashSet<String>();
-    for (Pair<String, IFile> dbcFile : _module.getResourceAccess().findAllFilesByExtension(".dbc")) {
-      String fileName = dbcFile.getFirst();
-      allFullNamespaces.add(fileName.substring(0, fileName.length() - ".dbc".length()).replace("/", "."));
-    }
-    return allFullNamespaces;
-  }
-
-  private DBConnection getConnInfo(String namespace) throws IOException {
-    DBConnection connInfo = _connInfos.get(namespace);
-    if (connInfo == null && getAllFullNamespaces().contains(namespace)) {
-      URL connRsrc = _module.getResource(namespace.replace('.', '/') + ".dbc");
-      InputStream connRsrcStream = connRsrc.openStream();
-      StringBuilder connUrlBuilder = new StringBuilder();
-      String line;
-      BufferedReader reader = new BufferedReader(new InputStreamReader(connRsrcStream));
-      while ((line = reader.readLine()) != null) {
-        connUrlBuilder.append(line);
-      }
-      String connUrl = connUrlBuilder.toString();
-      connInfo = new DBConnection(connUrl, namespace, this);
-      _connInfos.put(namespace, connInfo);
-    }
-    return connInfo;
-  }
+//  private Set<String> getAllFullNamespaces() {
+//    Set<String> allFullNamespaces = new HashSet<String>();
+//    for (Pair<String, IFile> dbcFile : _module.getResourceAccess().findAllFilesByExtension(".dbc")) {
+//      String fileName = dbcFile.getFirst();
+//      allFullNamespaces.add(fileName.substring(0, fileName.length() - ".dbc".length()).replace("/", "."));
+//    }
+//    return allFullNamespaces;
+//  }
+//
+//  private DBConnection getConnInfo(String namespace) throws IOException {
+//    DBConnection connInfo = _connInfos.get(namespace);
+//    if (connInfo == null && getAllFullNamespaces().contains(namespace)) {
+//      URL connRsrc = _module.getResource(namespace.replace('.', '/') + ".dbc");
+//      InputStream connRsrcStream = connRsrc.openStream();
+//      StringBuilder connUrlBuilder = new StringBuilder();
+//      String line;
+//      BufferedReader reader = new BufferedReader(new InputStreamReader(connRsrcStream));
+//      while ((line = reader.readLine()) != null) {
+//        connUrlBuilder.append(line);
+//      }
+//      String connUrl = connUrlBuilder.toString();
+//      connInfo = new DBConnection(connUrl, namespace, this);
+//      _connInfos.put(namespace, connInfo);
+//    }
+//    return connInfo;
+//  }
 
   @Override
   public IType getIntrinsicType(Class javaClass) {
@@ -101,83 +111,35 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     if (lastDot == -1) {
       return null;
     }
+    // TODO - AHK - What do we do if there's a table named "Transaction"?
+    // TODO - AHK - Is it really our job to do any caching at all?
     String namespace = fullyQualifiedName.substring(0, lastDot);
     String relativeName = fullyQualifiedName.substring(lastDot + 1);
+    DBTypeData dbTypeData = _typeDataByNamespace.get().get(namespace);
+    if (dbTypeData == null) {
+      return null;
+    }
+
     if ("Transaction".equals(relativeName)) {
-      TransactionType type = _transactionTypes.get(namespace);
-      if (type == null) {
-        try {
-          DBConnection dbConnection = getConnInfo(namespace);
-          if (dbConnection == null) {
-            return null;
-          }
-          type = new TransactionType(dbConnection, this);
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
-        _transactionTypes.put(namespace, type);
-      }
-      return type;
-    }
-    IType type = _types.get(fullyQualifiedName);
-    if (type == null || ((ITypeRef) type)._shouldReload()) {
-      TypeSystem.lock();
-      try {
-        type = _types.get(fullyQualifiedName);
-        if (type == null || ((ITypeRef) type)._shouldReload()) {
-          DBConnection connInfo;
-          try {
-            connInfo = getConnInfo(namespace);
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-          DBTypeData typeData = _typeDataByNamespace.get(namespace);
-          if (typeData != null) {
-            TableTypeData tableTypeData = typeData.getTable(relativeName);
-            if (tableTypeData != null && connInfo != null && connInfo.getAllTypeNames().contains(fullyQualifiedName)) {
-              type = TypeSystem.getOrCreateTypeReference(new DBType(relativeName, this, connInfo, tableTypeData));
-              _types.put(fullyQualifiedName, type);
-            }
-          }
-        }
-      } finally {
-        TypeSystem.unlock();
+      return new TransactionType(dbTypeData, this);
+    } else {
+      TableTypeData tableTypeData = dbTypeData.getTable(relativeName);
+      if (tableTypeData == null) {
+        return null;
+      } else {
+        return new DBType(relativeName, this, null, tableTypeData);
       }
     }
-    return type;
   }
 
   @Override
   public Set<? extends CharSequence> getAllTypeNames() {
-    Set<String> typeNames = new HashSet<String>();
-    for (String namespace : getAllFullNamespaces()) {
-      typeNames.add(namespace + ".Transaction");
-      try {
-        typeNames.addAll(getConnInfo(namespace).getAllTypeNames());
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    }
-    return typeNames;
+    return _typeNames.get();
   }
 
   @Override
   public Set<? extends CharSequence> getAllNamespaces() {
-    Set<String> allNamespaces = new HashSet<String>();
-    for (String namespace : getAllFullNamespaces()) {
-      String[] nsComponentsArr = namespace.split("\\.");
-      for (int i = 0; i < nsComponentsArr.length; i++) {
-        String nsName = "";
-        for (int n = 0; n < i + 1; n++) {
-          if (n > 0) {
-            nsName += ".";
-          }
-          nsName += nsComponentsArr[n];
-        }
-        allNamespaces.add(nsName);
-      }
-    }
-    return allNamespaces;
+    return _namespaces.get();
   }
 
   @Override
@@ -211,7 +173,7 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     if (lastDot == -1) {
       return false;
     }
-    return getAllFullNamespaces().contains(fullyQualifiedTypeName.substring(0, lastDot));
+    return _typeDataByNamespace.get().keySet().contains(fullyQualifiedTypeName.substring(0, lastDot));
   }
 
   @Override
@@ -227,6 +189,45 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     } else {
       return null;
     }
+  }
+
+  private Map<String, DBTypeData> initializeDBTypeData() {
+    IDBDataSource dataSource = new DDLDBDataSource();
+    Map<String, DBData> dbDataMap = dataSource.getDBData(_module);
+    Map<String, DBTypeData> dbTypeDataMap = new HashMap<String, DBTypeData>();
+    for (Map.Entry<String, DBData> dbDataEntry : dbDataMap.entrySet()) {
+      dbTypeDataMap.put(dbDataEntry.getKey(), new DBTypeData(dbDataEntry.getKey(), dbDataEntry.getValue()));
+    }
+    return dbTypeDataMap;
+  }
+
+  private Set<String> initializeNamespaces() {
+    Set<String> allNamespaces = new HashSet<String>();
+    for (String namespace : _typeDataByNamespace.get().keySet()) {
+      String[] nsComponentsArr = namespace.split("\\.");
+      for (int i = 0; i < nsComponentsArr.length; i++) {
+        String nsName = "";
+        for (int n = 0; n < i + 1; n++) {
+          if (n > 0) {
+            nsName += ".";
+          }
+          nsName += nsComponentsArr[n];
+        }
+        allNamespaces.add(nsName);
+      }
+    }
+    return allNamespaces;
+  }
+
+  private Set<String> initializeTypeNames() {
+    Set<String> typeNames = new HashSet<String>();
+
+    for (DBTypeData dbTypeData : _typeDataByNamespace.get().values()) {
+      typeNames.add(dbTypeData.getNamespace() + "." + TransactionType.TYPE_NAME);
+      typeNames.addAll(dbTypeData.getTypeNames());
+    }
+
+    return typeNames;
   }
 
 }

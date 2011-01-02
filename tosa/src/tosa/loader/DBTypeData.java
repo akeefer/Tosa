@@ -4,6 +4,7 @@ import tosa.Join;
 import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -31,16 +32,22 @@ public class DBTypeData {
     processDBData();
   }
 
+  public String getNamespace() {
+    return _namespace;
+  }
+
   public TableTypeData getTable(String tableName) {
     return _tables.get(tableName);
   }
 
-  private void processDBData() {
-    _typeNames = new HashSet<String>();
+  public Set<String> getTypeNames() {
+    // TODO - AHK - Make sure it's unmodifiable
+    return _typeNames;
+  }
 
+  private void processDBData() {
     // Create the initial set of objects
     for (TableData table : _dbData.getTables()) {
-      _typeNames.add(table.getName());
       _tables.put(table.getName(), new TableTypeData(table));
     }
 
@@ -56,6 +63,7 @@ public class DBTypeData {
           _tables.get(secondTable).addJoin(new Join(joinName == null ? firstTable + "s" : joinName, firstTable, tableTypeData.getTableName()));
         }
       } else {
+        _typeNames.add(_namespace + "." + tableTypeData.getTableName());
         for (ColumnTypeData column : tableTypeData.getColumns()) {
           if (column.isFK()) {
             _tables.get(column.getFkTarget()).addIncomingFK(table.getName());
