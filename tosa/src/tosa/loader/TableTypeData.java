@@ -76,7 +76,7 @@ public class TableTypeData {
     // TODO - AHK - Is there any good way to make the list of joins/fks immutable?
   }
 
-  DBTypeData getDbTypeData() {
+  public DBTypeData getDbTypeData() {
     return _dbTypeData;
   }
 

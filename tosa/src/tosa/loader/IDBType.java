@@ -11,6 +11,5 @@ import tosa.DBConnection;
  * To change this template use File | Settings | File Templates.
  */
 public interface IDBType extends IEnhanceableType {
-
-  public DBConnection getConnection();
+  public TableTypeData getTableTypeData();
 }

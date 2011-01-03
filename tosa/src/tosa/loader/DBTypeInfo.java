@@ -234,7 +234,7 @@ public class DBTypeInfo extends BaseTypeInfo {
           }
         }).build(this);
     _properties = new HashMap<String, IPropertyInfo>();
-    for (ColumnTypeData column : dbType.getTypeData().getColumns()) {
+    for (ColumnTypeData column : dbType.getTableTypeData().getColumns()) {
       IPropertyInfo prop = makeProperty(column);
       _properties.put(prop.getName(), prop);
     }
@@ -357,7 +357,7 @@ public class DBTypeInfo extends BaseTypeInfo {
   }
 
   private Connection connect() throws SQLException {
-    return getOwnersType().getConnection().connect();
+    return getOwnersType().getTableTypeData().getDbTypeData().getConnection().connect();
   }
 
   CachedDBObject selectById(Object id) throws SQLException {
@@ -500,7 +500,7 @@ public class DBTypeInfo extends BaseTypeInfo {
   }
 
   private CachedDBObject buildObject(ResultSet result) throws SQLException {
-    CachedDBObject obj = new CachedDBObject(getOwnersType().getRelativeName(), (DBTypeLoader) getOwnersType().getTypeLoader(), getOwnersType().getConnection(), false);
+    CachedDBObject obj = new CachedDBObject(getOwnersType(), false);
     for (IPropertyInfo prop : getProperties()) {
       if (prop instanceof DBPropertyInfo) {
         DBPropertyInfo dbProp = (DBPropertyInfo) prop;
@@ -537,16 +537,16 @@ public class DBTypeInfo extends BaseTypeInfo {
   }
 
   CachedDBObject create() {
-    return new CachedDBObject(getOwnersType().getRelativeName(), (DBTypeLoader) getOwnersType().getTypeLoader(), getOwnersType().getConnection(), true);
+    return new CachedDBObject(getOwnersType(), true);
   }
 
   private Map<String, IPropertyInfo> makeArrayProperties() {
     Map<String, IPropertyInfo> arrayProps = new HashMap<String, IPropertyInfo>();
-    for (String fkTable : getOwnersType().getTypeData().getIncomingFKs()) {
+    for (String fkTable : getOwnersType().getTableTypeData().getIncomingFKs()) {
       IPropertyInfo arrayProp = makeArrayProperty(fkTable);
       arrayProps.put(arrayProp.getName(), arrayProp);
     }
-    for (Join joinTable : getOwnersType().getTypeData().getJoins()) {
+    for (Join joinTable : getOwnersType().getTableTypeData().getJoins()) {
       IPropertyInfo joinProp = makeJoinProperty(joinTable);
       arrayProps.put(joinProp.getName(), joinProp);
     }
@@ -582,7 +582,7 @@ public class DBTypeInfo extends BaseTypeInfo {
   }
 
   private IPropertyInfo makeJoinProperty(final Join join) {
-    String namespace = getOwnersType().getConnection().getNamespace();
+    String namespace = getOwnersType().getNamespace();
     final IType fkType = getOwnersType().getTypeLoader().getType(namespace + "." + join.getTargetTable());
     return new PropertyInfoBuilder().withName(join.getPropName()).withType(IJavaType.LIST.getGenericType().getParameterizedType(fkType))
         .withWritable(false).withAccessor(new IPropertyAccessor() {
@@ -604,7 +604,7 @@ public class DBTypeInfo extends BaseTypeInfo {
               List<CachedDBObject> result = ((DBTypeInfo) fkType.getTypeInfo()).findFromSql(
                   "select * from \"" + join.getTargetTable() + "\", \"" + j + "\" as j where j.\"" + t + "_id\" = \"" + join.getTargetTable() + "\".\"id\" and j.\"" + o + "_id\" = " + id
               );
-              return new JoinResult(result, getOwnersType().getConnection(), j, o, t, id);
+              return new JoinResult(result, getOwnersType().getTableTypeData().getDbTypeData(), j, o, t, id);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }

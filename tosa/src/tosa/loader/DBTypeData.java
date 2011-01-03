@@ -1,5 +1,6 @@
 package tosa.loader;
 
+import tosa.DBConnection;
 import tosa.Join;
 import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
@@ -24,8 +25,10 @@ public class DBTypeData {
   private final DBData _dbData;
   private final Map<String, TableTypeData> _tables;
   private final Set<String> _typeNames;
+  private final DBTypeLoader _typeLoader;
+  private final DBConnection _connection;
 
-  public DBTypeData(String namespace, DBData dbData) {
+  public DBTypeData(String namespace, DBData dbData, DBTypeLoader typeLoader) {
     _namespace = namespace;
     _dbData = dbData;
     Map<String, TableTypeData> tables = new HashMap<String, TableTypeData>();
@@ -35,6 +38,8 @@ public class DBTypeData {
 
     _tables = Collections.unmodifiableMap(tables);
     _typeNames = Collections.unmodifiableSet(typeNames);
+    _typeLoader = typeLoader;
+    _connection = new DBConnection(dbData.getConnectionString(), typeLoader);
   }
 
   public String getNamespace() {
@@ -51,6 +56,10 @@ public class DBTypeData {
 
   public Set<String> getTypeNames() {
     return _typeNames;
+  }
+
+  public DBConnection getConnection() {
+    return _connection;
   }
 
   private void processDBData(Map<String, TableTypeData> tables, Set<String> typeNames) {

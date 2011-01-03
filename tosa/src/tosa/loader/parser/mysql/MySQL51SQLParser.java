@@ -47,21 +47,21 @@ public class MySQL51SQLParser implements SQLParserConstants, ISQLParser {
             "    \"Posted\" TIMESTAMP\n" +
             ");\n";
 
-    DBData data = new MySQL51SQLParser().parseDDLFile(testSQL);
+    List<TableData> tables = new MySQL51SQLParser().parseDDLFile(testSQL);
     System.out.println("Done");
   }
 
   private SQLTokenizer _tokenizer;
 
   @Override
-  public DBData parseDDLFile(String fileContents) {
+  public List<TableData> parseDDLFile(String fileContents) {
     _tokenizer = new SQLTokenizer(fileContents);
     List<TableData> tables = new ArrayList<TableData>();
     // TODO - AHK - Other Create calls?  Other stuff?  Closing semi-colon?
     for (TableData table = parseCreate(); table != null; table = parseCreate()) {
       tables.add(table);
     }
-    return new DBData(tables);
+    return tables;
   }
 
   private String consumeToken() {

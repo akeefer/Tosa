@@ -1,5 +1,7 @@
 package tosa;
 
+import tosa.loader.DBTypeData;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,16 +22,16 @@ public class JoinResult implements List<CachedDBObject> {
 
   private List<CachedDBObject> _result;
 
-  private DBConnection _conn;
+  private DBTypeData _dbTypeData;
   private String _joinTableName;
   private String _srcTableName;
   private String _targetTableName;
   private String _id;
 
-  public JoinResult(List<CachedDBObject> result, DBConnection conn, String joinTableName,
+  public JoinResult(List<CachedDBObject> result, DBTypeData dbTypeData, String joinTableName,
                     String srcTableName, String targetTableName, String id) {
     _result = result;
-    _conn = conn;
+    _dbTypeData = dbTypeData;
     _joinTableName = joinTableName;
     _srcTableName = srcTableName;
     _targetTableName = targetTableName;
@@ -39,7 +41,7 @@ public class JoinResult implements List<CachedDBObject> {
   @Override
   public boolean add(CachedDBObject obj) {
     try {
-      Connection conn = _conn.connect();
+      Connection conn = _dbTypeData.getConnection().connect();
       try {
         Statement stmt = conn.createStatement();
         try {
@@ -68,7 +70,7 @@ public class JoinResult implements List<CachedDBObject> {
       query.setLength(query.length() - 2);
     }
     try {
-      Connection conn = _conn.connect();
+      Connection conn = _dbTypeData.getConnection().connect();
       try {
         Statement stmt = conn.createStatement();
         try {
@@ -90,11 +92,11 @@ public class JoinResult implements List<CachedDBObject> {
     if (o instanceof CachedDBObject) {
       CachedDBObject obj = (CachedDBObject) o;
       try {
-        Connection conn = _conn.connect();
+        Connection conn = _dbTypeData.getConnection().connect();
         try {
           Statement stmt = conn.createStatement();
           try {
-            if (_conn.joinTableHasId(_joinTableName)) {
+            if (_dbTypeData.getTable(_joinTableName).hasId()) {
               ResultSet results = stmt.executeQuery("select * from \"" + _joinTableName + "\" where \"" + _srcTableName + "_id\" = " + _id + " and \"" + _targetTableName + "_id\" = " + obj.getColumns().get("id") + " limit 1");
               try {
                 if (results.first()) {
@@ -124,7 +126,7 @@ public class JoinResult implements List<CachedDBObject> {
   @Override
   public void clear() {
     try {
-      Connection conn = _conn.connect();
+      Connection conn = _dbTypeData.getConnection().connect();
       try {
         Statement stmt = conn.createStatement();
         try {

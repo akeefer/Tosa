@@ -68,33 +68,6 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     return _module;
   }
 
-//  private Set<String> getAllFullNamespaces() {
-//    Set<String> allFullNamespaces = new HashSet<String>();
-//    for (Pair<String, IFile> dbcFile : _module.getResourceAccess().findAllFilesByExtension(".dbc")) {
-//      String fileName = dbcFile.getFirst();
-//      allFullNamespaces.add(fileName.substring(0, fileName.length() - ".dbc".length()).replace("/", "."));
-//    }
-//    return allFullNamespaces;
-//  }
-//
-//  private DBConnection getConnInfo(String namespace) throws IOException {
-//    DBConnection connInfo = _connInfos.get(namespace);
-//    if (connInfo == null && getAllFullNamespaces().contains(namespace)) {
-//      URL connRsrc = _module.getResource(namespace.replace('.', '/') + ".dbc");
-//      InputStream connRsrcStream = connRsrc.openStream();
-//      StringBuilder connUrlBuilder = new StringBuilder();
-//      String line;
-//      BufferedReader reader = new BufferedReader(new InputStreamReader(connRsrcStream));
-//      while ((line = reader.readLine()) != null) {
-//        connUrlBuilder.append(line);
-//      }
-//      String connUrl = connUrlBuilder.toString();
-//      connInfo = new DBConnection(connUrl, namespace, this);
-//      _connInfos.put(namespace, connInfo);
-//    }
-//    return connInfo;
-//  }
-
   @Override
   public IType getIntrinsicType(Class javaClass) {
     return null;
@@ -183,9 +156,10 @@ public class DBTypeLoader implements IExtendedTypeLoader {
 
   @Override
   public IType getIntrinsicTypeFromObject(Object object) {
+    // TODO - AHK - This probably needs to work for the Transaction object as well
     if (object instanceof CachedDBObject) {
       CachedDBObject dbObj = (CachedDBObject) object;
-      return getType(dbObj.getConnection().getNamespace() + "." + dbObj.getTableName());
+      return dbObj.getIntrinsicType();
     } else {
       return null;
     }
@@ -196,7 +170,7 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     Map<String, DBData> dbDataMap = dataSource.getDBData(_module);
     Map<String, DBTypeData> dbTypeDataMap = new HashMap<String, DBTypeData>();
     for (Map.Entry<String, DBData> dbDataEntry : dbDataMap.entrySet()) {
-      dbTypeDataMap.put(dbDataEntry.getKey(), new DBTypeData(dbDataEntry.getKey(), dbDataEntry.getValue()));
+      dbTypeDataMap.put(dbDataEntry.getKey(), new DBTypeData(dbDataEntry.getKey(), dbDataEntry.getValue(), this));
     }
     return dbTypeDataMap;
   }

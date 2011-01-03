@@ -34,13 +34,8 @@ public class DBType extends TypeBase implements IDBType {
     };
   }
 
-  TableTypeData getTypeData() {
+  public TableTypeData getTableTypeData() {
     return _typeData;
-  }
-
-  @Override
-  public DBConnection getConnection() {
-    return null;
   }
 
   @Override

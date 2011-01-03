@@ -1,5 +1,7 @@
 package tosa.loader.data;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -12,20 +14,15 @@ import java.util.List;
 public class DBData {
   // TODO - AHK - Additional metadata about the database, such as the type
   private final List<TableData> _tables;
-  private String _connectionString;
+  private final String _connectionString;
 
-  public DBData(List<TableData> tables) {
-    // TODO - AHK - Should copy and wrap in an unmodifiable list
-    _tables = tables;
+  public DBData(List<TableData> tables, String connectionString) {
+    _tables = Collections.unmodifiableList(new ArrayList<TableData>(tables));
+    _connectionString = connectionString;
   }
 
-  // TODO - AHK - Should this be settable?
   public String getConnectionString() {
     return _connectionString;
-  }
-
-  public void setConnectionString(String connectionString) {
-    _connectionString = connectionString;
   }
 
   public List<TableData> getTables() {

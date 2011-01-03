@@ -1,6 +1,9 @@
 package tosa.loader.parser;
 
 import tosa.loader.data.DBData;
+import tosa.loader.data.TableData;
+
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -10,5 +13,5 @@ import tosa.loader.data.DBData;
  * To change this template use File | Settings | File Templates.
  */
 public interface ISQLParser {
-  DBData parseDDLFile(String fileContents);
+  List<TableData> parseDDLFile(String fileContents);
 }
