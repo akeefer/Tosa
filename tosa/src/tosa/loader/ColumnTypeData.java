@@ -12,7 +12,6 @@ import tosa.loader.data.ColumnData;
  * To change this template use File | Settings | File Templates.
  */
 public class ColumnTypeData {
-  // TODO - AHK - Mark stuff as final?
   private final TableTypeData _tableTypeData;
   private final ColumnData _columnData;
   private final boolean _isFK;

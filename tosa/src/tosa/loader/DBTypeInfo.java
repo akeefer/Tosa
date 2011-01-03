@@ -542,15 +542,14 @@ public class DBTypeInfo extends BaseTypeInfo {
 
   private Map<String, IPropertyInfo> makeArrayProperties() {
     Map<String, IPropertyInfo> arrayProps = new HashMap<String, IPropertyInfo>();
-    // TODO - AHK
-//    for (String fkTable : getOwnersType().getConnection().getFKs(getOwnersType().getRelativeName())) {
-//      IPropertyInfo arrayProp = makeArrayProperty(fkTable);
-//      arrayProps.put(arrayProp.getName(), arrayProp);
-//    }
-//    for (Join joinTable : getOwnersType().getConnection().getJoins(getOwnersType().getRelativeName())) {
-//      IPropertyInfo joinProp = makeJoinProperty(joinTable);
-//      arrayProps.put(joinProp.getName(), joinProp);
-//    }
+    for (String fkTable : getOwnersType().getTypeData().getIncomingFKs()) {
+      IPropertyInfo arrayProp = makeArrayProperty(fkTable);
+      arrayProps.put(arrayProp.getName(), arrayProp);
+    }
+    for (Join joinTable : getOwnersType().getTypeData().getJoins()) {
+      IPropertyInfo joinProp = makeJoinProperty(joinTable);
+      arrayProps.put(joinProp.getName(), joinProp);
+    }
     return arrayProps;
   }
 
@@ -563,8 +562,8 @@ public class DBTypeInfo extends BaseTypeInfo {
   }
 
   private IPropertyInfo makeArrayProperty(String fkTable) {
-    String namespace = getOwnersType().getConnection().getNamespace();
-    final IType fkType = getOwnersType().getTypeLoader().getType(namespace + "." + fkTable);
+    String namespace = getOwnersType().getNamespace();
+    final IType fkType = TypeSystem.getByFullName(namespace + "." + fkTable);
     return new PropertyInfoBuilder().withName(fkTable + "s").withType(IJavaType.LIST.getGenericType().getParameterizedType(fkType))
         .withWritable(false).withAccessor(new IPropertyAccessor() {
           @Override

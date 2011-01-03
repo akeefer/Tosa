@@ -117,4 +117,12 @@ public class TableTypeData {
   void addIncomingFK(String referencingTable) {
     _incomingFKs.add(referencingTable);
   }
+
+  public List<Join> getJoins() {
+    return _joins;
+  }
+
+  public List<String> getIncomingFKs() {
+    return _incomingFKs;
+  }
 }
