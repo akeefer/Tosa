@@ -24,7 +24,7 @@ function clean() {
 }
 
 function build() {
-  buildModule( file("."), classpath().withFileset( gosuHome.file( "jars" ).fileset() ), "tosa.jar" )
+  buildModule( file("tosa"), classpath().withFileset( gosuHome.file( "jars" ).fileset() ), "tosa.jar" )
 }
 
 private function buildModule(root : File, cp : Path, jarName : String) {
