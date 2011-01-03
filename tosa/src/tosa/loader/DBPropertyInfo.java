@@ -5,6 +5,7 @@ import gw.lang.reflect.IPropertyAccessor;
 import gw.lang.reflect.IType;
 import gw.lang.reflect.ITypeInfo;
 import gw.lang.reflect.PropertyInfoBase;
+import gw.lang.reflect.TypeSystem;
 import tosa.CachedDBObject;
 
 import java.sql.SQLException;
@@ -20,34 +21,15 @@ import java.util.List;
  */
 public class DBPropertyInfo extends PropertyInfoBase {
 
-  private String _name;
-  private IType _type;
-  private boolean _fk;
-  private boolean _named;
-  private ColumnTypeData _column;
+  private final String _name;
+  private final IType _type;
+  private final ColumnTypeData _column;
 
   public DBPropertyInfo(ITypeInfo container, ColumnTypeData column) {
     super(container);
     _column = column;
-    String propName = column.getColumnName();
-    if (propName.endsWith("_id")) {
-      String typeName;
-      if (propName.substring(0, propName.length() - 3).contains("_")) {
-        int underscorePos = propName.lastIndexOf('_', propName.length() - 4);
-        _name = propName.substring(0, underscorePos);
-        typeName = propName.substring(underscorePos + 1, propName.length() - 3);
-        _named = true;
-      } else {
-        _name = propName.substring(0, propName.length() - 3);
-        typeName = _name;
-      }
-      String namespace = ((IDBType) container.getOwnersType()).getConnection().getNamespace();
-      _type = container.getOwnersType().getTypeLoader().getType(namespace + "." + typeName);
-      _fk = true;
-    } else {
-      _name = propName;
-      _type = column.getType();
-    }
+    _name = column.getPropertyName();
+    _type = TypeSystem.getByFullName(_column.getPropertyTypeName());
   }
 
   @Override
@@ -67,30 +49,7 @@ public class DBPropertyInfo extends PropertyInfoBase {
 
   @Override
   public IPropertyAccessor getAccessor() {
-    return new IPropertyAccessor() {
-      @Override
-      public void setValue(Object ctx, Object value) {
-        if (_fk && value != null) {
-          ((CachedDBObject) ctx).getColumns().put(getColumnName(), ((CachedDBObject) value).getColumns().get("id"));
-        } else {
-          ((CachedDBObject) ctx).getColumns().put(getColumnName(), value);
-        }
-      }
-
-      @Override
-      public Object getValue(Object ctx) {
-        Object columnValue = ((CachedDBObject) ctx).getColumns().get(getColumnName());
-        if (_fk && columnValue != null) {
-          try {
-            return ((DBTypeInfo) _type.getTypeInfo()).selectById(columnValue);
-          } catch (SQLException e) {
-            throw new RuntimeException(e);
-          }
-        } else {
-          return columnValue;
-        }
-      }
-    };
+    return new DBPropertyAccessor();
   }
 
   @Override
@@ -109,15 +68,32 @@ public class DBPropertyInfo extends PropertyInfoBase {
   }
 
   public String getColumnName() {
-    if (_fk) {
-      if (_named) {
-        return getName() + "_" + _type.getRelativeName() + "_id";
-      } else {
-        return getName() + "_id";
+    return _column.getColumnData().getName();
+  }
+
+  private class DBPropertyAccessor implements IPropertyAccessor {
+    @Override
+      public void setValue(Object ctx, Object value) {
+        if (_column.isFK() && value != null) {
+          ((CachedDBObject) ctx).getColumns().put(getColumnName(), ((CachedDBObject) value).getColumns().get("id"));
+        } else {
+          ((CachedDBObject) ctx).getColumns().put(getColumnName(), value);
+        }
       }
-    } else {
-      return getName();
-    }
+
+      @Override
+      public Object getValue(Object ctx) {
+        Object columnValue = ((CachedDBObject) ctx).getColumns().get(getColumnName());
+        if (_column.isFK() && columnValue != null) {
+          try {
+            return ((DBTypeInfo) _type.getTypeInfo()).selectById(columnValue);
+          } catch (SQLException e) {
+            throw new RuntimeException(e);
+          }
+        } else {
+          return columnValue;
+        }
+      }
   }
 
 }
