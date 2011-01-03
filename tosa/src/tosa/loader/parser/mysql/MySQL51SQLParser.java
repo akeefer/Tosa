@@ -519,7 +519,8 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       return new ColumnType(Types.DECIMAL, DECIMAL, ColumnType.BIG_DECIMAL_ITYPE);
     } else if (accept(DATE)) {
       // TODO - AHK
-      return new ColumnType(Types.DATE, DATE, ColumnType.DATE_ITYPE);
+//      return new ColumnType(Types.DATE, DATE, ColumnType.DATE_ITYPE);
+      return new ColumnType(Types.DATE, DATE, "java.sql.Date");
     } else if (accept(TIME)) {
       // TODO - AHK
       return new ColumnType(Types.TIME, TIME, ColumnType.DATE_ITYPE);
