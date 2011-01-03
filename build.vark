@@ -20,7 +20,7 @@ var gosuHome = file( ghVar )
 var tosaHome = file( "." )
 
 function clean() {
-  file( "build" ).deleteRecursively()
+  file( "tosa/build" ).deleteRecursively()
 }
 
 function build() {
