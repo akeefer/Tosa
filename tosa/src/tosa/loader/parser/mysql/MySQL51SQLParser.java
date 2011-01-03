@@ -80,6 +80,15 @@ public class MySQL51SQLParser implements SQLParserConstants, ISQLParser {
     _tokenizer.expectIgnoreCase(expected);
   }
 
+  private String stripQuotes(String str) {
+    if (str.startsWith("\"")) {
+      str = str.substring(1);
+    }
+    if (str.endsWith("\"")) {
+      str = str.substring(0, str.length() - 1);
+    }
+    return str;
+  }
 
   // The grammar for this parser is based on the documentation at http://dev.mysql.com/doc/refman/5.1/en/create-table.html
 
@@ -105,7 +114,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       accept(TEMPORARY); // Discard; we don't care
       expect(TABLE);
       accept(IF, NOT, EXISTS);
-      String tableName = consumeToken();
+      String tableName = stripQuotes(consumeToken());
       List<ColumnData> columns = null;
       if (accept(LIKE)) {
         String likeTableName = consumeToken();
@@ -310,6 +319,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
     // Note:  In the syntax defined in the MySQL docs they don't include the name as part of the column_definition
     // production, but I'm moving it in there for the sake of sanity
     String name = consumeToken();
+    name = stripQuotes(name);
     ColumnType columnType = parseDataType();
     while (parseColumnOption()) {
       // Keep looping to consume all the options

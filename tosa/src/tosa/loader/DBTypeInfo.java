@@ -542,14 +542,15 @@ public class DBTypeInfo extends BaseTypeInfo {
 
   private Map<String, IPropertyInfo> makeArrayProperties() {
     Map<String, IPropertyInfo> arrayProps = new HashMap<String, IPropertyInfo>();
-    for (String fkTable : getOwnersType().getConnection().getFKs(getOwnersType().getRelativeName())) {
-      IPropertyInfo arrayProp = makeArrayProperty(fkTable);
-      arrayProps.put(arrayProp.getName(), arrayProp);
-    }
-    for (Join joinTable : getOwnersType().getConnection().getJoins(getOwnersType().getRelativeName())) {
-      IPropertyInfo joinProp = makeJoinProperty(joinTable);
-      arrayProps.put(joinProp.getName(), joinProp);
-    }
+    // TODO - AHK
+//    for (String fkTable : getOwnersType().getConnection().getFKs(getOwnersType().getRelativeName())) {
+//      IPropertyInfo arrayProp = makeArrayProperty(fkTable);
+//      arrayProps.put(arrayProp.getName(), arrayProp);
+//    }
+//    for (Join joinTable : getOwnersType().getConnection().getJoins(getOwnersType().getRelativeName())) {
+//      IPropertyInfo joinProp = makeJoinProperty(joinTable);
+//      arrayProps.put(joinProp.getName(), joinProp);
+//    }
     return arrayProps;
   }
 

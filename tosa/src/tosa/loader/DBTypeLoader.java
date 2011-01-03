@@ -127,7 +127,7 @@ public class DBTypeLoader implements IExtendedTypeLoader {
       if (tableTypeData == null) {
         return null;
       } else {
-        return new DBType(relativeName, this, null, tableTypeData);
+        return new DBType(this, tableTypeData);
       }
     }
   }
