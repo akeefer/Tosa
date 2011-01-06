@@ -1,5 +1,6 @@
 package test;
 
+import gw.lang.init.GosuInitialization;
 import junit.framework.TestCase;
 import org.junit.runner.RunWith;
 
@@ -11,11 +12,14 @@ import org.junit.runner.RunWith;
  * To change this template use File | Settings | File Templates.
  */
 @RunWith(GosuTestRunner.class)
-public abstract class GosuTestWrapper {
+public abstract class GosuTestWrapper implements ITestWrapper {
 
   public GosuTestWrapper() {
     System.out.println("Here");
   }
 
-  public abstract String getWrappedTestName();
+  @Override
+  public void initializeGosu() {
+    GosuInitialization.initializeRuntime(GosuInitHelper.constructPathEntriesFromSystemClasspath("tosa.loader.DBTypeLoader"));
+  }
 }
