@@ -19,6 +19,7 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="H2" level="project" />
   </component>
 </module>
 

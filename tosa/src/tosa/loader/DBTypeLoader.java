@@ -204,4 +204,9 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     return typeNames;
   }
 
+  // TODO - AHK - This doesn't really belong here, but for now . . .
+  public DBTypeData getTypeDataForNamespace(String namespace) {
+    return _typeDataByNamespace.get().get(namespace);
+  }
+
 }

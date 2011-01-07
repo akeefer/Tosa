@@ -1,1 +1,1 @@
-jdbc:h2:test.db;USER=sa;PASSWORD=
+jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1

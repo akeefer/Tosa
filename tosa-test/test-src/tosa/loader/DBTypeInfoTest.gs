@@ -6,22 +6,64 @@ uses gw.lang.reflect.IPropertyInfo
 uses gw.lang.reflect.features.PropertyReference
 uses org.junit.Assert
 uses org.junit.Before
+uses org.junit.BeforeClass
 uses org.junit.Test
+uses test.testdb.Bar
+uses test.testdb.SortPage
+uses test.testdb.Foo
+uses test.testdb.Baz
 
 class DBTypeInfoTest {
 
   static final var NUM_FOOS = 1
 
+  @BeforeClass
+  static function beforeTestClass() {
+    print("*** Before class")
+    TosaTestDBInit.createDatabase()
+    
+    
+    var bar = new Bar(){:Date = new java.sql.Date(new java.util.Date("4/22/2009").Time), :Misc = "misc"}
+    bar.update()
+    new SortPage(){:Number = 1}.update()
+    new SortPage(){:Number = 2}.update()
+    new SortPage(){:Number = 3}.update()
+    new SortPage(){:Number = 4}.update()
+    new SortPage(){:Number = 5}.update()
+    new SortPage(){:Number = 1}.update()
+    new SortPage(){:Number = 2}.update()
+    new SortPage(){:Number = 3}.update()
+    new SortPage(){:Number = 4}.update()
+    new SortPage(){:Number = 5}.update()
+    new SortPage(){:Number = 1}.update()
+    new SortPage(){:Number = 2}.update()
+    new SortPage(){:Number = 3}.update()
+    new SortPage(){:Number = 4}.update()
+    new SortPage(){:Number = 5}.update()
+    var sortPage16 = new SortPage(){:Number = 1}
+    sortPage16.update()
+    new SortPage(){:Number = 2}.update()
+    new SortPage(){:Number = 3}.update()
+    new SortPage(){:Number = 4}.update()
+    new SortPage(){:Number = 5}.update()
+    
+    
+    var foo =new Foo(){:FirstName = "Charlie", :LastName="Brown", :Bar=bar, :Address="1234 Main St. \nCentreville, KS 12345", :Named = sortPage16}
+    foo.update()
+    
+    var baz = new Baz(){:Text = "First"}
+    baz.update()
+    
+    foo.Bazs.add(baz)
+    foo.update()
+    
+    bar.Relatives.add(baz)
+    bar.update()
+  }
+
   @Before
   function beforeTestMethod() {
-      new File(System.getProperty("user.dir")).eachChild( \ f -> {
-        if(f.Name.endsWith(".bak")) {
-            var newFile = new File(f.AbsolutePath.substring(0, f.AbsolutePath.length() - ".bak".length()))
-            f.copyTo(newFile)
-        } else if(f.Name.endsWith(".log.db")) {
-            f.delete()
-        }
-      } )
+    // TODO - AHK - Restore the database to its previous state
   }
 
   @Test
@@ -35,11 +77,6 @@ class DBTypeInfoTest {
       Assert.assertTrue(types.contains("test.testdb.Bar"))
       Assert.assertTrue(types.contains("test.testdb.Baz"))
       Assert.assertTrue(types.contains("test.testdb.Transaction"))
-  }
-
-  @Test
-  function testFailure() {
-    Assert.fail("foo")
   }
 
   @Test
@@ -325,6 +362,8 @@ class DBTypeInfoTest {
   function testCreateNew() {
       var newFoo = new test.testdb.Foo(){:FirstName = "Linus", :LastName = "Van Pelt"}
       newFoo.update()
+      
+      print(">> newFoo id is " + newFoo.id)
 
       Assert.assertNotNull(newFoo.id)
       Assert.assertEquals(NUM_FOOS + 1, test.testdb.Foo.find(null).Count)
@@ -336,7 +375,9 @@ class DBTypeInfoTest {
 
   @Test
   function testUpdateRegularColumns() {
+      print(">> Here")
       var foo = test.testdb.Foo.fromID(1)
+      print(">> Now here")
       foo.FirstName = "Leroy"
       foo.update()
 
@@ -346,7 +387,9 @@ class DBTypeInfoTest {
 
   @Test
   function testUpdateTextColumn() {
+      print("*** Here")
       var foo = test.testdb.Foo.fromID(1)
+      print("*** And here")
       foo.Address = "54321 Centre Ave.\nMiddleton, IA 52341"
       foo.update()
 
