@@ -19,18 +19,13 @@ import java.util.List;
  */
 public class DBType extends TypeBase implements IDBType {
 
-  private String _tableName;
   private DBTypeLoader _typeLoader;
   private LazyVar<DBTypeInfo> _typeInfo;
-  private DBConnection _conn;
   private TableTypeData _typeData;
 
-  public DBType(String relativeName, DBTypeLoader dbTypeLoader,
-                DBConnection connInfo, TableTypeData typeData) {
-    _tableName = relativeName;
+  public DBType(DBTypeLoader dbTypeLoader, TableTypeData typeData) {
     _typeLoader = dbTypeLoader;
     _typeData = typeData;
-    _conn = connInfo;
     _typeInfo = new LazyVar<DBTypeInfo>() {
       @Override
       protected DBTypeInfo init() {
@@ -39,28 +34,23 @@ public class DBType extends TypeBase implements IDBType {
     };
   }
 
-  TableTypeData getTypeData() {
+  public TableTypeData getTableTypeData() {
     return _typeData;
   }
 
   @Override
-  public DBConnection getConnection() {
-    return _conn;
-  }
-
-  @Override
   public String getName() {
-    return _conn.getNamespace() + "." + _tableName;
+    return getNamespace() + "." + getRelativeName();
   }
 
   @Override
   public String getRelativeName() {
-    return _tableName;
+    return _typeData.getTableName();
   }
 
   @Override
   public String getNamespace() {
-    return _conn.getNamespace();
+    return _typeData.getDbTypeData().getNamespace();
   }
 
   @Override

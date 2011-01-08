@@ -1,1 +1,1 @@
-Gosu-Typeloaders: DBTypeLoader
+Gosu-Typeloaders: tosa.loader.DBTypeLoader

@@ -1,6 +1,8 @@
 # Compilation artifacts #
 build/*
 out/*
+tosa/build/*
+tosa/out/*
 
 # IntelliJ Workspace - This will differ per user#
 .idea/workspace.xml

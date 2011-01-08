@@ -1,9 +1,12 @@
 package tosa.loader;
 
+import tosa.DBConnection;
 import tosa.Join;
 import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -17,48 +20,70 @@ import java.util.Set;
  * To change this template use File | Settings | File Templates.
  */
 public class DBTypeData {
-  private String _namespace;
-  private DBData _dbData;
-  private Map<String, TableTypeData> _tables;
-  private Set<String> _typeNames;
 
-  public DBTypeData(String namespace, DBData dbData) {
+  private final String _namespace;
+  private final DBData _dbData;
+  private final Map<String, TableTypeData> _tables;
+  private final Set<String> _typeNames;
+  private final DBTypeLoader _typeLoader;
+  private final DBConnection _connection;
+
+  public DBTypeData(String namespace, DBData dbData, DBTypeLoader typeLoader) {
     _namespace = namespace;
     _dbData = dbData;
-    _tables = new HashMap<String, TableTypeData>();
-    _typeNames = new HashSet<String>();
+    Map<String, TableTypeData> tables = new HashMap<String, TableTypeData>();
+    Set<String> typeNames = new HashSet<String>();
 
-    processDBData();
+    processDBData(tables, typeNames);
+
+    _tables = Collections.unmodifiableMap(tables);
+    _typeNames = Collections.unmodifiableSet(typeNames);
+    _typeLoader = typeLoader;
+    _connection = new DBConnection(dbData.getConnectionString(), typeLoader);
+  }
+
+  public String getNamespace() {
+    return _namespace;
   }
 
   public TableTypeData getTable(String tableName) {
     return _tables.get(tableName);
   }
 
-  private void processDBData() {
-    _typeNames = new HashSet<String>();
+  public Collection<TableTypeData> getAllTables() {
+    return _tables.values();
+  }
 
+  public Set<String> getTypeNames() {
+    return _typeNames;
+  }
+
+  public DBConnection getConnection() {
+    return _connection;
+  }
+
+  private void processDBData(Map<String, TableTypeData> tables, Set<String> typeNames) {
     // Create the initial set of objects
     for (TableData table : _dbData.getTables()) {
-      _typeNames.add(table.getName());
-      _tables.put(table.getName(), new TableTypeData(table));
+      tables.put(table.getName(), new TableTypeData(this, table));
     }
 
     // Now link together the various join and fk relationships
     for (TableData table : _dbData.getTables()) {
-      TableTypeData tableTypeData = _tables.get(table.getName());
+      TableTypeData tableTypeData = tables.get(table.getName());
       if (tableTypeData.isJoinTable()) {
         String joinName = tableTypeData.getJoinName();
         String firstTable = tableTypeData.getFirstJoinTable();
         String secondTable = tableTypeData.getSecondJoinTable();
-        _tables.get(firstTable).addJoin(new Join(joinName == null ? secondTable + "s" : joinName, secondTable, tableTypeData.getTableName()));
+        tables.get(firstTable).addJoin(new Join(joinName == null ? secondTable + "s" : joinName, secondTable, tableTypeData.getTableName()));
         if (!firstTable.equals(secondTable)) {
-          _tables.get(secondTable).addJoin(new Join(joinName == null ? firstTable + "s" : joinName, firstTable, tableTypeData.getTableName()));
+          tables.get(secondTable).addJoin(new Join(joinName == null ? firstTable + "s" : joinName, firstTable, tableTypeData.getTableName()));
         }
       } else {
+        typeNames.add(_namespace + "." + tableTypeData.getTableName());
         for (ColumnTypeData column : tableTypeData.getColumns()) {
           if (column.isFK()) {
-            _tables.get(column.getFkTarget()).addIncomingFK(table.getName());
+            tables.get(column.getFkTarget()).addIncomingFK(table.getName());
           }
         }
       }

@@ -20,11 +20,11 @@ var gosuHome = file( ghVar )
 var tosaHome = file( "." )
 
 function clean() {
-  file( "build" ).deleteRecursively()
+  file( "tosa/build" ).deleteRecursively()
 }
 
 function build() {
-  buildModule( file("."), classpath().withFileset( gosuHome.file( "jars" ).fileset() ), "tosa.jar" )
+  buildModule( file("tosa"), classpath().withFileset( gosuHome.file( "jars" ).fileset() ), "tosa.jar" )
 }
 
 private function buildModule(root : File, cp : Path, jarName : String) {

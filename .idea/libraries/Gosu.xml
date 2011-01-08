@@ -2,6 +2,15 @@
   <library name="Gosu">
     <CLASSES>
       <root url="jar://$GOSU_HOME$/jars/gw-gosu-core-api.jar!/" />
+      <root url="jar://$GOSU_HOME$/jars/gw-asm-commons-3.1.jar!/" />
+      <root url="jar://$GOSU_HOME$/jars/gw-asm-analysis-3.1.jar!/" />
+      <root url="jar://$GOSU_HOME$/jars/gw-asm-3.1.jar!/" />
+      <root url="jar://$GOSU_HOME$/jars/gw-gosu-core.jar!/" />
+      <root url="jar://$GOSU_HOME$/jars/gw-commons-cli-1.0.jar!/" />
+      <root url="jar://$GOSU_HOME$/jars/native-library-marker.jar!/" />
+      <root url="jar://$GOSU_HOME$/jars/gw-asm-util-3.1.jar!/" />
+      <root url="jar://$GOSU_HOME$/jars/gw-asm-tree-3.1.jar!/" />
+      <root url="jar://$GOSU_HOME$/jars/gw-jline-0.9.94.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

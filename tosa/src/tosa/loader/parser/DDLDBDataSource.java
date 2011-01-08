@@ -5,11 +5,13 @@ import gw.lang.reflect.module.IModule;
 import gw.util.Pair;
 import tosa.loader.data.DBData;
 import tosa.loader.data.IDBDataSource;
+import tosa.loader.data.TableData;
 import tosa.loader.parser.mysql.MySQL51SQLParser;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,9 +26,14 @@ public class DDLDBDataSource implements IDBDataSource {
     for (Pair<String, IFile> dbcFile : module.getResourceAccess().findAllFilesByExtension(".ddl")) {
       // TODO - AHK - Lots o' error handling
       // TODO - AHK - Select the correct parser somehow
-      DBData data = new MySQL51SQLParser().parseDDLFile(readFile(dbcFile.getSecond()));
+      IFile connectionFile = dbcFile.getSecond().getParent().file(dbcFile.getSecond().getBaseName() + ".dbc");
+      String connectionString = null;
+      if (connectionFile.exists()) {
+        connectionString = readFile(connectionFile);
+      }
+      List<TableData> tables = new MySQL51SQLParser().parseDDLFile(readFile(dbcFile.getSecond()));
       String fileName = dbcFile.getFirst();
-      results.put(fileName.substring(0, fileName.length() - ".ddl".length()).replace("/", "."), data);
+      results.put(fileName.substring(0, fileName.length() - ".ddl".length()).replace("/", "."),  new DBData(tables, connectionString));
     }
     return results;
   }

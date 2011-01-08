@@ -14,6 +14,11 @@ public class ColumnData {
   public ColumnData(String name, ColumnType columnType) {
     _name = name;
     _columnType = columnType;
+
+    // TODO - AHK - Total hack
+    if (_columnType == null) {
+      _columnType = ColumnType.VARCHAR;
+    }
   }
 
   public String getName() {

@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/roblog/roblog.iml" filepath="$PROJECT_DIR$/roblog/roblog.iml" />
       <module fileurl="file://$PROJECT_DIR$/tosa/tosa.iml" filepath="$PROJECT_DIR$/tosa/tosa.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tosa-test/tosa-test.iml" filepath="$PROJECT_DIR$/tosa-test/tosa-test.iml" />
     </modules>
   </component>
 </project>

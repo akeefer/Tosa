@@ -18,29 +18,31 @@ import java.util.List;
  */
 public class TransactionType extends TypeBase implements ITransactionType {
 
-  private DBConnection _conn;
+  public static final String TYPE_NAME = "Transaction";
+
+  private DBTypeData _dbTypeData;
   private TransactionTypeInfo _typeInfo;
   private DBTypeLoader _typeLoader;
 
-  public TransactionType(DBConnection connInfo, DBTypeLoader dbTypeLoader) {
-    _conn = connInfo;
+  public TransactionType(DBTypeData dbTypeData, DBTypeLoader dbTypeLoader) {
+    _dbTypeData = dbTypeData;
     _typeLoader = dbTypeLoader;
     _typeInfo = new TransactionTypeInfo(this);
   }
 
   @Override
   public String getName() {
-    return _conn.getNamespace() + ".Transaction";
+    return _dbTypeData.getNamespace() + "." + TYPE_NAME;
   }
 
   @Override
   public String getRelativeName() {
-    return "Transaction";
+    return TYPE_NAME;
   }
 
   @Override
   public String getNamespace() {
-    return _conn.getNamespace();
+    return _dbTypeData.getNamespace();
   }
 
   @Override
@@ -63,8 +65,7 @@ public class TransactionType extends TypeBase implements ITransactionType {
     return _typeInfo;
   }
 
-  public DBConnection getConnection() {
-    return _conn;
+  public DBTypeData getDbTypeData() {
+    return _dbTypeData;
   }
-
 }
