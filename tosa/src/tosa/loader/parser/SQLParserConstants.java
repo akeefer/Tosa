@@ -137,6 +137,8 @@ public interface SQLParserConstants {
   public static final String WITH = "WITH";
   public static final String ZEROFILL = "ZEROFILL";
 
+  public static final String SELECT = "SELECT";
+
   public static final String bigint = "bigint";
   public static final String int8 = "int8";
   public static final String bigserial = "bigserial";

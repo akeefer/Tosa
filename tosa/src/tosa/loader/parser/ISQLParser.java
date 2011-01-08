@@ -1,6 +1,7 @@
 package tosa.loader.parser;
 
 import tosa.loader.data.DBData;
+import tosa.loader.query.SQLQuery;
 
 /**
  * Created by IntelliJ IDEA.
@@ -11,4 +12,6 @@ import tosa.loader.data.DBData;
  */
 public interface ISQLParser {
   DBData parseDDLFile(String fileContents);
+
+  SQLQuery parseQuery(String fileContents);
 }
