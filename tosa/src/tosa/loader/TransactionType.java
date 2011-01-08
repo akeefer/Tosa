@@ -65,9 +65,7 @@ public class TransactionType extends TypeBase implements ITransactionType {
     return _typeInfo;
   }
 
-  public DBConnection getConnection() {
-//    return _conn;
-    return null;
+  public DBTypeData getDbTypeData() {
+    return _dbTypeData;
   }
-
 }

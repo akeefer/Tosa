@@ -549,7 +549,7 @@ class DBTypeInfoTest {
       foo.update()
       test.testdb.Transaction.commit()
     }
-    Assert.assertEquals("committed", test.testdb.Foo.fromID(1).FirstName)
+    Assert.assertEquals("committed", test.testdb.Foo.fromID(_fooId).FirstName)
   }
 
 }
