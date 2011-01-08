@@ -12,6 +12,7 @@ uses test.testdb.Bar
 uses test.testdb.SortPage
 uses test.testdb.Foo
 uses test.testdb.Baz
+uses gw.lang.reflect.TypeSystem
 
 class DBTypeInfoTest {
 
@@ -21,10 +22,36 @@ class DBTypeInfoTest {
   static function beforeTestClass() {
     print("*** Before class")
     TosaTestDBInit.createDatabase()
-    
-    
+  }
+
+  private function deleteAllData() {
+    clearTable("SelfJoins_join_Baz_Baz")
+    clearTable("Relatives_join_Bar_Baz")
+    clearTable("join_Foo_Baz")
+    clearTable("Baz")
+    clearTable("Foo")
+    clearTable("SortPage")
+    clearTable("Bar")
+  }
+
+  private function clearTable(tableName : String) {
+    print("Clearing table ${tableName}")
+    var dbTypeLoader = TypeSystem.getTypeLoader(DBTypeLoader)
+    var dbTypeData = dbTypeLoader.getTypeDataForNamespace( "test.testdb" )
+    var connection = dbTypeData.Connection.connect()
+    connection.createStatement().executeUpdate( "DELETE FROM \"${tableName}\"" )
+    connection.close()
+  }
+
+  private var _barId : long
+  private var _fooId : long
+  private var _bazId : long
+  private var _sortPageId : long
+
+  private function importSampleData() {
     var bar = new Bar(){:Date = new java.sql.Date(new java.util.Date("4/22/2009").Time), :Misc = "misc"}
     bar.update()
+    _barId = bar.id
     new SortPage(){:Number = 1}.update()
     new SortPage(){:Number = 2}.update()
     new SortPage(){:Number = 3}.update()
@@ -42,28 +69,32 @@ class DBTypeInfoTest {
     new SortPage(){:Number = 5}.update()
     var sortPage16 = new SortPage(){:Number = 1}
     sortPage16.update()
+    _sortPageId = sortPage16.id
     new SortPage(){:Number = 2}.update()
     new SortPage(){:Number = 3}.update()
     new SortPage(){:Number = 4}.update()
     new SortPage(){:Number = 5}.update()
-    
-    
-    var foo =new Foo(){:FirstName = "Charlie", :LastName="Brown", :Bar=bar, :Address="1234 Main St. \nCentreville, KS 12345", :Named = sortPage16}
+
+
+    var foo =new Foo(){:FirstName = "Charlie", :LastName="Brown", :Bar=bar, :Address="1234 Main St.\nCentreville, KS 12345", :Named = sortPage16}
     foo.update()
-    
+    _fooId = foo.id
+
     var baz = new Baz(){:Text = "First"}
     baz.update()
-    
+    _bazId = baz.id
+
     foo.Bazs.add(baz)
     foo.update()
-    
+
     bar.Relatives.add(baz)
     bar.update()
   }
 
   @Before
   function beforeTestMethod() {
-    // TODO - AHK - Restore the database to its previous state
+    deleteAllData()
+    importSampleData()
   }
 
   @Test
@@ -207,7 +238,7 @@ class DBTypeInfoTest {
 
   @Test
   function testGetMethod() {
-      var foo = test.testdb.Foo.fromID(1)
+      var foo = test.testdb.Foo.fromID(_fooId)
       Assert.assertNotNull(foo)
       Assert.assertEquals("Charlie", foo.FirstName)
       Assert.assertEquals("Brown", foo.LastName)
@@ -235,7 +266,7 @@ class DBTypeInfoTest {
       var foo = foos[0]
       Assert.assertEquals("Charlie", foo.FirstName)
       Assert.assertEquals("Brown", foo.LastName)
-      Assert.assertEquals(1, foo.id)
+      Assert.assertEquals(_fooId, foo.id)
   }
 
   @Test
@@ -309,52 +340,52 @@ class DBTypeInfoTest {
 
   @Test
   function testForeignKey() {
-      var foo = test.testdb.Foo.fromID(1)
-      Assert.assertEquals(1, foo.Bar.id)
+      var foo = test.testdb.Foo.fromID(_fooId)
+      Assert.assertEquals(_barId, foo.Bar.id)
   }
 
   @Test
   function testNamedForeignKey() {
-      var foo = test.testdb.Foo.fromID(1)
-      Assert.assertEquals(16, foo.Named.id)
+      var foo = test.testdb.Foo.fromID(_fooId)
+      Assert.assertEquals(_sortPageId, foo.Named.id)
       Assert.assertEquals(1, foo.Named.Number)
   }
 
   @Test
   function testArray() {
-      var bar = test.testdb.Bar.fromID(1)
+      var bar = test.testdb.Bar.fromID(_barId)
       var array = bar.foos.map(\f -> f.id)
       Assert.assertEquals(1, array.Count)
-      Assert.assertEquals(1, array[0])
+      Assert.assertEquals(_fooId, array[0])
   }
 
   @Test
   function testJoinArray() {
-      var foo = test.testdb.Foo.fromID(1)
+      var foo = test.testdb.Foo.fromID(_fooId)
       var array = foo.Bazs.map(\b -> b.id)
       Assert.assertEquals(1, array.Count)
-      Assert.assertEquals(1l, array[0])
-      var baz = test.testdb.Baz.fromID(1)
+      Assert.assertEquals(_bazId, array[0])
+      var baz = test.testdb.Baz.fromID(_bazId)
       var array2 = baz.Foos.map(\f -> f.id)
       Assert.assertEquals(1, array2.Count)
-      Assert.assertEquals(1, array2[0])
+      Assert.assertEquals(_fooId, array2[0])
   }
 
   @Test
   function testNamedJoinArray() {
-      var bar = test.testdb.Bar.fromID(1)
+      var bar = test.testdb.Bar.fromID(_barId)
       var array = bar.Relatives.map(\b -> b.id)
       Assert.assertEquals(1, array.Count)
-      Assert.assertEquals(1l, array[0])
-      var baz = test.testdb.Baz.fromID(1)
+      Assert.assertEquals(_barId, array[0])
+      var baz = test.testdb.Baz.fromID(_bazId)
       var array2 = baz.Relatives.map(\b -> b.id)
       Assert.assertEquals(1, array2.Count)
-      Assert.assertEquals(1, array2[0])
+      Assert.assertEquals(_bazId, array2[0])
   }
 
   @Test
   function testDelete() {
-      test.testdb.Foo.fromID(1).delete()
+      test.testdb.Foo.fromID(_fooId).delete()
       Assert.assertEquals(0, test.testdb.Foo.find(new test.testdb.Foo()).Count)
   }
 
@@ -376,24 +407,24 @@ class DBTypeInfoTest {
   @Test
   function testUpdateRegularColumns() {
       print(">> Here")
-      var foo = test.testdb.Foo.fromID(1)
+      var foo = test.testdb.Foo.fromID(_fooId)
       print(">> Now here")
       foo.FirstName = "Leroy"
       foo.update()
 
-      var retrievedFoo = test.testdb.Foo.fromID(1)
+      var retrievedFoo = test.testdb.Foo.fromID(_fooId)
       Assert.assertEquals("Leroy", retrievedFoo.FirstName)
   }
 
   @Test
   function testUpdateTextColumn() {
       print("*** Here")
-      var foo = test.testdb.Foo.fromID(1)
+      var foo = test.testdb.Foo.fromID(_fooId)
       print("*** And here")
       foo.Address = "54321 Centre Ave.\nMiddleton, IA 52341"
       foo.update()
 
-      var retrievedFoo = test.testdb.Foo.fromID(1)
+      var retrievedFoo = test.testdb.Foo.fromID(_fooId)
       Assert.assertEquals("54321 Centre Ave.\nMiddleton, IA 52341", retrievedFoo.Address)
   }
 
@@ -402,11 +433,11 @@ class DBTypeInfoTest {
       var newBar = new test.testdb.Bar()
       newBar.update()
 
-      var foo = test.testdb.Foo.fromID(1)
+      var foo = test.testdb.Foo.fromID(_fooId)
       foo.Bar = newBar
       foo.update()
 
-      var retrievedFoo = test.testdb.Foo.fromID(1)
+      var retrievedFoo = test.testdb.Foo.fromID(_fooId)
       Assert.assertEquals(newBar, retrievedFoo.Bar)
   }
 
@@ -414,14 +445,14 @@ class DBTypeInfoTest {
   function testAddJoin() {
       var newBaz = new test.testdb.Baz()
       newBaz.update()
-      var foo = test.testdb.Foo.fromID(1)
+      var foo = test.testdb.Foo.fromID(_fooId)
       foo.Bazs.add(newBaz)
       Assert.assertTrue(foo.Bazs.contains(newBaz))
   }
 
   @Test
   function testAddAllJoin() {
-      var foo = test.testdb.Foo.fromID(1)
+      var foo = test.testdb.Foo.fromID(_fooId)
       var oldBazsCount = foo.Bazs.Count
       var newBazs : List<test.testdb.Baz> = {}
       for(i in 1..10) {
@@ -439,8 +470,8 @@ class DBTypeInfoTest {
 
   @Test
   function testRemoveJoin() {
-      var foo = test.testdb.Foo.fromID(1)
-      foo.Bazs.remove(test.testdb.Baz.fromID(1))
+      var foo = test.testdb.Foo.fromID(_fooId)
+      foo.Bazs.remove(test.testdb.Baz.fromID(_bazId))
       Assert.assertEquals(0, foo.Bazs.Count)
   }
 
@@ -448,15 +479,15 @@ class DBTypeInfoTest {
   function testAddNamedJoin() {
       var newBaz = new test.testdb.Baz()
       newBaz.update()
-      var bar = test.testdb.Bar.fromID(1)
+      var bar = test.testdb.Bar.fromID(_barId)
       bar.Relatives.add(newBaz)
       Assert.assertTrue(bar.Relatives.contains(newBaz))
   }
 
   @Test
   function testRemoveNamedJoin() {
-      var bar = test.testdb.Bar.fromID(1)
-      bar.Relatives.remove(test.testdb.Baz.fromID(1))
+      var bar = test.testdb.Bar.fromID(_barId)
+      bar.Relatives.remove(test.testdb.Baz.fromID(_bazId))
       Assert.assertEquals(0, bar.Relatives.Count)
   }
 
@@ -478,7 +509,7 @@ class DBTypeInfoTest {
 
   @Test
   function testTextColumn() {
-      var foo = test.testdb.Foo.fromID(1)
+      var foo = test.testdb.Foo.fromID(_fooId)
       Assert.assertEquals("1234 Main St.\nCentreville, KS 12345", foo.Address)
   }
 
@@ -487,7 +518,7 @@ class DBTypeInfoTest {
       var newFoo = new test.testdb.Foo()
       Assert.assertTrue(newFoo._New)
 
-      var oldFoo = test.testdb.Foo.fromID(1)
+      var oldFoo = test.testdb.Foo.fromID(_fooId)
       Assert.assertFalse(oldFoo._New)
   }
 
@@ -502,17 +533,17 @@ class DBTypeInfoTest {
 
   @Test
   function testTransactionNoCommit() {
-    var foo = test.testdb.Foo.fromID(1)
+    var foo = test.testdb.Foo.fromID(_fooId)
     using(test.testdb.Transaction.Lock) {
       foo.FirstName = "not committed"
       foo.update()
     }
-    Assert.assertFalse(test.testdb.Foo.fromID(1).FirstName == "not committed")
+    Assert.assertFalse(test.testdb.Foo.fromID(_fooId).FirstName == "not committed")
   }
 
   @Test
   function testTransactionCommit() {
-    var foo = test.testdb.Foo.fromID(1)
+    var foo = test.testdb.Foo.fromID(_fooId)
     using(test.testdb.Transaction.Lock) {
       foo.FirstName = "committed"
       foo.update()
