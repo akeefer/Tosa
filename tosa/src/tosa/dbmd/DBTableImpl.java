@@ -27,13 +27,13 @@ public class DBTableImpl implements IDBTable {
   // All the tables that this table is joined with
   private final List<Join> _joins;
   // Tables that have FKs to this table
-  private final List<String> _incomingFKs;
+  private final List<IDBTable> _incomingFKs;
 
   public DBTableImpl(DatabaseImpl database, TableData tableData) {
     _database = database;
     _tableData = tableData;
     _joins = new ArrayList<Join>();
-    _incomingFKs = new ArrayList<String>();
+    _incomingFKs = new ArrayList<IDBTable>();
 
     // It might be best to do this in a separate method, but that gets annoying with Java rules
     // around when final variables can be initialized
@@ -76,7 +76,7 @@ public class DBTableImpl implements IDBTable {
   }
 
   // TODO - AHK - Kill this if possible
-  void addIncomingFK(String referencingTable) {
+  void addIncomingFK(IDBTable referencingTable) {
     _incomingFKs.add(referencingTable);
   }
 
@@ -84,7 +84,7 @@ public class DBTableImpl implements IDBTable {
     return _joins;
   }
 
-  public List<String> getIncomingFKs() {
+  public List<IDBTable> getIncomingFKs() {
     return _incomingFKs;
   }
 }

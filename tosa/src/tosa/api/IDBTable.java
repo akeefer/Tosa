@@ -22,4 +22,6 @@ public interface IDBTable {
   Collection<? extends IDBColumn> getColumns();
 
   boolean hasId();
+
+  // TODO - AHK - Some attribute to indicate it's a join table?
 }

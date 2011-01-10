@@ -90,7 +90,7 @@ public class DatabaseImpl implements IDatabase {
         typeNames.add(_namespace + "." + table.getName());
         for (DBColumnImpl column : table.getColumns()) {
           if (column.isFK()) {
-            tables.get(column.getFkTarget()).addIncomingFK(table.getName());
+            tables.get(column.getFkTarget()).addIncomingFK(table);
           }
         }
       }

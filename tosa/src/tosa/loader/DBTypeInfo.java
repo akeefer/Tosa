@@ -22,6 +22,7 @@ import tosa.CachedDBObject;
 import tosa.Join;
 import tosa.JoinResult;
 import tosa.api.IDBColumn;
+import tosa.api.IDBTable;
 import tosa.dbmd.DBColumnImpl;
 import tosa.dbmd.DBTableImpl;
 
@@ -547,7 +548,7 @@ public class DBTypeInfo extends BaseTypeInfo {
   private Map<String, IPropertyInfo> makeArrayProperties() {
     Map<String, IPropertyInfo> arrayProps = new HashMap<String, IPropertyInfo>();
     // TODO - AHK - Ideally this cast wouldn't be necessary
-    for (String fkTable : ((DBTableImpl) getOwnersType().getTable()).getIncomingFKs()) {
+    for (IDBTable fkTable : ((DBTableImpl) getOwnersType().getTable()).getIncomingFKs()) {
       IPropertyInfo arrayProp = makeArrayProperty(fkTable);
       arrayProps.put(arrayProp.getName(), arrayProp);
     }
@@ -567,10 +568,10 @@ public class DBTypeInfo extends BaseTypeInfo {
     return new DBPropertyInfo(this, column);
   }
 
-  private IPropertyInfo makeArrayProperty(String fkTable) {
+  private IPropertyInfo makeArrayProperty(IDBTable fkTable) {
     String namespace = getOwnersType().getNamespace();
-    final IType fkType = TypeSystem.getByFullName(namespace + "." + fkTable);
-    return new PropertyInfoBuilder().withName(fkTable + "s").withType(IJavaType.LIST.getGenericType().getParameterizedType(fkType))
+    final IType fkType = TypeSystem.getByFullName(namespace + "." + fkTable.getName());
+    return new PropertyInfoBuilder().withName(fkTable.getName() + "s").withType(IJavaType.LIST.getGenericType().getParameterizedType(fkType))
         .withWritable(false).withAccessor(new IPropertyAccessor() {
           @Override
           public void setValue(Object ctx, Object value) {
