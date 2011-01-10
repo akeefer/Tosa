@@ -1,4 +1,4 @@
-package tosa.loader;
+package tosa.dbmd;
 
 import tosa.Join;
 import tosa.api.IDBTable;
@@ -90,10 +90,6 @@ public class DBTableImpl implements IDBTable {
 
   public List<DBColumnImpl> getColumns() {
     return _columns;
-  }
-
-  public String getTableName() {
-    return _tableData.getName();
   }
 
   public boolean hasId() {

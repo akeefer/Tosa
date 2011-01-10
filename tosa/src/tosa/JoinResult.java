@@ -1,7 +1,7 @@
 package tosa;
 
 import tosa.api.IDatabase;
-import tosa.loader.DBTableImpl;
+import tosa.dbmd.DBTableImpl;
 
 import java.sql.Connection;
 import java.sql.ResultSet;

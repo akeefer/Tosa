@@ -7,6 +7,7 @@ import gw.lang.reflect.ITypeInfo;
 import gw.lang.reflect.PropertyInfoBase;
 import gw.lang.reflect.TypeSystem;
 import tosa.CachedDBObject;
+import tosa.dbmd.DBColumnImpl;
 
 import java.sql.SQLException;
 import java.util.Collections;
@@ -68,7 +69,7 @@ public class DBPropertyInfo extends PropertyInfoBase {
   }
 
   public String getColumnName() {
-    return _column.getColumnData().getName();
+    return _column.getName();
   }
 
   private class DBPropertyAccessor implements IPropertyAccessor {

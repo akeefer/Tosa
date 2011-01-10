@@ -6,6 +6,7 @@ import gw.lang.reflect.ITypeLoader;
 import gw.lang.reflect.TypeBase;
 import gw.util.concurrent.LazyVar;
 import tosa.api.IDBTable;
+import tosa.dbmd.DBTableImpl;
 
 import java.util.Collections;
 import java.util.List;
@@ -45,7 +46,7 @@ public class DBType extends TypeBase implements IDBType {
 
   @Override
   public String getRelativeName() {
-    return _table.getTableName();
+    return _table.getName();
   }
 
   @Override

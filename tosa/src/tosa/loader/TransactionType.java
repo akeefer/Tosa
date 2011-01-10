@@ -4,6 +4,7 @@ import gw.lang.reflect.IType;
 import gw.lang.reflect.ITypeInfo;
 import gw.lang.reflect.ITypeLoader;
 import gw.lang.reflect.TypeBase;
+import tosa.dbmd.DatabaseImpl;
 
 import java.util.Collections;
 import java.util.List;

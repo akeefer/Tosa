@@ -22,6 +22,8 @@ import tosa.CachedDBObject;
 import tosa.Join;
 import tosa.JoinResult;
 import tosa.api.IDBColumn;
+import tosa.dbmd.DBColumnImpl;
+import tosa.dbmd.DBTableImpl;
 
 import java.io.BufferedReader;
 import java.io.IOException;

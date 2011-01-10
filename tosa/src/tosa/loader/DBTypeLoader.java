@@ -8,6 +8,8 @@ import gw.lang.reflect.module.IExecutionEnvironment;
 import gw.lang.reflect.module.IModule;
 import gw.util.concurrent.LazyVar;
 import tosa.CachedDBObject;
+import tosa.dbmd.DBTableImpl;
+import tosa.dbmd.DatabaseImpl;
 import tosa.loader.data.DBData;
 import tosa.loader.data.IDBDataSource;
 import tosa.loader.parser.DDLDBDataSource;

@@ -1,8 +1,9 @@
-package tosa.loader;
+package tosa.dbmd;
 
 import tosa.DBConnection;
 import tosa.Join;
 import tosa.api.IDatabase;
+import tosa.loader.DBTypeLoader;
 import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
 
@@ -26,7 +27,6 @@ public class DatabaseImpl implements IDatabase {
   private final DBData _dbData;
   private final Map<String, DBTableImpl> _tables;
   private final Set<String> _typeNames;
-  private final DBTypeLoader _typeLoader;
   private final DBConnection _connection;
 
   public DatabaseImpl(String namespace, DBData dbData, DBTypeLoader typeLoader) {
@@ -39,7 +39,6 @@ public class DatabaseImpl implements IDatabase {
 
     _tables = Collections.unmodifiableMap(tables);
     _typeNames = Collections.unmodifiableSet(typeNames);
-    _typeLoader = typeLoader;
     _connection = new DBConnection(dbData.getConnectionString(), typeLoader);
   }
 
@@ -70,19 +69,19 @@ public class DatabaseImpl implements IDatabase {
     }
 
     // Now link together the various join and fk relationships
-    for (TableData table : _dbData.getTables()) {
-      DBTableImpl DBTableImpl = tables.get(table.getName());
-      if (DBTableImpl.isJoinTable()) {
-        String joinName = DBTableImpl.getJoinName();
-        String firstTable = DBTableImpl.getFirstJoinTable();
-        String secondTable = DBTableImpl.getSecondJoinTable();
-        tables.get(firstTable).addJoin(new Join(joinName == null ? secondTable + "s" : joinName, secondTable, DBTableImpl.getTableName()));
+    for (TableData tableData : _dbData.getTables()) {
+      DBTableImpl table = tables.get(tableData.getName());
+      if (table.isJoinTable()) {
+        String joinName = table.getJoinName();
+        String firstTable = table.getFirstJoinTable();
+        String secondTable = table.getSecondJoinTable();
+        tables.get(firstTable).addJoin(new Join(joinName == null ? secondTable + "s" : joinName, secondTable, table.getName()));
         if (!firstTable.equals(secondTable)) {
-          tables.get(secondTable).addJoin(new Join(joinName == null ? firstTable + "s" : joinName, firstTable, DBTableImpl.getTableName()));
+          tables.get(secondTable).addJoin(new Join(joinName == null ? firstTable + "s" : joinName, firstTable, table.getName()));
         }
       } else {
-        typeNames.add(_namespace + "." + DBTableImpl.getTableName());
-        for (DBColumnImpl column : DBTableImpl.getColumns()) {
+        typeNames.add(_namespace + "." + table.getName());
+        for (DBColumnImpl column : table.getColumns()) {
           if (column.isFK()) {
             tables.get(column.getFkTarget()).addIncomingFK(table.getName());
           }
