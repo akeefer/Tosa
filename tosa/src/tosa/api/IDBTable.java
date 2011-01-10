@@ -20,4 +20,6 @@ public interface IDBTable {
 
   // TODO - AHK - Should this be an iterable?
   Collection<? extends IDBColumn> getColumns();
+
+  boolean hasId();
 }

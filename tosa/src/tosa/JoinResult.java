@@ -97,8 +97,7 @@ public class JoinResult implements List<CachedDBObject> {
         try {
           Statement stmt = conn.createStatement();
           try {
-            // TODO - AHK - Shouldn't need to have a cast here
-            if (((DBTableImpl)_database.getTable(_joinTableName)).hasId()) {
+            if (_database.getTable(_joinTableName).hasId()) {
               ResultSet results = stmt.executeQuery("select * from \"" + _joinTableName + "\" where \"" + _srcTableName + "_id\" = " + _id + " and \"" + _targetTableName + "_id\" = " + obj.getColumns().get("id") + " limit 1");
               try {
                 if (results.first()) {
