@@ -71,10 +71,17 @@ public class DatabaseImpl implements IDatabase {
     // Now link together the various join and fk relationships
     for (TableData tableData : _dbData.getTables()) {
       DBTableImpl table = tables.get(tableData.getName());
-      if (table.isJoinTable()) {
-        String joinName = table.getJoinName();
-        String firstTable = table.getFirstJoinTable();
-        String secondTable = table.getSecondJoinTable();
+
+      String tableName = tableData.getName();
+      if (tableName.contains("join_")) {
+        String joinName = null;
+        if (!tableName.startsWith("join_")) {
+          joinName = tableName.substring(0, tableName.indexOf('_'));
+        }
+        int lastUnderscore = tableName.lastIndexOf('_');
+        int nextToLastUnderscore = tableName.lastIndexOf('_', lastUnderscore - 1);
+        String firstTable = tableName.substring(nextToLastUnderscore + 1, lastUnderscore);
+        String secondTable = tableName.substring(lastUnderscore + 1);
         tables.get(firstTable).addJoin(new Join(joinName == null ? secondTable + "s" : joinName, secondTable, table.getName()));
         if (!firstTable.equals(secondTable)) {
           tables.get(secondTable).addJoin(new Join(joinName == null ? firstTable + "s" : joinName, firstTable, table.getName()));
@@ -89,4 +96,6 @@ public class DatabaseImpl implements IDatabase {
       }
     }
   }
+
+
 }

@@ -22,11 +22,6 @@ public class DBTableImpl implements IDBTable {
   private final DatabaseImpl _database;
   private final TableData _tableData;
   private final boolean _hasId;
-  private final boolean _isJoinTable;
-  private final String _joinName;
-  private final String _firstJoinTable;
-  private final String _secondJoinTable;
-
   private final List<DBColumnImpl> _columns;
 
   // All the tables that this table is joined with
@@ -39,27 +34,6 @@ public class DBTableImpl implements IDBTable {
     _tableData = tableData;
     _joins = new ArrayList<Join>();
     _incomingFKs = new ArrayList<String>();
-
-    // It might be best to do this in a separate method, but that gets annoying with Java rules
-    // around when final variables can be initialized
-    String tableName = _tableData.getName();
-    if (tableName.contains("join_")) {
-      _isJoinTable = true;
-      if (!tableName.startsWith("join_")) {
-        _joinName = tableName.substring(0, tableName.indexOf('_'));
-      } else {
-        _joinName = null;
-      }
-      int lastUnderscore = tableName.lastIndexOf('_');
-      int nextToLastUnderscore = tableName.lastIndexOf('_', lastUnderscore - 1);
-      _firstJoinTable = tableName.substring(nextToLastUnderscore + 1, lastUnderscore);
-      _secondJoinTable = tableName.substring(lastUnderscore + 1);
-    } else {
-      _isJoinTable = false;
-      _joinName = null;
-      _firstJoinTable = null;
-      _secondJoinTable = null;
-    }
 
     // It might be best to do this in a separate method, but that gets annoying with Java rules
     // around when final variables can be initialized
@@ -94,22 +68,6 @@ public class DBTableImpl implements IDBTable {
 
   public boolean hasId() {
     return _hasId;
-  }
-
-  public boolean isJoinTable() {
-    return _isJoinTable;
-  }
-
-  public String getJoinName() {
-    return _joinName;
-  }
-
-  public String getFirstJoinTable() {
-    return _firstJoinTable;
-  }
-
-  public String getSecondJoinTable() {
-    return _secondJoinTable;
   }
 
   // TODO - AHK - Kill this if possible
