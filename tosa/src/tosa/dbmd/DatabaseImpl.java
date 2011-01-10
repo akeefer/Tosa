@@ -82,9 +82,9 @@ public class DatabaseImpl implements IDatabase {
         int nextToLastUnderscore = tableName.lastIndexOf('_', lastUnderscore - 1);
         String firstTable = tableName.substring(nextToLastUnderscore + 1, lastUnderscore);
         String secondTable = tableName.substring(lastUnderscore + 1);
-        tables.get(firstTable).addJoin(new Join(joinName == null ? secondTable + "s" : joinName, secondTable, table.getName()));
+        tables.get(firstTable).addJoin(new Join(joinName == null ? secondTable + "s" : joinName, tables.get(secondTable), table));
         if (!firstTable.equals(secondTable)) {
-          tables.get(secondTable).addJoin(new Join(joinName == null ? firstTable + "s" : joinName, firstTable, table.getName()));
+          tables.get(secondTable).addJoin(new Join(joinName == null ? firstTable + "s" : joinName, tables.get(firstTable), table));
         }
       } else {
         typeNames.add(_namespace + "." + table.getName());

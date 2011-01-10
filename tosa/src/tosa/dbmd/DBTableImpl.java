@@ -84,6 +84,7 @@ public class DBTableImpl implements IDBTable {
     return _joins;
   }
 
+  // TODO - AHK - This should be a list of IDBColumn, not IDBTable
   public List<IDBTable> getIncomingFKs() {
     return _incomingFKs;
   }

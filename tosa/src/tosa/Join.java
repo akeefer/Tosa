@@ -1,5 +1,7 @@
 package tosa;
 
+import tosa.api.IDBTable;
+
 /**
  * Created by IntelliJ IDEA.
  * User: alan
@@ -9,10 +11,10 @@ package tosa;
  */
 public class Join {
   private String _propName;
-  private String _joinTable;
-  private String _targetTable;
+  private IDBTable _joinTable;
+  private IDBTable _targetTable;
 
-  public Join(String propName, String targetTable, String joinTable) {
+  public Join(String propName, IDBTable targetTable, IDBTable joinTable) {
     _propName = propName;
     _joinTable = joinTable;
     _targetTable = targetTable;
@@ -22,11 +24,11 @@ public class Join {
     return _propName;
   }
 
-  public String getJoinTable() {
+  public IDBTable getJoinTable() {
     return _joinTable;
   }
 
-  public String getTargetTable() {
+  public IDBTable getTargetTable() {
     return _targetTable;
   }
 

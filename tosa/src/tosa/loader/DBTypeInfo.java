@@ -590,7 +590,7 @@ public class DBTypeInfo extends BaseTypeInfo {
 
   private IPropertyInfo makeJoinProperty(final Join join) {
     String namespace = getOwnersType().getNamespace();
-    final IType fkType = getOwnersType().getTypeLoader().getType(namespace + "." + join.getTargetTable());
+    final IType fkType = getOwnersType().getTypeLoader().getType(namespace + "." + join.getTargetTable().getName());
     return new PropertyInfoBuilder().withName(join.getPropName()).withType(IJavaType.LIST.getGenericType().getParameterizedType(fkType))
         .withWritable(false).withAccessor(new IPropertyAccessor() {
           @Override
@@ -599,8 +599,8 @@ public class DBTypeInfo extends BaseTypeInfo {
 
           @Override
           public Object getValue(Object ctx) {
-            String j = join.getJoinTable();
-            String t = join.getTargetTable();
+            String j = join.getJoinTable().getName();
+            String t = join.getTargetTable().getName();
             String o = getOwnersType().getRelativeName();
             if (GosuStringUtil.equals(t, o)) {
               o += "_src";
@@ -609,7 +609,7 @@ public class DBTypeInfo extends BaseTypeInfo {
             String id = ((CachedDBObject) ctx).getColumns().get("id").toString();
             try {
               List<CachedDBObject> result = ((DBTypeInfo) fkType.getTypeInfo()).findFromSql(
-                  "select * from \"" + join.getTargetTable() + "\", \"" + j + "\" as j where j.\"" + t + "_id\" = \"" + join.getTargetTable() + "\".\"id\" and j.\"" + o + "_id\" = " + id
+                  "select * from \"" + join.getTargetTable().getName() + "\", \"" + j + "\" as j where j.\"" + t + "_id\" = \"" + join.getTargetTable().getName() + "\".\"id\" and j.\"" + o + "_id\" = " + id
               );
               return new JoinResult(result, getOwnersType().getTable().getDatabase(), j, o, t, id);
             } catch (SQLException e) {
