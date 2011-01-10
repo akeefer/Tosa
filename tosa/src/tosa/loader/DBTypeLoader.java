@@ -1,26 +1,18 @@
 package tosa.loader;
 
-import gw.fs.IFile;
 import gw.lang.reflect.IExtendedTypeLoader;
 import gw.lang.reflect.IType;
-import gw.lang.reflect.ITypeRef;
 import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.java.IJavaClassInfo;
 import gw.lang.reflect.module.IExecutionEnvironment;
 import gw.lang.reflect.module.IModule;
-import gw.util.Pair;
 import gw.util.concurrent.LazyVar;
 import tosa.CachedDBObject;
-import tosa.DBConnection;
 import tosa.loader.data.DBData;
 import tosa.loader.data.IDBDataSource;
 import tosa.loader.parser.DDLDBDataSource;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,8 +34,8 @@ public class DBTypeLoader implements IExtendedTypeLoader {
 //  private Set<String> _initializedDrivers = new HashSet<String>();
 //  private Map<String, DBConnection> _connInfos = new HashMap<String, DBConnection>();
 
-  private LazyVar<Map<String, DBTypeData>> _typeDataByNamespace = new LazyVar<Map<String, DBTypeData>>() {
-    protected Map<String, DBTypeData> init() { return initializeDBTypeData(); }
+  private LazyVar<Map<String, DatabaseImpl>> _typeDataByNamespace = new LazyVar<Map<String, DatabaseImpl>>() {
+    protected Map<String, DatabaseImpl> init() { return initializeDBTypeData(); }
   };
 
   private LazyVar<Set<String>> _namespaces = new LazyVar<Set<String>>() {
@@ -88,19 +80,19 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     // TODO - AHK - Is it really our job to do any caching at all?
     String namespace = fullyQualifiedName.substring(0, lastDot);
     String relativeName = fullyQualifiedName.substring(lastDot + 1);
-    DBTypeData dbTypeData = _typeDataByNamespace.get().get(namespace);
-    if (dbTypeData == null) {
+    DatabaseImpl databaseImpl = _typeDataByNamespace.get().get(namespace);
+    if (databaseImpl == null) {
       return null;
     }
 
     if ("Transaction".equals(relativeName)) {
-      return new TransactionType(dbTypeData, this);
+      return new TransactionType(databaseImpl, this);
     } else {
-      TableTypeData tableTypeData = dbTypeData.getTable(relativeName);
-      if (tableTypeData == null) {
+      DBTableImpl DBTableImpl = databaseImpl.getTable(relativeName);
+      if (DBTableImpl == null) {
         return null;
       } else {
-        return new DBType(this, tableTypeData);
+        return new DBType(this, DBTableImpl);
       }
     }
   }
@@ -165,12 +157,12 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     }
   }
 
-  private Map<String, DBTypeData> initializeDBTypeData() {
+  private Map<String, DatabaseImpl> initializeDBTypeData() {
     IDBDataSource dataSource = new DDLDBDataSource();
     Map<String, DBData> dbDataMap = dataSource.getDBData(_module);
-    Map<String, DBTypeData> dbTypeDataMap = new HashMap<String, DBTypeData>();
+    Map<String, DatabaseImpl> dbTypeDataMap = new HashMap<String, DatabaseImpl>();
     for (Map.Entry<String, DBData> dbDataEntry : dbDataMap.entrySet()) {
-      dbTypeDataMap.put(dbDataEntry.getKey(), new DBTypeData(dbDataEntry.getKey(), dbDataEntry.getValue(), this));
+      dbTypeDataMap.put(dbDataEntry.getKey(), new DatabaseImpl(dbDataEntry.getKey(), dbDataEntry.getValue(), this));
     }
     return dbTypeDataMap;
   }
@@ -196,16 +188,16 @@ public class DBTypeLoader implements IExtendedTypeLoader {
   private Set<String> initializeTypeNames() {
     Set<String> typeNames = new HashSet<String>();
 
-    for (DBTypeData dbTypeData : _typeDataByNamespace.get().values()) {
-      typeNames.add(dbTypeData.getNamespace() + "." + TransactionType.TYPE_NAME);
-      typeNames.addAll(dbTypeData.getTypeNames());
+    for (DatabaseImpl databaseImpl : _typeDataByNamespace.get().values()) {
+      typeNames.add(databaseImpl.getNamespace() + "." + TransactionType.TYPE_NAME);
+      typeNames.addAll(databaseImpl.getTypeNames());
     }
 
     return typeNames;
   }
 
   // TODO - AHK - This doesn't really belong here, but for now . . .
-  public DBTypeData getTypeDataForNamespace(String namespace) {
+  public DatabaseImpl getTypeDataForNamespace(String namespace) {
     return _typeDataByNamespace.get().get(namespace);
   }
 

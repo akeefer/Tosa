@@ -9,8 +9,8 @@ class TosaTestDBInit {
     var ddlFile = sourceRoot.file( "test/testdb.ddl" )
     
     print(">>> Creating database from DDL statements in file " + ddlFile.Path.FileSystemPathString)
-    var dbTypeData = dbTypeLoader.getTypeDataForNamespace( "test.testdb" )
-    var connection = dbTypeData.Connection.connect()
+    var database = dbTypeLoader.getTypeDataForNamespace( "test.testdb" )
+    var connection = database.Connection.connect()
     connection.createStatement().executeUpdate( ddlFile.toJavaFile().read() )
     connection.close()
   }

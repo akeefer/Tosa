@@ -1,7 +1,6 @@
 package tosa.loader;
 
-import gw.lang.reflect.IType;
-import gw.lang.reflect.TypeSystem;
+import tosa.api.IDBColumn;
 import tosa.loader.data.ColumnData;
 
 /**
@@ -11,16 +10,16 @@ import tosa.loader.data.ColumnData;
  * Time: 1:12 AM
  * To change this template use File | Settings | File Templates.
  */
-public class ColumnTypeData {
-  private final TableTypeData _tableTypeData;
+public class DBColumnImpl implements IDBColumn {
+  private final DBTableImpl _table;
   private final ColumnData _columnData;
   private final boolean _isFK;
   private final String _fkTarget;
   private final String _propertyName;
   private final String _propertyTypeName;
 
-  public ColumnTypeData(TableTypeData tableTypeData, ColumnData columnData) {
-    _tableTypeData = tableTypeData;
+  public DBColumnImpl(DBTableImpl table, ColumnData columnData) {
+    _table = table;
     _columnData = columnData;
 
     // If would be nice if we could refactor this isn't a separate method, but final variable assignment
@@ -40,13 +39,18 @@ public class ColumnTypeData {
         _fkTarget = _propertyName;
       }
       _isFK = true;
-      _propertyTypeName = _tableTypeData.getDbTypeData().getNamespace() + "." + _fkTarget;
+      _propertyTypeName = _table.getDatabase().getNamespace() + "." + _fkTarget;
     } else {
       _isFK = false;
       _fkTarget = null;
       _propertyName = getColumnData().getName();
       _propertyTypeName = getColumnData().getColumnType().getGosuTypeName();
     }
+  }
+
+  @Override
+  public String getName() {
+    return _columnData.getName();
   }
 
   public ColumnData getColumnData() {
@@ -66,8 +70,8 @@ public class ColumnTypeData {
     return getColumnData().getName().equals("id");
   }
 
-  public TableTypeData getTableTypeData() {
-    return _tableTypeData;
+  public DBTableImpl getTable() {
+    return _table;
   }
 
   public String getPropertyName() {

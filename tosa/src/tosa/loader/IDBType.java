@@ -1,7 +1,7 @@
 package tosa.loader;
 
 import gw.lang.reflect.IEnhanceableType;
-import tosa.DBConnection;
+import tosa.api.IDBTable;
 
 /**
  * Created by IntelliJ IDEA.
@@ -11,5 +11,5 @@ import tosa.DBConnection;
  * To change this template use File | Settings | File Templates.
  */
 public interface IDBType extends IEnhanceableType {
-  public TableTypeData getTableTypeData();
+  public IDBTable getTable();
 }

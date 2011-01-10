@@ -37,8 +37,8 @@ class DBTypeInfoTest {
   private function clearTable(tableName : String) {
     print("Clearing table ${tableName}")
     var dbTypeLoader = TypeSystem.getTypeLoader(DBTypeLoader)
-    var dbTypeData = dbTypeLoader.getTypeDataForNamespace( "test.testdb" )
-    var connection = dbTypeData.Connection.connect()
+    var database = dbTypeLoader.getTypeDataForNamespace( "test.testdb" )
+    var connection = database.Connection.connect()
     connection.createStatement().executeUpdate( "DELETE FROM \"${tableName}\"" )
     connection.close()
   }

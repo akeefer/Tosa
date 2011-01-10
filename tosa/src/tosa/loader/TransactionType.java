@@ -4,7 +4,6 @@ import gw.lang.reflect.IType;
 import gw.lang.reflect.ITypeInfo;
 import gw.lang.reflect.ITypeLoader;
 import gw.lang.reflect.TypeBase;
-import tosa.DBConnection;
 
 import java.util.Collections;
 import java.util.List;
@@ -20,19 +19,19 @@ public class TransactionType extends TypeBase implements ITransactionType {
 
   public static final String TYPE_NAME = "Transaction";
 
-  private DBTypeData _dbTypeData;
+  private DatabaseImpl _databaseImpl;
   private TransactionTypeInfo _typeInfo;
   private DBTypeLoader _typeLoader;
 
-  public TransactionType(DBTypeData dbTypeData, DBTypeLoader dbTypeLoader) {
-    _dbTypeData = dbTypeData;
+  public TransactionType(DatabaseImpl databaseImpl, DBTypeLoader dbTypeLoader) {
+    _databaseImpl = databaseImpl;
     _typeLoader = dbTypeLoader;
     _typeInfo = new TransactionTypeInfo(this);
   }
 
   @Override
   public String getName() {
-    return _dbTypeData.getNamespace() + "." + TYPE_NAME;
+    return _databaseImpl.getNamespace() + "." + TYPE_NAME;
   }
 
   @Override
@@ -42,7 +41,7 @@ public class TransactionType extends TypeBase implements ITransactionType {
 
   @Override
   public String getNamespace() {
-    return _dbTypeData.getNamespace();
+    return _databaseImpl.getNamespace();
   }
 
   @Override
@@ -65,7 +64,7 @@ public class TransactionType extends TypeBase implements ITransactionType {
     return _typeInfo;
   }
 
-  public DBTypeData getDbTypeData() {
-    return _dbTypeData;
+  public DatabaseImpl getDatabaseImpl() {
+    return _databaseImpl;
   }
 }

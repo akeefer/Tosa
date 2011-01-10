@@ -23,9 +23,9 @@ public class DBPropertyInfo extends PropertyInfoBase {
 
   private final String _name;
   private final IType _type;
-  private final ColumnTypeData _column;
+  private final DBColumnImpl _column;
 
-  public DBPropertyInfo(ITypeInfo container, ColumnTypeData column) {
+  public DBPropertyInfo(ITypeInfo container, DBColumnImpl column) {
     super(container);
     _column = column;
     _name = column.getPropertyName();

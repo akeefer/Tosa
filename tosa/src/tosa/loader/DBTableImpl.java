@@ -1,6 +1,8 @@
 package tosa.loader;
 
 import tosa.Join;
+import tosa.api.IDBTable;
+import tosa.api.IDatabase;
 import tosa.loader.data.ColumnData;
 import tosa.loader.data.TableData;
 
@@ -15,9 +17,9 @@ import java.util.List;
  * Time: 1:12 AM
  * To change this template use File | Settings | File Templates.
  */
-public class TableTypeData {
+public class DBTableImpl implements IDBTable {
   // TODO - AHK - Make stuff final
-  private final DBTypeData _dbTypeData;
+  private final DatabaseImpl _database;
   private final TableData _tableData;
   private final boolean _hasId;
   private final boolean _isJoinTable;
@@ -25,15 +27,15 @@ public class TableTypeData {
   private final String _firstJoinTable;
   private final String _secondJoinTable;
 
-  private final List<ColumnTypeData> _columns;
+  private final List<DBColumnImpl> _columns;
 
   // All the tables that this table is joined with
   private final List<Join> _joins;
   // Tables that have FKs to this table
   private final List<String> _incomingFKs;
 
-  public TableTypeData(DBTypeData dbTypeData, TableData tableData) {
-    _dbTypeData = dbTypeData;
+  public DBTableImpl(DatabaseImpl database, TableData tableData) {
+    _database = database;
     _tableData = tableData;
     _joins = new ArrayList<Join>();
     _incomingFKs = new ArrayList<String>();
@@ -61,10 +63,10 @@ public class TableTypeData {
 
     // It might be best to do this in a separate method, but that gets annoying with Java rules
     // around when final variables can be initialized
-    List<ColumnTypeData> columns = new ArrayList<ColumnTypeData>();
+    List<DBColumnImpl> columns = new ArrayList<DBColumnImpl>();
     boolean hasId = false;
     for (ColumnData column : _tableData.getColumns()) {
-      ColumnTypeData columnTypeData = new ColumnTypeData(this, column);
+      DBColumnImpl columnTypeData = new DBColumnImpl(this, column);
       if (columnTypeData.isIdColumn()) {
         hasId = true;
       }
@@ -76,11 +78,17 @@ public class TableTypeData {
     // TODO - AHK - Is there any good way to make the list of joins/fks immutable?
   }
 
-  public DBTypeData getDbTypeData() {
-    return _dbTypeData;
+  @Override
+  public String getName() {
+    return _tableData.getName();
   }
 
-  public List<ColumnTypeData> getColumns() {
+  @Override
+  public IDatabase getDatabase() {
+    return _database;
+  }
+
+  public List<DBColumnImpl> getColumns() {
     return _columns;
   }
 

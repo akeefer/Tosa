@@ -4,7 +4,6 @@ import gw.lang.reflect.IType;
 import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.gs.IGosuObject;
 import tosa.loader.DBType;
-import tosa.loader.DBTypeLoader;
 import tosa.loader.IDBType;
 
 import java.sql.Connection;
@@ -54,7 +53,7 @@ public class CachedDBObject implements IGosuObject {
   }
 
   public void update() throws SQLException {
-    Connection conn = _type.getTableTypeData().getDbTypeData().getConnection().connect();
+    Connection conn = _type.getTable().getDatabase().getConnection().connect();
     try {
       Statement stmt = conn.createStatement();
       try {
@@ -118,7 +117,7 @@ public class CachedDBObject implements IGosuObject {
   }
 
   public void delete() throws SQLException {
-    Connection conn = _type.getTableTypeData().getDbTypeData().getConnection().connect();
+    Connection conn = _type.getTable().getDatabase().getConnection().connect();
     try {
       Statement stmt = conn.createStatement();
       try {

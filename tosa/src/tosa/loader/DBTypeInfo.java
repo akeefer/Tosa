@@ -21,6 +21,7 @@ import gw.util.concurrent.LazyVar;
 import tosa.CachedDBObject;
 import tosa.Join;
 import tosa.JoinResult;
+import tosa.api.IDBColumn;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -234,8 +235,9 @@ public class DBTypeInfo extends BaseTypeInfo {
           }
         }).build(this);
     _properties = new HashMap<String, IPropertyInfo>();
-    for (ColumnTypeData column : dbType.getTableTypeData().getColumns()) {
-      IPropertyInfo prop = makeProperty(column);
+    for (IDBColumn column : dbType.getTable().getColumns()) {
+      // TODO - AHK - Ideally this cast wouldn't be necessary
+      IPropertyInfo prop = makeProperty((DBColumnImpl) column);
       _properties.put(prop.getName(), prop);
     }
 
@@ -357,7 +359,7 @@ public class DBTypeInfo extends BaseTypeInfo {
   }
 
   private Connection connect() throws SQLException {
-    return getOwnersType().getTableTypeData().getDbTypeData().getConnection().connect();
+    return getOwnersType().getTable().getDatabase().getConnection().connect();
   }
 
   CachedDBObject selectById(Object id) throws SQLException {
@@ -542,11 +544,13 @@ public class DBTypeInfo extends BaseTypeInfo {
 
   private Map<String, IPropertyInfo> makeArrayProperties() {
     Map<String, IPropertyInfo> arrayProps = new HashMap<String, IPropertyInfo>();
-    for (String fkTable : getOwnersType().getTableTypeData().getIncomingFKs()) {
+    // TODO - AHK - Ideally this cast wouldn't be necessary
+    for (String fkTable : ((DBTableImpl) getOwnersType().getTable()).getIncomingFKs()) {
       IPropertyInfo arrayProp = makeArrayProperty(fkTable);
       arrayProps.put(arrayProp.getName(), arrayProp);
     }
-    for (Join joinTable : getOwnersType().getTableTypeData().getJoins()) {
+    // TODO - AHK - Ideally this cast wouldn't be necessary
+    for (Join joinTable : ((DBTableImpl) getOwnersType().getTable()).getJoins()) {
       IPropertyInfo joinProp = makeJoinProperty(joinTable);
       arrayProps.put(joinProp.getName(), joinProp);
     }
@@ -557,7 +561,7 @@ public class DBTypeInfo extends BaseTypeInfo {
     return new HashMap<String, IMethodInfo>();
   }
 
-  private DBPropertyInfo makeProperty(ColumnTypeData column) {
+  private DBPropertyInfo makeProperty(DBColumnImpl column) {
     return new DBPropertyInfo(this, column);
   }
 
@@ -604,7 +608,7 @@ public class DBTypeInfo extends BaseTypeInfo {
               List<CachedDBObject> result = ((DBTypeInfo) fkType.getTypeInfo()).findFromSql(
                   "select * from \"" + join.getTargetTable() + "\", \"" + j + "\" as j where j.\"" + t + "_id\" = \"" + join.getTargetTable() + "\".\"id\" and j.\"" + o + "_id\" = " + id
               );
-              return new JoinResult(result, getOwnersType().getTableTypeData().getDbTypeData(), j, o, t, id);
+              return new JoinResult(result, getOwnersType().getTable().getDatabase(), j, o, t, id);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
