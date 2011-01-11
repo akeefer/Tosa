@@ -26,19 +26,16 @@ public class DatabaseImpl implements IDatabase {
   private final String _namespace;
   private final DBData _dbData;
   private final Map<String, DBTableImpl> _tables;
-  private final Set<String> _typeNames;
   private final DBConnection _connection;
 
   public DatabaseImpl(String namespace, DBData dbData, DBTypeLoader typeLoader) {
     _namespace = namespace;
     _dbData = dbData;
     Map<String, DBTableImpl> tables = new HashMap<String, DBTableImpl>();
-    Set<String> typeNames = new HashSet<String>();
 
-    processDBData(tables, typeNames);
+    processDBData(tables);
 
     _tables = Collections.unmodifiableMap(tables);
-    _typeNames = Collections.unmodifiableSet(typeNames);
     _connection = new DBConnection(dbData.getConnectionString(), typeLoader);
   }
 
@@ -54,15 +51,11 @@ public class DatabaseImpl implements IDatabase {
     return _tables.values();
   }
 
-  public Set<String> getTypeNames() {
-    return _typeNames;
-  }
-
   public DBConnection getConnection() {
     return _connection;
   }
 
-  private void processDBData(Map<String, DBTableImpl> tables, Set<String> typeNames) {
+  private void processDBData(Map<String, DBTableImpl> tables) {
     // Create the initial set of objects
     for (TableData table : _dbData.getTables()) {
       tables.put(table.getName(), new DBTableImpl(this, table));
@@ -87,7 +80,6 @@ public class DatabaseImpl implements IDatabase {
           tables.get(secondTable).addJoin(new Join(joinName == null ? firstTable + "s" : joinName, tables.get(firstTable), table));
         }
       } else {
-        typeNames.add(_namespace + "." + table.getName());
         for (DBColumnImpl column : table.getColumns()) {
           if (column.isFK()) {
             tables.get(column.getFkTarget()).addIncomingFK(table);

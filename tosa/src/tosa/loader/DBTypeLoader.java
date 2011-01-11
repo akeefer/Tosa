@@ -8,6 +8,8 @@ import gw.lang.reflect.module.IExecutionEnvironment;
 import gw.lang.reflect.module.IModule;
 import gw.util.concurrent.LazyVar;
 import tosa.CachedDBObject;
+import tosa.api.IDBTable;
+import tosa.api.IDatabase;
 import tosa.dbmd.DBTableImpl;
 import tosa.dbmd.DatabaseImpl;
 import tosa.loader.data.DBData;
@@ -190,9 +192,14 @@ public class DBTypeLoader implements IExtendedTypeLoader {
   private Set<String> initializeTypeNames() {
     Set<String> typeNames = new HashSet<String>();
 
-    for (DatabaseImpl databaseImpl : _typeDataByNamespace.get().values()) {
-      typeNames.add(databaseImpl.getNamespace() + "." + TransactionType.TYPE_NAME);
-      typeNames.addAll(databaseImpl.getTypeNames());
+    for (IDatabase database : _typeDataByNamespace.get().values()) {
+      typeNames.add(database.getNamespace() + "." + TransactionType.TYPE_NAME);
+      for (IDBTable table : database.getAllTables()) {
+        if (!table.getName().contains("join_")) {
+          // TODO - AHK - Should there be a utility method for converting from table to entity name?
+          typeNames.add(database.getNamespace() + "." + table.getName());
+        }
+      }
     }
 
     return typeNames;
