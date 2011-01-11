@@ -2,11 +2,17 @@ package tosa.dbmd;
 
 import tosa.DBConnection;
 import tosa.Join;
+import tosa.api.IDBColumn;
 import tosa.api.IDatabase;
+import tosa.api.IPreparedStatementParameter;
 import tosa.loader.DBTypeLoader;
 import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -90,4 +96,57 @@ public class DatabaseImpl implements IDatabase {
   }
 
 
+  public IPreparedStatementParameter wrapParameter(Object value, IDBColumn column) {
+    // TODO - AHK - Do data conversions here
+    return new PreparedStatementParameterImpl(value, column.getColumnType().getJdbcTypeNumber());
+  }
+
+  public void executeInsert(String sql, IPreparedStatementParameter... arguments) {
+    try {
+      Connection connection = _connection.connect();
+      try {
+        PreparedStatement statement = connection.prepareStatement(sql);
+        for (int i = 0; i < arguments.length; i++) {
+          arguments[i].setParameter(statement, i + 1);
+        }
+        try {
+          statement.execute();
+        } catch (SQLException e) {
+          // TODO - AHK - Handle the error better
+          throw new RuntimeException(e);
+        } finally {
+          statement.close();
+        }
+      } catch (SQLException e) {
+        // TODO - AHK - Handle the error better
+          throw new RuntimeException(e);
+      } finally {
+        connection.close();
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+
+//  public void executeInsert(String sql, Object[] arguments) {
+//    Connection connection = _connection.connect();
+//    try {
+//      PreparedStatement statement = connection.prepareStatement(sql);
+//      for (int i = 0; i < arguments.length; i++) {
+//        statement.setObject(i + 1, arguments[i]);
+//      }
+//      try {
+//        statement.
+//      } finally {
+//        statement.close();
+//      }
+//    } finally {
+//      connection.close();
+//    }
+//  }
+//
+//  private void setParameter(PreparedStatement statement, int position, Object argument) {
+//    statement.setN
+//  }
 }

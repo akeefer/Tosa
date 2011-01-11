@@ -25,5 +25,13 @@ public interface IDatabase {
 
   String getNamespace();
 
+  // Query Execution Statements
+
+  // TODO - AHK - Decide if this is really a good API
+
+  IPreparedStatementParameter wrapParameter(Object value, IDBColumn column);
+
+  void executeInsert(String sql, IPreparedStatementParameter... arguments);
+
   // TODO - AHK - Get CREATE TABLE statements
 }
