@@ -31,7 +31,7 @@ public interface IDatabase {
 
   IPreparedStatementParameter wrapParameter(Object value, IDBColumn column);
 
-  void executeInsert(String sql, IPreparedStatementParameter... arguments);
+  Object executeInsert(String sql, IPreparedStatementParameter... arguments);
 
   // TODO - AHK - Get CREATE TABLE statements
 }

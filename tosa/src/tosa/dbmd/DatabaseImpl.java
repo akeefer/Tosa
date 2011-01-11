@@ -9,10 +9,7 @@ import tosa.loader.DBTypeLoader;
 import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -101,7 +98,8 @@ public class DatabaseImpl implements IDatabase {
     return new PreparedStatementParameterImpl(value, column.getColumnType().getJdbcTypeNumber());
   }
 
-  public void executeInsert(String sql, IPreparedStatementParameter... arguments) {
+  public Object executeInsert(String sql, IPreparedStatementParameter... arguments) {
+    Object generatedKey = null;
     try {
       Connection connection = _connection.connect();
       try {
@@ -110,7 +108,15 @@ public class DatabaseImpl implements IDatabase {
           arguments[i].setParameter(statement, i + 1);
         }
         try {
-          statement.execute();
+          statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+          ResultSet result = statement.getGeneratedKeys();
+          try {
+            if (result.first()) {
+              generatedKey = result.getObject(1);
+            }
+          } finally {
+            result.close();
+          }
         } catch (SQLException e) {
           // TODO - AHK - Handle the error better
           throw new RuntimeException(e);
@@ -126,6 +132,8 @@ public class DatabaseImpl implements IDatabase {
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
+
+    return generatedKey;
   }
 
 
