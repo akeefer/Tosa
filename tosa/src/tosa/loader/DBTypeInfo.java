@@ -547,9 +547,9 @@ public class DBTypeInfo extends BaseTypeInfo {
 
   private Map<String, IPropertyInfo> makeArrayProperties() {
     Map<String, IPropertyInfo> arrayProps = new HashMap<String, IPropertyInfo>();
-    // TODO - AHK - Ideally this cast wouldn't be necessary
-    for (IDBTable fkTable : ((DBTableImpl) getOwnersType().getTable()).getIncomingFKs()) {
-      IPropertyInfo arrayProp = makeArrayProperty(fkTable);
+    for (IDBColumn fkColumn : getOwnersType().getTable().getIncomingFKs()) {
+      // TODO - AHK - Deal with multiple incoming fks
+      IPropertyInfo arrayProp = makeArrayProperty(fkColumn.getTable());
       arrayProps.put(arrayProp.getName(), arrayProp);
     }
     // TODO - AHK - Ideally this cast wouldn't be necessary

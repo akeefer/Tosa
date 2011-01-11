@@ -21,6 +21,8 @@ public interface IDBTable {
   // TODO - AHK - Should this be an iterable?
   Collection<? extends IDBColumn> getColumns();
 
+  Collection<? extends IDBColumn> getIncomingFKs();
+
   boolean hasId();
 
   // TODO - AHK - Some attribute to indicate it's a join table?

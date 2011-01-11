@@ -1,6 +1,7 @@
 package tosa.dbmd;
 
 import tosa.Join;
+import tosa.api.IDBColumn;
 import tosa.api.IDBTable;
 import tosa.api.IDatabase;
 import tosa.loader.data.ColumnData;
@@ -27,13 +28,13 @@ public class DBTableImpl implements IDBTable {
   // All the tables that this table is joined with
   private final List<Join> _joins;
   // Tables that have FKs to this table
-  private final List<IDBTable> _incomingFKs;
+  private final List<IDBColumn> _incomingFKs;
 
   public DBTableImpl(DatabaseImpl database, TableData tableData) {
     _database = database;
     _tableData = tableData;
     _joins = new ArrayList<Join>();
-    _incomingFKs = new ArrayList<IDBTable>();
+    _incomingFKs = new ArrayList<IDBColumn>();
 
     // It might be best to do this in a separate method, but that gets annoying with Java rules
     // around when final variables can be initialized
@@ -76,16 +77,15 @@ public class DBTableImpl implements IDBTable {
   }
 
   // TODO - AHK - Kill this if possible
-  void addIncomingFK(IDBTable referencingTable) {
-    _incomingFKs.add(referencingTable);
+  void addIncomingFK(IDBColumn fkColumn) {
+    _incomingFKs.add(fkColumn);
   }
 
   public List<Join> getJoins() {
     return _joins;
   }
 
-  // TODO - AHK - This should be a list of IDBColumn, not IDBTable
-  public List<IDBTable> getIncomingFKs() {
+  public List<? extends IDBColumn> getIncomingFKs() {
     return _incomingFKs;
   }
 }
