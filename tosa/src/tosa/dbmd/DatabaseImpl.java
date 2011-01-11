@@ -103,12 +103,12 @@ public class DatabaseImpl implements IDatabase {
     try {
       Connection connection = _connection.connect();
       try {
-        PreparedStatement statement = connection.prepareStatement(sql);
+        PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
         for (int i = 0; i < arguments.length; i++) {
           arguments[i].setParameter(statement, i + 1);
         }
         try {
-          statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+          statement.execute();
           ResultSet result = statement.getGeneratedKeys();
           try {
             if (result.first()) {

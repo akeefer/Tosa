@@ -63,6 +63,17 @@ public class DBTableImpl implements IDBTable {
     return _database;
   }
 
+  @Override
+  public IDBColumn getColumn(String name) {
+    // TODO - AHK - Use a hash table if it matters
+    for (IDBColumn column : _columns) {
+      if (column.getName().equals(name)) {
+        return column;
+      }
+    }
+    return null;
+  }
+
   public List<DBColumnImpl> getColumns() {
     return _columns;
   }

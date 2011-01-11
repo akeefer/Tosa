@@ -18,6 +18,8 @@ public interface IDBTable {
 
   String getName();
 
+  IDBColumn getColumn(String name);
+
   // TODO - AHK - Should this be an iterable?
   Collection<? extends IDBColumn> getColumns();
 
