@@ -29,8 +29,24 @@ public class DBPropertyInfo extends PropertyInfoBase {
   public DBPropertyInfo(ITypeInfo container, DBColumnImpl column) {
     super(container);
     _column = column;
-    _name = column.getPropertyName();
-    _type = TypeSystem.getByFullName(_column.getPropertyTypeName());
+
+    String colName = column.getName();
+    if (colName.endsWith("_id")) {
+      // Anything ending in _id is considered an fk
+      if (colName.substring(0, colName.length() - 3).contains("_")) {
+        // If it's Employer_Company_id, we want the property to be named "Employer" and the target table is "Company"
+        int underscorePos = colName.lastIndexOf('_', colName.length() - 4);
+        _name = colName.substring(0, underscorePos);
+      } else {
+        // If it's Company_id, we want the property to be named "Company" and the target table is also "Company"
+        _name = colName.substring(0, colName.length() - 3);
+      }
+      // TODO - AHK - Use some consistent method to transform a table into a type name
+      _type = TypeSystem.getByFullName(column.getFKTarget().getDatabase().getNamespace() + "." + column.getFKTarget().getName());
+    } else {
+      _name = colName;
+      _type = TypeSystem.getByFullName(column.getColumnType().getGosuTypeName());
+    }
   }
 
   @Override

@@ -82,7 +82,7 @@ public class DatabaseImpl implements IDatabase {
       } else {
         for (DBColumnImpl column : table.getColumns()) {
           if (column.isFK()) {
-            tables.get(column.getFkTarget()).addIncomingFK(column);
+            tables.get(column.getFKTargetName()).addIncomingFK(column);
           }
         }
       }

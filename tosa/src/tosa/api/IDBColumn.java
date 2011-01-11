@@ -1,5 +1,7 @@
 package tosa.api;
 
+import tosa.loader.data.ColumnType;
+
 /**
  * Created by IntelliJ IDEA.
  * User: alan
@@ -13,6 +15,12 @@ public interface IDBColumn {
 
   String getName();
 
+  boolean isFK();
+
+  IDBTable getFKTarget();
+
+  // TODO - AHK - Pull the column type into the api package
+  ColumnType getColumnType();
   // TODO - Column type
   // TODO - Additional attributes
 }

@@ -1,7 +1,9 @@
 package tosa.dbmd;
 
 import tosa.api.IDBColumn;
+import tosa.api.IDBTable;
 import tosa.loader.data.ColumnData;
+import tosa.loader.data.ColumnType;
 
 /**
  * Created by IntelliJ IDEA.
@@ -15,8 +17,6 @@ public class DBColumnImpl implements IDBColumn {
   private final ColumnData _columnData;
   private final boolean _isFK;
   private final String _fkTarget;
-  private final String _propertyName;
-  private final String _propertyTypeName;
 
   public DBColumnImpl(DBTableImpl table, ColumnData columnData) {
     _table = table;
@@ -31,20 +31,15 @@ public class DBColumnImpl implements IDBColumn {
       if (colName.substring(0, colName.length() - 3).contains("_")) {
         // If it's Employer_Company_id, we want the property to be named "Employer" and the target table is "Company"
         int underscorePos = colName.lastIndexOf('_', colName.length() - 4);
-        _propertyName = colName.substring(0, underscorePos);
         _fkTarget = colName.substring(underscorePos + 1, colName.length() - 3);
       } else {
         // If it's Company_id, we want the property to be named "Company" and the target table is also "Company"
-        _propertyName = colName.substring(0, colName.length() - 3);
-        _fkTarget = _propertyName;
+        _fkTarget = colName.substring(0, colName.length() - 3);
       }
       _isFK = true;
-      _propertyTypeName = _table.getDatabase().getNamespace() + "." + _fkTarget;
     } else {
       _isFK = false;
       _fkTarget = null;
-      _propertyName = _columnData.getName();
-      _propertyTypeName = _columnData.getColumnType().getGosuTypeName();
     }
   }
 
@@ -57,7 +52,17 @@ public class DBColumnImpl implements IDBColumn {
     return _isFK;
   }
 
-  public String getFkTarget() {
+  public IDBTable getFKTarget() {
+    return _table.getDatabase().getTable(_fkTarget);
+  }
+
+  @Override
+  public ColumnType getColumnType() {
+    return _columnData.getColumnType();
+  }
+
+  // TODO - AHK - It would be nice if this wasn't necessary
+  String getFKTargetName() {
     return _fkTarget;
   }
 
@@ -68,20 +73,5 @@ public class DBColumnImpl implements IDBColumn {
 
   public DBTableImpl getTable() {
     return _table;
-  }
-
-  public String getPropertyName() {
-    return _propertyName;
-  }
-
-  /**
-   * The name of the type that this property should represent.  This is stored as a String
-   * until the property info is actually constructed to minimize circular dependencies within
-   * the type system.
-   *
-   * @return the fully-qualified name of the type this property should appear as
-   */
-  public String getPropertyTypeName() {
-    return _propertyTypeName;
   }
 }
