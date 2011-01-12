@@ -25,6 +25,7 @@ import tosa.api.IDBColumn;
 import tosa.api.IDBTable;
 import tosa.dbmd.DBColumnImpl;
 import tosa.dbmd.DBTableImpl;
+import tosa.query.SelectHelper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -88,7 +89,7 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return selectById(args[0]);
+              return SelectHelper.selectById(getOwnersType(), args[0]);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -363,30 +364,6 @@ public class DBTypeInfo extends BaseTypeInfo {
 
   private Connection connect() throws SQLException {
     return getOwnersType().getTable().getDatabase().getConnection().connect();
-  }
-
-  CachedDBObject selectById(Object id) throws SQLException {
-    CachedDBObject obj = null;
-    Connection conn = connect();
-    try {
-      Statement stmt = conn.createStatement();
-      try {
-        stmt.executeQuery("select * from \"" + getOwnersType().getRelativeName() + "\" where \"id\" = '" + id.toString().replace("'", "''") + "'");
-        ResultSet result = stmt.getResultSet();
-        try {
-          if (result.first()) {
-            obj = buildObject(result);
-          }
-        } finally {
-          result.close();
-        }
-      } finally {
-        stmt.close();
-      }
-    } finally {
-      conn.close();
-    }
-    return obj;
   }
 
   List<CachedDBObject> findFromTemplate(CachedDBObject template, PropertyReference sortColumn, boolean ascending, int limit, int offset) throws SQLException {
