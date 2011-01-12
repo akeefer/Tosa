@@ -173,7 +173,7 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return findFromTemplate((CachedDBObject) args[0], null, false, -1, -1);
+              return SelectHelper.findFromTemplate(getOwnersType(), (CachedDBObject) args[0], null, false, -1, -1);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -188,7 +188,7 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return findFromTemplate((CachedDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2], -1, -1);
+              return SelectHelper.findFromTemplate(getOwnersType(), (CachedDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2], -1, -1);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -203,7 +203,7 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return findFromTemplate((CachedDBObject) args[0], null, false, (Integer) args[1], (Integer) args[2]);
+              return SelectHelper.findFromTemplate(getOwnersType(), (CachedDBObject) args[0], null, false, (Integer) args[1], (Integer) args[2]);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -220,7 +220,7 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return findFromTemplate((CachedDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2], (Integer) args[3], (Integer) args[4]);
+              return SelectHelper.findFromTemplate(getOwnersType(), (CachedDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2], (Integer) args[3], (Integer) args[4]);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -364,21 +364,6 @@ public class DBTypeInfo extends BaseTypeInfo {
 
   private Connection connect() throws SQLException {
     return getOwnersType().getTable().getDatabase().getConnection().connect();
-  }
-
-  List<CachedDBObject> findFromTemplate(CachedDBObject template, PropertyReference sortColumn, boolean ascending, int limit, int offset) throws SQLException {
-    StringBuilder query = new StringBuilder("select * from \"");
-    query.append(getOwnersType().getRelativeName()).append("\" where ");
-    addWhereClause(query, template);
-    if (sortColumn != null) {
-      query.append(" order by \"").append(sortColumn.getPropertyInfo().getName()).append("\" ").append(ascending ? "ASC" : "DESC").append(", \"id\" ASC");
-    } else {
-      query.append(" order by \"id\" ASC");
-    }
-    if (limit != -1) {
-      query.append(" limit ").append(limit).append(" offset ").append(offset);
-    }
-    return findFromSql(query.toString());
   }
 
   int countFromTemplate(CachedDBObject template) throws SQLException {
