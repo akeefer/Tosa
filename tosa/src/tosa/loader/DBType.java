@@ -5,7 +5,6 @@ import gw.lang.reflect.ITypeInfo;
 import gw.lang.reflect.ITypeLoader;
 import gw.lang.reflect.TypeBase;
 import gw.util.concurrent.LazyVar;
-import tosa.DBConnection;
 
 import java.util.Collections;
 import java.util.List;
@@ -40,7 +39,7 @@ public class DBType extends TypeBase implements IDBType {
 
   @Override
   public String getName() {
-    return getNamespace() + "." + getRelativeName();
+    return _typeData.getTypeName();
   }
 
   @Override
@@ -69,7 +68,7 @@ public class DBType extends TypeBase implements IDBType {
   }
 
   @Override
-  public ITypeInfo getTypeInfo() {
+  public DBTypeInfo getTypeInfo() {
     return _typeInfo.get();
   }
 }

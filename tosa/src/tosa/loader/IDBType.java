@@ -1,6 +1,7 @@
 package tosa.loader;
 
 import gw.lang.reflect.IEnhanceableType;
+import gw.lang.reflect.ITypeInfo;
 import tosa.DBConnection;
 
 /**
@@ -12,4 +13,7 @@ import tosa.DBConnection;
  */
 public interface IDBType extends IEnhanceableType {
   public TableTypeData getTableTypeData();
+
+  @Override
+  DBTypeInfo getTypeInfo();
 }

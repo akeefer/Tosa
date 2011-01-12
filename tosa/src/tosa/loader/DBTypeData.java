@@ -62,6 +62,10 @@ public class DBTypeData {
     return _connection;
   }
 
+  public DBData getDBData() {
+    return _dbData;
+  }
+
   private void processDBData(Map<String, TableTypeData> tables, Set<String> typeNames) {
     // Create the initial set of objects
     for (TableData table : _dbData.getTables()) {

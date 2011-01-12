@@ -125,4 +125,8 @@ public class TableTypeData {
   public List<String> getIncomingFKs() {
     return _incomingFKs;
   }
+
+  public String getTypeName() {
+    return getDbTypeData().getNamespace() + "." + getTableName();
+  }
 }

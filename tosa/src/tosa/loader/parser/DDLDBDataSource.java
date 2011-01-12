@@ -33,7 +33,7 @@ public class DDLDBDataSource implements IDBDataSource {
       }
       List<TableData> tables = new MySQL51SQLParser().parseDDLFile(readFile(dbcFile.getSecond()));
       String fileName = dbcFile.getFirst();
-      results.put(fileName.substring(0, fileName.length() - ".ddl".length()).replace("/", "."),  new DBData(tables, connectionString));
+      results.put(fileName.substring(0, fileName.length() - ".ddl".length()).replace("/", "."),  new DBData(dbcFile.getSecond(), tables, connectionString));
     }
     return results;
   }

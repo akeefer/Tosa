@@ -499,7 +499,7 @@ public class DBTypeInfo extends BaseTypeInfo {
     return objs;
   }
 
-  private CachedDBObject buildObject(ResultSet result) throws SQLException {
+  public CachedDBObject buildObject(ResultSet result) throws SQLException {
     CachedDBObject obj = new CachedDBObject(getOwnersType(), false);
     for (IPropertyInfo prop : getProperties()) {
       if (prop instanceof DBPropertyInfo) {

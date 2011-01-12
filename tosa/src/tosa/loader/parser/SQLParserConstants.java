@@ -14,6 +14,16 @@ public interface SQLParserConstants {
   public static final String EQUALS = "=";
   public static final String OPEN_PAREN = "(";
   public static final String SEMI_COLON = ";";
+  public static final String ASTERISK = "*";
+  public static final String EQ_OP = "=";
+  public static final String LT_OP = "<";
+  public static final String LTEQ_OP = "<=";
+  public static final String GT_OP = ">";
+  public static final String GTEQ_OP = ">=";
+  public static final String PLUS_OP = "+";
+  public static final String MINUS_OP = "+";
+  public static final String TIMES_OP = "*";
+  public static final String DIV_OP = "/";
 
   public static final String ACTION = "ACTION";
   public static final String ASC = "ASC";
@@ -199,4 +209,11 @@ public interface SQLParserConstants {
   public static final String MINUTE = "MINUTE";
   public static final String SECOND = "SECOND";
   public static final String TO = "TO";
+
+  public static final String DISTINCT = "DISTINCT";
+  public static final String ALL = "ALL";
+  public static final String FROM = "FROM";
+  public static final String WHERE = "WHERE";
+  public static final String OR = "OR";
+  public static final String AND = "AND";
 }

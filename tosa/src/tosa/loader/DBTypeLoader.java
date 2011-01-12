@@ -1,26 +1,22 @@
 package tosa.loader;
 
+import gw.fs.IDirectory;
 import gw.fs.IFile;
+import gw.fs.IResource;
 import gw.lang.reflect.IExtendedTypeLoader;
 import gw.lang.reflect.IType;
-import gw.lang.reflect.ITypeRef;
 import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.java.IJavaClassInfo;
 import gw.lang.reflect.module.IExecutionEnvironment;
 import gw.lang.reflect.module.IModule;
-import gw.util.Pair;
+import gw.util.GosuClassUtil;
 import gw.util.concurrent.LazyVar;
 import tosa.CachedDBObject;
-import tosa.DBConnection;
 import tosa.loader.data.DBData;
 import tosa.loader.data.IDBDataSource;
 import tosa.loader.parser.DDLDBDataSource;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,6 +40,10 @@ public class DBTypeLoader implements IExtendedTypeLoader {
 
   private LazyVar<Map<String, DBTypeData>> _typeDataByNamespace = new LazyVar<Map<String, DBTypeData>>() {
     protected Map<String, DBTypeData> init() { return initializeDBTypeData(); }
+  };
+
+  private LazyVar<Map<String, SQLTypeData>> _sqlTypeDataByName = new LazyVar<Map<String, SQLTypeData>>() {
+    protected Map<String, SQLTypeData> init() { return initializeSQLTypeData(); }
   };
 
   private LazyVar<Set<String>> _namespaces = new LazyVar<Set<String>>() {
@@ -90,7 +90,12 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     String relativeName = fullyQualifiedName.substring(lastDot + 1);
     DBTypeData dbTypeData = _typeDataByNamespace.get().get(namespace);
     if (dbTypeData == null) {
-      return null;
+      SQLTypeData data = _sqlTypeDataByName.get().get(fullyQualifiedName);
+      if (data != null) {
+        return new SQLType(data, this);
+      } else {
+        return null;
+      }
     }
 
     if ("Transaction".equals(relativeName)) {
@@ -175,22 +180,63 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     return dbTypeDataMap;
   }
 
+
+  private Map<String, SQLTypeData> initializeSQLTypeData() {
+    Map<String, SQLTypeData> typeData = new HashMap<String, SQLTypeData>();
+    for (DBTypeData dbTypeData : _typeDataByNamespace.get().values()) {
+      DBData data = dbTypeData.getDBData();
+      IFile ddl = data.getDDLFile();
+      populateTypeData(dbTypeData,
+        GosuClassUtil.getPackage(
+          GosuClassUtil.getPackage(dbTypeData.getNamespace())),
+        ddl.getParent(),
+        typeData);
+    }
+    return typeData;
+  }
+
+  private void populateTypeData(DBTypeData dbTypeData, String namespace, IResource res, Map<String, SQLTypeData> types) {
+    if (res instanceof IFile && res.getName().endsWith(".sql")) {
+      String name = namespace + "." + ((IFile) res).getBaseName();
+      SQLTypeData data = new SQLTypeData(name, dbTypeData, (IFile) res);
+      types.put(name, data);
+    } else if (res instanceof IDirectory) {
+      String nextNamespace = res.getName();
+      if (!namespace.equals("")) {
+        nextNamespace = namespace + "." + nextNamespace;
+      }
+      for (IDirectory directory : ((IDirectory) res).listDirs()) {
+        populateTypeData(dbTypeData, nextNamespace, directory, types);
+      }
+      for (IFile file : ((IDirectory) res).listFiles()) {
+        populateTypeData(dbTypeData, nextNamespace, file, types);
+      }
+    }
+  }
+
   private Set<String> initializeNamespaces() {
     Set<String> allNamespaces = new HashSet<String>();
     for (String namespace : _typeDataByNamespace.get().keySet()) {
-      String[] nsComponentsArr = namespace.split("\\.");
-      for (int i = 0; i < nsComponentsArr.length; i++) {
-        String nsName = "";
-        for (int n = 0; n < i + 1; n++) {
-          if (n > 0) {
-            nsName += ".";
-          }
-          nsName += nsComponentsArr[n];
-        }
-        allNamespaces.add(nsName);
-      }
+      addNamespaces(allNamespaces, namespace);
+    }
+    for (SQLTypeData data : _sqlTypeDataByName.get().values()) {
+      addNamespaces(allNamespaces, GosuClassUtil.getPackage(data.getTypeName()));
     }
     return allNamespaces;
+  }
+
+  private void addNamespaces(Set<String> allNamespaces, String namespace) {
+    String[] nsComponentsArr = namespace.split("\\.");
+    for (int i = 0; i < nsComponentsArr.length; i++) {
+      String nsName = "";
+      for (int n = 0; n < i + 1; n++) {
+        if (n > 0) {
+          nsName += ".";
+        }
+        nsName += nsComponentsArr[n];
+      }
+      allNamespaces.add(nsName);
+    }
   }
 
   private Set<String> initializeTypeNames() {
@@ -199,6 +245,9 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     for (DBTypeData dbTypeData : _typeDataByNamespace.get().values()) {
       typeNames.add(dbTypeData.getNamespace() + "." + TransactionType.TYPE_NAME);
       typeNames.addAll(dbTypeData.getTypeNames());
+    }
+    for (SQLTypeData data : _sqlTypeDataByName.get().values()) {
+      typeNames.add(data.getTypeName());
     }
 
     return typeNames;
