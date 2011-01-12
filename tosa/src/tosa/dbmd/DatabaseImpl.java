@@ -5,17 +5,13 @@ import tosa.Join;
 import tosa.api.IDBColumn;
 import tosa.api.IDatabase;
 import tosa.api.IPreparedStatementParameter;
+import tosa.api.IQueryResultProcessor;
 import tosa.loader.DBTypeLoader;
 import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
 
 import java.sql.*;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -99,24 +95,96 @@ public class DatabaseImpl implements IDatabase {
   }
 
   public Object executeInsert(String sql, IPreparedStatementParameter... arguments) {
-    Object generatedKey = null;
+    InsertExecuteCallback callback = new InsertExecuteCallback();
+    execute(sql, arguments, callback);
+    return callback.getGeneratedKey();
+  }
+
+  @Override
+  public <T> List<T> executeSelect(String sql, IQueryResultProcessor<T> resultProcessor, IPreparedStatementParameter... arguments) {
+    SelectExecuteCallback<T> callback = new SelectExecuteCallback<T>(resultProcessor);
+    execute(sql, arguments, callback);
+    return callback.getResults();
+  }
+
+  private static class InsertExecuteCallback implements ExecuteCallback {
+
+    private Object _generatedKey;
+
+    @Override
+    public PreparedStatement prepareStatement(Connection connection, String sql) throws SQLException {
+      return connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+    }
+
+    @Override
+    public void processStatementPostExecute(PreparedStatement statement) throws SQLException {
+      ResultSet result = statement.getGeneratedKeys();
+      try {
+        if (result.first()) {
+          _generatedKey = result.getObject(1);
+        }
+      } finally {
+        result.close();
+      }
+    }
+
+    public Object getGeneratedKey() {
+      return _generatedKey;
+    }
+  }
+
+  private static class SelectExecuteCallback<T> implements ExecuteCallback {
+    private IQueryResultProcessor<T> _processor;
+    private List<T> _results;
+
+    private SelectExecuteCallback(IQueryResultProcessor<T> processor) {
+      _processor = processor;
+    }
+
+    @Override
+    public PreparedStatement prepareStatement(Connection connection, String sql) throws SQLException {
+      return connection.prepareStatement(sql);
+    }
+
+    @Override
+    public void processStatementPostExecute(PreparedStatement statement) throws SQLException {
+      // TODO - AHK - Should this be created up-front so it's non-null if an exception occurs somewhere?
+      _results = new ArrayList<T>();
+      ResultSet result = statement.getResultSet();
+      try {
+        if (result.first()) {
+          while (!result.isAfterLast()) {
+            _results.add(_processor.processResult(result));
+            result.next();
+          }
+          result.next();
+        }
+      } finally {
+        result.close();
+      }
+    }
+
+    public List<T> getResults() {
+      return _results;
+    }
+  }
+
+  private interface ExecuteCallback {
+    PreparedStatement prepareStatement(Connection connection, String sql) throws SQLException;
+    void processStatementPostExecute(PreparedStatement statement) throws SQLException;
+  }
+
+  private void execute(String sql, IPreparedStatementParameter[] arguments, ExecuteCallback callback) {
     try {
       Connection connection = _connection.connect();
       try {
-        PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        PreparedStatement statement = callback.prepareStatement(connection, sql);
         for (int i = 0; i < arguments.length; i++) {
           arguments[i].setParameter(statement, i + 1);
         }
         try {
           statement.execute();
-          ResultSet result = statement.getGeneratedKeys();
-          try {
-            if (result.first()) {
-              generatedKey = result.getObject(1);
-            }
-          } finally {
-            result.close();
-          }
+          callback.processStatementPostExecute(statement);
         } catch (SQLException e) {
           // TODO - AHK - Handle the error better
           throw new RuntimeException(e);
@@ -132,29 +200,5 @@ public class DatabaseImpl implements IDatabase {
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
-
-    return generatedKey;
   }
-
-
-//  public void executeInsert(String sql, Object[] arguments) {
-//    Connection connection = _connection.connect();
-//    try {
-//      PreparedStatement statement = connection.prepareStatement(sql);
-//      for (int i = 0; i < arguments.length; i++) {
-//        statement.setObject(i + 1, arguments[i]);
-//      }
-//      try {
-//        statement.
-//      } finally {
-//        statement.close();
-//      }
-//    } finally {
-//      connection.close();
-//    }
-//  }
-//
-//  private void setParameter(PreparedStatement statement, int position, Object argument) {
-//    statement.setN
-//  }
 }

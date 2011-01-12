@@ -3,6 +3,7 @@ package tosa.api;
 import tosa.DBConnection;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -34,6 +35,8 @@ public interface IDatabase {
   // TODO - AHK - This should probably return more than just one object
   // TODO - AHK - Should there also be an executeUpdate method?  probably . . .
   Object executeInsert(String sql, IPreparedStatementParameter... arguments);
+
+  <T> List<T> executeSelect(String sql, IQueryResultProcessor<T> resultProcessor, IPreparedStatementParameter... arguments);
 
   // TODO - AHK - Get CREATE TABLE statements
 }
