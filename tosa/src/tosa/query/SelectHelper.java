@@ -6,10 +6,7 @@ import gw.lang.reflect.features.PropertyReference;
 import gw.lang.reflect.java.IJavaType;
 import gw.util.GosuStringUtil;
 import tosa.CachedDBObject;
-import tosa.api.IDBColumn;
-import tosa.api.IDBTable;
-import tosa.api.IDatabase;
-import tosa.api.IQueryResultProcessor;
+import tosa.api.*;
 import tosa.loader.DBPropertyInfo;
 import tosa.loader.DBType;
 import tosa.loader.IDBType;
@@ -65,20 +62,28 @@ public class SelectHelper {
     }
   }
 
-//  public static List<CachedDBObject> findFromTemplate(CachedDBObject template, PropertyReference sortColumn, boolean ascending, int limit, int offset) throws SQLException {
-//    StringBuilder query = new StringBuilder("select * from \"");
-//    query.append(getOwnersType().getRelativeName()).append("\" where ");
-//    addWhereClause(query, template);
-//    if (sortColumn != null) {
-//      query.append(" order by \"").append(sortColumn.getPropertyInfo().getName()).append("\" ").append(ascending ? "ASC" : "DESC").append(", \"id\" ASC");
-//    } else {
-//      query.append(" order by \"id\" ASC");
-//    }
-//    if (limit != -1) {
-//      query.append(" limit ").append(limit).append(" offset ").append(offset);
-//    }
-//    return findFromSql(query.toString());
-//  }
+  // TODO - AHK - Should we just infer the type from the template?
+  public static List<CachedDBObject> findFromTemplate(IDBType type, CachedDBObject template, PropertyReference sortColumn, boolean ascending, int limit, int offset) throws SQLException {
+    IDBTable table = type.getTable();
+    IDatabase db = table.getDatabase();
+
+    StringBuilder query = new StringBuilder("select * from \"");
+    query.append(table.getName()).append("\" where ");
+    List<IPreparedStatementParameter> queryParameters = new ArrayList<IPreparedStatementParameter>();
+    addWhereClause(query, template, table, queryParameters);
+    if (sortColumn != null) {
+      query.append(" order by \"").append(sortColumn.getPropertyInfo().getName()).append("\" ").append(ascending ? "ASC" : "DESC").append(", \"id\" ASC");
+    } else {
+      query.append(" order by \"id\" ASC");
+    }
+    if (limit != -1) {
+      query.append(" limit ").append(limit).append(" offset ").append(offset);
+    }
+
+    return db.executeSelect(query.toString(),
+        new CachedDBQueryResultProcessor(type),
+        queryParameters.toArray(new IPreparedStatementParameter[queryParameters.size()]));
+  }
 //
 //  public static int countFromTemplate(CachedDBObject template) throws SQLException {
 //    StringBuilder query = new StringBuilder("select count(*) as count from \"").append(getOwnersType().getRelativeName()).append("\" where ");
@@ -110,25 +115,25 @@ public class SelectHelper {
 //    }
 //  }
 //
-//  public static void addWhereClause(StringBuilder query, CachedDBObject template) {
-//    List<String> whereClause = new ArrayList<String>();
-//    if (template != null) {
-//      for (Map.Entry<String, Object> column : template.getColumns().entrySet()) {
-//        if (column.getValue() != null) {
-//          String value = "'" + column.getValue().toString().replace("'", "''") + "'";
-//          whereClause.add("\"" + column.getKey() + "\" = " + value);
-//        }
-//      }
-//      if (!whereClause.isEmpty()) {
-//        query.append(GosuStringUtil.join(whereClause, " and "));
-//      } else {
-//        query.append("true");
-//      }
-//    } else {
-//      query.append("true");
-//    }
-//  }
-//
+  public static void addWhereClause(StringBuilder query, CachedDBObject template, IDBTable table, List<IPreparedStatementParameter> parameters) {
+    List<String> whereClause = new ArrayList<String>();
+    if (template != null) {
+      for (Map.Entry<String, Object> column : template.getColumns().entrySet()) {
+        if (column.getValue() != null) {
+          whereClause.add("\"" + column.getKey() + "\" = ?");
+          parameters.add(table.getDatabase().wrapParameter(column.getValue(), table.getColumn(column.getKey())));
+        }
+      }
+      if (!whereClause.isEmpty()) {
+        query.append(GosuStringUtil.join(whereClause, " and "));
+      } else {
+        query.append("true");
+      }
+    } else {
+      query.append("true");
+    }
+  }
+
 //  public static List<CachedDBObject> findInDb(List<IPropertyInfo> props, Object... args) throws SQLException {
 //    List<String> whereClause = new ArrayList<String>();
 //    for (int i = 0; i < props.size(); i++) {
@@ -147,29 +152,6 @@ public class SelectHelper {
 //    return findFromSql("select * from \"" + getOwnersType().getRelativeName() + "\" where " + GosuStringUtil.join(whereClause, " and "));
 //  }
 //
-//  public static List<CachedDBObject> findFromSql(String query) throws SQLException {
-//    List<CachedDBObject> objs = new ArrayList<CachedDBObject>();
-//    Connection conn = connect();
-//    try {
-//      Statement stmt = conn.createStatement();
-//      try {
-//        stmt.executeQuery(query);
-//        ResultSet result = stmt.getResultSet();
-//        try {
-//          if (result.first()) {
-//            objs = buildObjects(result);
-//          }
-//        } finally {
-//          result.close();
-//        }
-//      } finally {
-//        stmt.close();
-//      }
-//    } finally {
-//      conn.close();
-//    }
-//    return Collections.unmodifiableList(objs);
-//  }
 //
 //  public static ArrayList<CachedDBObject> buildObjects(ResultSet result) throws SQLException {
 //    ArrayList<CachedDBObject> objs = new ArrayList<CachedDBObject>();
