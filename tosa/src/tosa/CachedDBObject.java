@@ -47,7 +47,7 @@ public class CachedDBObject implements IGosuObject {
     return _columns;
   }
 
-  public CachedDBObject(DBType type, boolean isNew) {
+  public CachedDBObject(IDBType type, boolean isNew) {
     // TODO - AHK
     _type = (IDBType) TypeSystem.getOrCreateTypeReference(type);
     _new = isNew;

@@ -1,6 +1,7 @@
 package tosa.api;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -10,5 +11,5 @@ import java.sql.ResultSet;
  * To change this template use File | Settings | File Templates.
  */
 public interface IQueryResultProcessor<T> {
-  T processResult(ResultSet result);
+  T processResult(ResultSet result) throws SQLException;
 }
