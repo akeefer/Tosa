@@ -85,32 +85,26 @@ public class CachedDBObject implements IGosuObject {
         _new = false;
       }
     } else {
-      Connection conn = _type.getTable().getDatabase().getConnection().connect();
-      try {
-        Statement stmt = conn.createStatement();
-        try {
-          List<String> attrs = new ArrayList<String>();
-          for (Map.Entry<String, Object> entry : _columns.entrySet()) {
-            attrs.add("\"" + entry.getKey() + "\" = " + (entry.getValue() == null ? "null" : "'" + (entry.getValue().toString().replace("'", "''")) + "'"));
-          }
-          StringBuilder query = new StringBuilder("update \"");
-          query.append(getTableName()).append("\" set ");
-          for (String attr : attrs) {
-            query.append(attr);
-            if (attr != attrs.get(attrs.size() - 1)) {
-              query.append(", ");
-            }
-          }
-          query.append(" where \"id\" = '");
-          query.append(_columns.get("id").toString().replace("'", "''"));
-          query.append("'");
-          stmt.executeUpdate(query.toString());
-        } finally {
-          stmt.close();
+      List<String> attrs = new ArrayList<String>();
+      List<IPreparedStatementParameter> values = new ArrayList<IPreparedStatementParameter>();
+      for (Map.Entry<String, Object> entry : _columns.entrySet()) {
+        if (entry.getKey().equals("id")) {
+          continue;
         }
-      } finally {
-        conn.close();
+        attrs.add("\"" + entry.getKey() + "\" = ?");
+        values.add(database.wrapParameter(entry.getValue(), _type.getTable().getColumn(entry.getKey())));
       }
+      StringBuilder query = new StringBuilder("update \"");
+      query.append(getTableName()).append("\" set ");
+      for (String attr : attrs) {
+        query.append(attr);
+        if (attr != attrs.get(attrs.size() - 1)) {
+          query.append(", ");
+        }
+      }
+      query.append(" where \"id\" = ?");
+      values.add(database.wrapParameter(_columns.get("id"), _type.getTable().getColumn("id")));
+      database.executeInsert(query.toString(), values.toArray(new IPreparedStatementParameter[values.size()]));
     }
   }
 

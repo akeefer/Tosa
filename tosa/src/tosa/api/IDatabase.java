@@ -31,6 +31,8 @@ public interface IDatabase {
 
   IPreparedStatementParameter wrapParameter(Object value, IDBColumn column);
 
+  // TODO - AHK - This should probably return more than just one object
+  // TODO - AHK - Should there also be an executeUpdate method?  probably . . .
   Object executeInsert(String sql, IPreparedStatementParameter... arguments);
 
   // TODO - AHK - Get CREATE TABLE statements
