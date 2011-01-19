@@ -14,5 +14,5 @@ class TosaTestDBInit {
     connection.createStatement().executeUpdate( ddlFile.toJavaFile().read() )
     connection.close()
   }
-  
+
 }
