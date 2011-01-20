@@ -1,9 +1,6 @@
 package tosa;
 
-import tosa.api.IDBColumn;
-import tosa.api.IDBTable;
-import tosa.api.IDatabase;
-import tosa.api.IPreparedStatementParameter;
+import tosa.api.*;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -84,57 +81,42 @@ public class JoinResult implements List<CachedDBObject> {
 
   @Override
   public boolean remove(Object o) {
+    // TODO - AHK - Ensure it's an object of the right type
     if (o instanceof CachedDBObject) {
       CachedDBObject obj = (CachedDBObject) o;
-      try {
-        Connection conn = _database.getConnection().connect();
-        try {
-          Statement stmt = conn.createStatement();
-          try {
-            if (_database.getTable(_joinTable.getName()).hasId()) {
-              ResultSet results = stmt.executeQuery("select * from \"" + _joinTable.getName() + "\" where \"" + _srcColumn.getName() + "\" = " + _id + " and \"" + _targetColumn.getName() + "\" = " + obj.getColumns().get("id") + " limit 1");
-              try {
-                if (results.first()) {
-                  Object id = results.getObject("id");
-                  stmt.executeUpdate("delete from \"" + _joinTable.getName() + "\" where \"id\" = '" + id.toString().replace("'", "''") + "'");
-                  return true;
-                }
-              } finally {
-                results.close();
+      if (_joinTable.hasId()) {
+        // TODO - AHK - CRITICAL - Execute the select and delete in a single transaction
+        String selectQuery = "select \"id\" from \"" + _joinTable.getName() + "\" where \"" + _srcColumn.getName() + "\" = ? and \"" + _targetColumn.getName() + "\" = ? limit 1";
+        List<Long> ids =_database.executeSelect(selectQuery,
+            new IQueryResultProcessor<Long>() {
+              @Override
+              public Long processResult(ResultSet result) throws SQLException {
+                return result.getLong("id");
               }
-            } else {
-              stmt.executeUpdate("delete from \"" + _joinTable.getName() + "\" where \"" + _srcColumn.getName() + "\" = " + _id + " and \"" + _targetColumn.getName() + "\" = " + obj.getColumns().get("id"));
-            }
-          } finally {
-            stmt.close();
-          }
-        } finally {
-          conn.close();
+            },
+            _database.wrapParameter(_id, _srcColumn), _database.wrapParameter(obj.getColumns().get("id"), _targetColumn));
+        if (ids.size() > 0) {
+          // TODO -- Throw if there's more than 1
+          String deleteStatement = "delete from \"" + _joinTable.getName() + "\" where \"id\" = ?";
+          _database.executeDelete(deleteStatement, _database.wrapParameter(ids.get(0), _joinTable.getColumn("id")));
+          return true;
         }
-      } catch (SQLException e) {
-        throw new RuntimeException(e);
+      } else {
+        String query = "delete from \"" + _joinTable.getName() + "\" where \"" + _srcColumn.getName() + "\" = ? and \"" + _targetColumn.getName() + "\" = ?";
+        IPreparedStatementParameter[] parameters = new IPreparedStatementParameter[2];
+        parameters[0] = _database.wrapParameter(_id, _srcColumn);
+        parameters[1] = _database.wrapParameter(obj.getColumns().get("id"), _targetColumn);
+        _database.executeDelete(query, parameters);
       }
     }
+
     return false;
   }
 
   @Override
   public void clear() {
-    try {
-      Connection conn = _database.getConnection().connect();
-      try {
-        Statement stmt = conn.createStatement();
-        try {
-          stmt.executeUpdate("delete from \"" + _joinTable.getName() + "\" where \"" + _srcColumn.getName() + "\" = " + _id);
-        } finally {
-          stmt.close();
-        }
-      } finally {
-        conn.close();
-      }
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
+    String query = "delete from \"" + _joinTable.getName() + "\" where \"" + _srcColumn.getName() + "\" = ?";
+    _database.executeDelete(query, _database.wrapParameter(_id, _srcColumn));
   }
 
 
