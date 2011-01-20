@@ -107,6 +107,11 @@ public class DatabaseImpl implements IDatabase {
     return callback.getResults();
   }
 
+  @Override
+  public void executeDelete(String sql, IPreparedStatementParameter... arguments) {
+    execute(sql, arguments, new DeleteExecuteCallback());
+  }
+
   private static class InsertExecuteCallback implements ExecuteCallback {
 
     private Object _generatedKey;
@@ -166,6 +171,18 @@ public class DatabaseImpl implements IDatabase {
 
     public List<T> getResults() {
       return _results;
+    }
+  }
+
+  private static class DeleteExecuteCallback implements ExecuteCallback {
+    @Override
+    public PreparedStatement prepareStatement(Connection connection, String sql) throws SQLException {
+      return connection.prepareStatement(sql);
+    }
+
+    @Override
+    public void processStatementPostExecute(PreparedStatement statement) throws SQLException {
+      // Nothing to do here
     }
   }
 

@@ -561,6 +561,7 @@ public class DBTypeInfo extends BaseTypeInfo {
 
           @Override
           public Object getValue(Object ctx) {
+            // TODO - AHK - The objects on the Join object seem like they might not be the right things
             String j = join.getJoinTable().getName();
             String t = join.getTargetTable().getName();
             String o = getOwnersType().getRelativeName();
@@ -568,12 +569,14 @@ public class DBTypeInfo extends BaseTypeInfo {
               o += "_src";
               t += "_dest";
             }
+            o += "_id";
+            t += "_id";
             String id = ((CachedDBObject) ctx).getColumns().get("id").toString();
             try {
               List<CachedDBObject> result = ((DBTypeInfo) fkType.getTypeInfo()).findFromSql(
-                  "select * from \"" + join.getTargetTable().getName() + "\", \"" + j + "\" as j where j.\"" + t + "_id\" = \"" + join.getTargetTable().getName() + "\".\"id\" and j.\"" + o + "_id\" = " + id
+                  "select * from \"" + join.getTargetTable().getName() + "\", \"" + j + "\" as j where j.\"" + t + "\" = \"" + join.getTargetTable().getName() + "\".\"id\" and j.\"" + o + "\" = " + id
               );
-              return new JoinResult(result, getOwnersType().getTable().getDatabase(), j, o, t, id);
+              return new JoinResult(result, getOwnersType().getTable().getDatabase(), join.getJoinTable(), join.getJoinTable().getColumn(o), join.getJoinTable().getColumn(t), id);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }

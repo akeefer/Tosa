@@ -38,5 +38,7 @@ public interface IDatabase {
 
   <T> List<T> executeSelect(String sql, IQueryResultProcessor<T> resultProcessor, IPreparedStatementParameter... arguments);
 
+  void executeDelete(String sql, IPreparedStatementParameter... arguments);
+
   // TODO - AHK - Get CREATE TABLE statements
 }

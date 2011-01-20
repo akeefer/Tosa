@@ -1,7 +1,9 @@
 package tosa;
 
+import tosa.api.IDBColumn;
+import tosa.api.IDBTable;
 import tosa.api.IDatabase;
-import tosa.dbmd.DBTableImpl;
+import tosa.api.IPreparedStatementParameter;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -24,45 +26,37 @@ public class JoinResult implements List<CachedDBObject> {
   private List<CachedDBObject> _result;
 
   private IDatabase _database;
-  private String _joinTableName;
-  private String _srcTableName;
-  private String _targetTableName;
+  private IDBTable _joinTable;
+  private IDBColumn _srcColumn;
+  private IDBColumn _targetColumn;
   private String _id;
 
-  public JoinResult(List<CachedDBObject> result, IDatabase database, String joinTableName,
-                    String srcTableName, String targetTableName, String id) {
+  public JoinResult(List<CachedDBObject> result, IDatabase database, IDBTable joinTable,
+                    IDBColumn srcColumn, IDBColumn targetColumn, String id) {
     _result = result;
     _database = database;
-    _joinTableName = joinTableName;
-    _srcTableName = srcTableName;
-    _targetTableName = targetTableName;
+    _joinTable = joinTable;
+    _srcColumn = srcColumn;
+    _targetColumn = targetColumn;
     _id = id;
   }
 
   @Override
   public boolean add(CachedDBObject obj) {
-    try {
-      Connection conn = _database.getConnection().connect();
-      try {
-        Statement stmt = conn.createStatement();
-        try {
-          stmt.executeUpdate("insert into \"" + _joinTableName + "\" (\"" + _srcTableName + "_id\", \"" + _targetTableName + "_id\") values (" + _id + ", " + obj.getColumns().get("id") + ")");
-        } finally {
-          stmt.close();
-        }
-      } finally {
-        conn.close();
-      }
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
+    // TODO - AHK - Hardcode ID as a column name somewhere
+    // TODO - AHK - Determine dynamically if table names should be quoted or not
+    String query = "insert into \"" + _joinTable.getName() + "\" (\"" + _srcColumn.getName() + "\", \"" + _targetColumn.getName() + "\") values (?, ?)";
+    IPreparedStatementParameter[] parameters = new IPreparedStatementParameter[2];
+    parameters[0] = _database.wrapParameter(_id, _srcColumn);
+    parameters[1] = _database.wrapParameter(obj.getColumns().get("id"), _targetColumn);
+    _database.executeInsert(query, parameters);
     return true;
   }
 
   @Override
   public boolean addAll(Collection<? extends CachedDBObject> objs) {
     StringBuilder query = new StringBuilder("insert into \"");
-    query.append(_joinTableName).append("\" (\"").append(_srcTableName).append("_id\", \"").append(_targetTableName).append("_id\") values ");
+    query.append(_joinTable.getName()).append("\" (\"").append(_srcColumn.getName()).append("\", \"").append(_targetColumn.getName()).append("\") values ");
     for (CachedDBObject obj : objs) {
       query.append("(").append(_id).append(", ").append(obj.getColumns().get("id")).append(")");
       query.append(", ");
@@ -97,19 +91,19 @@ public class JoinResult implements List<CachedDBObject> {
         try {
           Statement stmt = conn.createStatement();
           try {
-            if (_database.getTable(_joinTableName).hasId()) {
-              ResultSet results = stmt.executeQuery("select * from \"" + _joinTableName + "\" where \"" + _srcTableName + "_id\" = " + _id + " and \"" + _targetTableName + "_id\" = " + obj.getColumns().get("id") + " limit 1");
+            if (_database.getTable(_joinTable.getName()).hasId()) {
+              ResultSet results = stmt.executeQuery("select * from \"" + _joinTable.getName() + "\" where \"" + _srcColumn.getName() + "\" = " + _id + " and \"" + _targetColumn.getName() + "\" = " + obj.getColumns().get("id") + " limit 1");
               try {
                 if (results.first()) {
                   Object id = results.getObject("id");
-                  stmt.executeUpdate("delete from \"" + _joinTableName + "\" where \"id\" = '" + id.toString().replace("'", "''") + "'");
+                  stmt.executeUpdate("delete from \"" + _joinTable.getName() + "\" where \"id\" = '" + id.toString().replace("'", "''") + "'");
                   return true;
                 }
               } finally {
                 results.close();
               }
             } else {
-              stmt.executeUpdate("delete from \"" + _joinTableName + "\" where \"" + _srcTableName + "_id\" = " + _id + " and \"" + _targetTableName + "_id\" = " + obj.getColumns().get("id"));
+              stmt.executeUpdate("delete from \"" + _joinTable.getName() + "\" where \"" + _srcColumn.getName() + "\" = " + _id + " and \"" + _targetColumn.getName() + "\" = " + obj.getColumns().get("id"));
             }
           } finally {
             stmt.close();
@@ -131,7 +125,7 @@ public class JoinResult implements List<CachedDBObject> {
       try {
         Statement stmt = conn.createStatement();
         try {
-          stmt.executeUpdate("delete from \"" + _joinTableName + "\" where \"" + _srcTableName + "_id\" = " + _id);
+          stmt.executeUpdate("delete from \"" + _joinTable.getName() + "\" where \"" + _srcColumn.getName() + "\" = " + _id);
         } finally {
           stmt.close();
         }
