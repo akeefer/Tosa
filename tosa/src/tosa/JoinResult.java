@@ -6,10 +6,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -52,30 +49,19 @@ public class JoinResult implements List<CachedDBObject> {
 
   @Override
   public boolean addAll(Collection<? extends CachedDBObject> objs) {
+    List<IPreparedStatementParameter> parameters = new ArrayList<IPreparedStatementParameter>();
     StringBuilder query = new StringBuilder("insert into \"");
     query.append(_joinTable.getName()).append("\" (\"").append(_srcColumn.getName()).append("\", \"").append(_targetColumn.getName()).append("\") values ");
     for (CachedDBObject obj : objs) {
-      query.append("(").append(_id).append(", ").append(obj.getColumns().get("id")).append(")");
+      parameters.add(_database.wrapParameter(_id, _srcColumn));
+      parameters.add(_database.wrapParameter(obj.getColumns().get("id"), _targetColumn));
+      query.append("(?, ?)");
       query.append(", ");
     }
     if (!objs.isEmpty()) {
       query.setLength(query.length() - 2);
     }
-    try {
-      Connection conn = _database.getConnection().connect();
-      try {
-        Statement stmt = conn.createStatement();
-        try {
-          stmt.executeUpdate(query.toString());
-        } finally {
-          stmt.close();
-        }
-      } finally {
-        conn.close();
-      }
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
+    _database.executeInsert(query.toString(), parameters.toArray(new IPreparedStatementParameter[parameters.size()]));
     return true;
   }
 
