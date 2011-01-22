@@ -20,8 +20,14 @@ class DBTypeInfoTest {
 
   @BeforeClass
   static function beforeTestClass() {
-    print("*** Before class")
-    TosaTestDBInit.createDatabase()
+    time(\ -> TosaTestDBInit.createDatabase(), ">> Created database in ")
+  }
+
+  private static function time(callback : block(), message : String) {
+    var start = java.lang.System.currentTimeMillis()
+    callback()
+    var end = java.lang.System.currentTimeMillis()
+    print(message + (end - start) + "ms")
   }
 
   private function deleteAllData() {
@@ -35,18 +41,17 @@ class DBTypeInfoTest {
   }
 
   private function clearTable(tableName : String) {
-    print("Clearing table ${tableName}")
     var dbTypeLoader = TypeSystem.getTypeLoader(DBTypeLoader)
-    var dbTypeData = dbTypeLoader.getTypeDataForNamespace( "test.testdb" )
-    var connection = dbTypeData.Connection.connect()
+    var database = dbTypeLoader.getTypeDataForNamespace( "test.testdb" )
+    var connection = database.Connection.connect()
     connection.createStatement().executeUpdate( "DELETE FROM \"${tableName}\"" )
     connection.close()
   }
 
-  private var _barId : long
-  private var _fooId : long
-  private var _bazId : long
-  private var _sortPageId : long
+  private static var _barId : long
+  private static var _fooId : long
+  private static var _bazId : long
+  private static var _sortPageId : long
 
   private function importSampleData() {
     var bar = new Bar(){:Date = new java.sql.Date(new java.util.Date("4/22/2009").Time), :Misc = "misc"}
@@ -112,76 +117,60 @@ class DBTypeInfoTest {
 
   @Test
   function testPropertiesCreated() {
-      print(">>>>Test 1")
       var typeinfo = test.testdb.Foo.Type.TypeInfo
       Assert.assertEquals(8, typeinfo.Properties.Count)
 
-      print(">>>>Test 2")
       var idProp = typeinfo.getProperty("id")
       Assert.assertNotNull(idProp)
       Assert.assertEquals(Integer, idProp.FeatureType)
 
-      print(">>>>Test 3")
       var firstNameProp = typeinfo.getProperty("FirstName")
       Assert.assertNotNull(firstNameProp)
       Assert.assertEquals(String, firstNameProp.FeatureType)
 
-      print(">>>>Test 4")
       var lastNameProp = typeinfo.getProperty("LastName")
       Assert.assertNotNull(lastNameProp)
       Assert.assertEquals(String, lastNameProp.FeatureType)
 
-      print(">>>>Test 5")
       var fkProp = typeinfo.getProperty("Bar")
       Assert.assertNotNull(fkProp)
       Assert.assertEquals(test.testdb.Bar, fkProp.FeatureType)
 
-      print(">>>>Test 6")
       var namedFkProp = typeinfo.getProperty("Named")
       Assert.assertNotNull(namedFkProp)
       Assert.assertEquals(test.testdb.SortPage, namedFkProp.FeatureType)
 
-      print(">>>>Test 7")
       var textProp = typeinfo.getProperty("Address")
       Assert.assertNotNull(textProp)
       Assert.assertEquals(String, textProp.FeatureType)
 
-      print(">>>>Test 8")
       var joinProp = typeInfo.getProperty("Bazs")
       Assert.assertNotNull(joinProp)
       Assert.assertEquals(List<test.testdb.Baz>, joinProp.FeatureType)
 
-      print(">>>>Test 9")
       typeinfo = test.testdb.Bar.Type.TypeInfo
       Assert.assertEquals(6, typeinfo.Properties.Count)
 
-      print(">>>>Test 10")
       idProp = typeinfo.getProperty("id")
       Assert.assertNotNull(idProp)
       Assert.assertEquals(Integer, idProp.FeatureType)
 
-      print(">>>>Test 11")
       var miscProp = typeinfo.getProperty("Misc")
       Assert.assertNotNull(miscProp)
       Assert.assertEquals(String, miscProp.FeatureType)
 
-      print(">>>>Test 12")
       var dateProp = typeinfo.getProperty("Date")
       Assert.assertNotNull(dateProp)
       Assert.assertEquals(java.sql.Date, dateProp.FeatureType)
 
-      print(">>>>Test 13")
       var arrayProp = typeinfo.getProperty("Foos")
       Assert.assertNotNull(arrayProp)
       Assert.assertEquals(List<test.testdb.Foo>, arrayProp.FeatureType)
       Assert.assertFalse(arrayProp.Writable)
 
-      print(">>>>Test 14")
       joinProp = typeInfo.getProperty("Relatives")
       Assert.assertNotNull(joinProp)
       Assert.assertEquals(List<test.testdb.Baz>, joinProp.FeatureType)
-
-      print(">>>>Test passed")
   }
 
   @Test
@@ -393,8 +382,6 @@ class DBTypeInfoTest {
   function testCreateNew() {
       var newFoo = new test.testdb.Foo(){:FirstName = "Linus", :LastName = "Van Pelt"}
       newFoo.update()
-      
-      print(">> newFoo id is " + newFoo.id)
 
       Assert.assertNotNull(newFoo.id)
       Assert.assertEquals(NUM_FOOS + 1, test.testdb.Foo.find(null).Count)
@@ -406,9 +393,7 @@ class DBTypeInfoTest {
 
   @Test
   function testUpdateRegularColumns() {
-      print(">> Here")
       var foo = test.testdb.Foo.fromID(_fooId)
-      print(">> Now here")
       foo.FirstName = "Leroy"
       foo.update()
 
@@ -418,9 +403,7 @@ class DBTypeInfoTest {
 
   @Test
   function testUpdateTextColumn() {
-      print("*** Here")
       var foo = test.testdb.Foo.fromID(_fooId)
-      print("*** And here")
       foo.Address = "54321 Centre Ave.\nMiddleton, IA 52341"
       foo.update()
 

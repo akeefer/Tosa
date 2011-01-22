@@ -5,6 +5,8 @@ import gw.lang.reflect.ITypeInfo;
 import gw.lang.reflect.ITypeLoader;
 import gw.lang.reflect.TypeBase;
 import gw.util.concurrent.LazyVar;
+import tosa.api.IDBTable;
+import tosa.dbmd.DBTableImpl;
 
 import java.util.Collections;
 import java.util.List;
@@ -20,11 +22,11 @@ public class DBType extends TypeBase implements IDBType {
 
   private DBTypeLoader _typeLoader;
   private LazyVar<DBTypeInfo> _typeInfo;
-  private TableTypeData _typeData;
+  private DBTableImpl _table;
 
-  public DBType(DBTypeLoader dbTypeLoader, TableTypeData typeData) {
+  public DBType(DBTypeLoader dbTypeLoader, DBTableImpl table) {
     _typeLoader = dbTypeLoader;
-    _typeData = typeData;
+    _table = table;
     _typeInfo = new LazyVar<DBTypeInfo>() {
       @Override
       protected DBTypeInfo init() {
@@ -33,23 +35,23 @@ public class DBType extends TypeBase implements IDBType {
     };
   }
 
-  public TableTypeData getTableTypeData() {
-    return _typeData;
+  public IDBTable getTable() {
+    return _table;
   }
 
   @Override
   public String getName() {
-    return _typeData.getTypeName();
+    return getNamespace() + "." + getRelativeName();
   }
 
   @Override
   public String getRelativeName() {
-    return _typeData.getTableName();
+    return _table.getName();
   }
 
   @Override
   public String getNamespace() {
-    return _typeData.getDbTypeData().getNamespace();
+    return _table.getDatabase().getNamespace();
   }
 
   @Override
@@ -68,7 +70,7 @@ public class DBType extends TypeBase implements IDBType {
   }
 
   @Override
-  public DBTypeInfo getTypeInfo() {
+  public ITypeInfo getTypeInfo() {
     return _typeInfo.get();
   }
 }

@@ -1,8 +1,8 @@
 package tosa.loader.parser.mysql;
 
-import tosa.loader.DBTypeData;
 import tosa.loader.data.ColumnData;
 import tosa.loader.data.ColumnType;
+import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
 import tosa.loader.parser.ISQLParser;
 import tosa.loader.parser.SQLParserConstants;
@@ -1010,21 +1010,17 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
   }
 
   @Override
-  public SelectStatement parseSQLFile(DBTypeData dbData, String fileContents) {
+  public SelectStatement parseSQLFile(DBData dbData, String fileContents) {
     Token t = Token.tokenize(fileContents);
     if (t.match(SELECT)) {
       SQLParsedElement quantifier = parseSetQuantifers(t.nextToken());
       SQLParsedElement selectList = parseSelectList(nextToken(quantifier, t));
       TableExpression tableExpr = parseTableExpression(selectList.nextToken());
       SelectStatement select = new SelectStatement(t, tableExpr.lastToken(), quantifier, selectList, tableExpr);
-      verify(dbData, select);
+      select.verify(dbData);
       return select;
     }
     return null;
-  }
-
-  private void verify(DBTypeData dbData, SelectStatement select) {
-    select.verify(dbData);
   }
 
   private Token nextToken(SQLParsedElement elt, Token t) {

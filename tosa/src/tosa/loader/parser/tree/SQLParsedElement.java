@@ -1,5 +1,6 @@
 package tosa.loader.parser.tree;
 
+import tosa.loader.data.DBData;
 import tosa.loader.parser.Token;
 
 import java.util.ArrayList;
@@ -102,6 +103,12 @@ public abstract class SQLParsedElement {
     }
     for (SQLParsedElement child : getChildren()) {
       child.findDescendents(cutOff, type, elts);
+    }
+  }
+
+  public void verify(DBData dbData) {
+    for (SQLParsedElement child : getChildren()) {
+      child.verify(dbData);
     }
   }
 }

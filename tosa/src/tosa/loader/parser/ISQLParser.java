@@ -1,6 +1,6 @@
 package tosa.loader.parser;
 
-import tosa.loader.DBTypeData;
+import tosa.loader.data.DBData;
 import tosa.loader.parser.tree.SelectStatement;
 import tosa.loader.data.TableData;
 
@@ -15,7 +15,7 @@ import java.util.List;
  */
 public interface ISQLParser {
 
-  SelectStatement parseSQLFile(DBTypeData dbData, String fileContents);
+  SelectStatement parseSQLFile(DBData dbData, String fileContents);
 
   List<TableData> parseDDLFile(String fileContents);
 }

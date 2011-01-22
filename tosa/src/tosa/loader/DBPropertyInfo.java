@@ -7,6 +7,8 @@ import gw.lang.reflect.ITypeInfo;
 import gw.lang.reflect.PropertyInfoBase;
 import gw.lang.reflect.TypeSystem;
 import tosa.CachedDBObject;
+import tosa.dbmd.DBColumnImpl;
+import tosa.query.SelectHelper;
 
 import java.sql.SQLException;
 import java.util.Collections;
@@ -23,13 +25,29 @@ public class DBPropertyInfo extends PropertyInfoBase {
 
   private final String _name;
   private final IType _type;
-  private final ColumnTypeData _column;
+  private final DBColumnImpl _column;
 
-  public DBPropertyInfo(ITypeInfo container, ColumnTypeData column) {
+  public DBPropertyInfo(ITypeInfo container, DBColumnImpl column) {
     super(container);
     _column = column;
-    _name = column.getPropertyName();
-    _type = TypeSystem.getByFullName(_column.getPropertyTypeName());
+
+    String colName = column.getName();
+    if (colName.endsWith("_id")) {
+      // Anything ending in _id is considered an fk
+      if (colName.substring(0, colName.length() - 3).contains("_")) {
+        // If it's Employer_Company_id, we want the property to be named "Employer" and the target table is "Company"
+        int underscorePos = colName.lastIndexOf('_', colName.length() - 4);
+        _name = colName.substring(0, underscorePos);
+      } else {
+        // If it's Company_id, we want the property to be named "Company" and the target table is also "Company"
+        _name = colName.substring(0, colName.length() - 3);
+      }
+      // TODO - AHK - Use some consistent method to transform a table into a type name
+      _type = TypeSystem.getByFullName(column.getFKTarget().getDatabase().getNamespace() + "." + column.getFKTarget().getName());
+    } else {
+      _name = colName;
+      _type = TypeSystem.getByFullName(column.getColumnType().getGosuTypeName());
+    }
   }
 
   @Override
@@ -68,7 +86,7 @@ public class DBPropertyInfo extends PropertyInfoBase {
   }
 
   public String getColumnName() {
-    return _column.getColumnData().getName();
+    return _column.getName();
   }
 
   private class DBPropertyAccessor implements IPropertyAccessor {
@@ -86,7 +104,7 @@ public class DBPropertyInfo extends PropertyInfoBase {
         Object columnValue = ((CachedDBObject) ctx).getColumns().get(getColumnName());
         if (_column.isFK() && columnValue != null) {
           try {
-            return ((DBTypeInfo) _type.getTypeInfo()).selectById(columnValue);
+            return SelectHelper.selectById((IDBType) _type, columnValue);
           } catch (SQLException e) {
             throw new RuntimeException(e);
           }

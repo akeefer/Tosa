@@ -34,7 +34,7 @@ public class TransactionTypeInfo extends BaseTypeInfo {
 
   public TransactionTypeInfo(TransactionType type) {
     super(type);
-    _connInfo = type.getDbTypeData().getConnection();
+    _connInfo = type.getDatabaseImpl().getConnection();
     _commitMethod = new MethodInfoBuilder().withName("commit").withStatic()
         .withCallHandler(new IMethodCallHandler() {
           @Override

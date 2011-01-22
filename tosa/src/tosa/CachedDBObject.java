@@ -3,8 +3,9 @@ package tosa;
 import gw.lang.reflect.IType;
 import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.gs.IGosuObject;
+import tosa.api.IDatabase;
+import tosa.api.IPreparedStatementParameter;
 import tosa.loader.DBType;
-import tosa.loader.DBTypeLoader;
 import tosa.loader.IDBType;
 
 import java.sql.Connection;
@@ -46,7 +47,7 @@ public class CachedDBObject implements IGosuObject {
     return _columns;
   }
 
-  public CachedDBObject(DBType type, boolean isNew) {
+  public CachedDBObject(IDBType type, boolean isNew) {
     // TODO - AHK
     _type = (IDBType) TypeSystem.getOrCreateTypeReference(type);
     _new = isNew;
@@ -54,71 +55,61 @@ public class CachedDBObject implements IGosuObject {
   }
 
   public void update() throws SQLException {
-    Connection conn = _type.getTableTypeData().getDbTypeData().getConnection().connect();
-    try {
-      Statement stmt = conn.createStatement();
-      try {
-        if (_new) {
-          List<String> keys = new ArrayList<String>();
-          List<String> values = new ArrayList<String>();
-          for (Map.Entry<String, Object> entry : _columns.entrySet()) {
-            keys.add(entry.getKey());
-            values.add(entry.getValue() == null ? "null" : "'" + (entry.getValue().toString().replace("'", "''")) + "'");
-          }
-          StringBuilder query = new StringBuilder("insert into \"");
-          query.append(getTableName()).append("\" (");
-          for (String key : keys) {
-            query.append("\"").append(key).append("\"");
-            if (key != keys.get(keys.size() - 1)) {
-              query.append(", ");
-            }
-          }
-          query.append(") values (");
-          for (String value : values) {
-            query.append(value);
-            if (value != values.get(values.size() - 1)) {
-              query.append(", ");
-            }
-          }
-          query.append(")");
-          stmt.executeUpdate(query.toString(), Statement.RETURN_GENERATED_KEYS);
-          ResultSet result = stmt.getGeneratedKeys();
-          try {
-            if (result.first()) {
-              _columns.put("id", result.getObject(1));
-              _new = false;
-            }
-          } finally {
-            result.close();
-          }
-        } else {
-          List<String> attrs = new ArrayList<String>();
-          for (Map.Entry<String, Object> entry : _columns.entrySet()) {
-            attrs.add("\"" + entry.getKey() + "\" = " + (entry.getValue() == null ? "null" : "'" + (entry.getValue().toString().replace("'", "''")) + "'"));
-          }
-          StringBuilder query = new StringBuilder("update \"");
-          query.append(getTableName()).append("\" set ");
-          for (String attr : attrs) {
-            query.append(attr);
-            if (attr != attrs.get(attrs.size() - 1)) {
-              query.append(", ");
-            }
-          }
-          query.append(" where \"id\" = '");
-          query.append(_columns.get("id").toString().replace("'", "''"));
-          query.append("'");
-          stmt.executeUpdate(query.toString());
-        }
-      } finally {
-        stmt.close();
+    IDatabase database = _type.getTable().getDatabase();
+    if (_new) {
+      List<String> keys = new ArrayList<String>();
+      List<IPreparedStatementParameter> values = new ArrayList<IPreparedStatementParameter>();
+      for (Map.Entry<String, Object> entry : _columns.entrySet()) {
+        keys.add(entry.getKey());
+        values.add(database.wrapParameter(entry.getValue(), _type.getTable().getColumn(entry.getKey())));
       }
-    } finally {
-      conn.close();
+      StringBuilder query = new StringBuilder("insert into \"");
+      query.append(getTableName()).append("\" (");
+      for (String key : keys) {
+        query.append("\"").append(key).append("\"");
+        if (key != keys.get(keys.size() - 1)) {
+          query.append(", ");
+        }
+      }
+      query.append(") values (");
+      for (int i = 0; i < keys.size(); i++) {
+        if (i > 0) {
+          query.append(", ");
+        }
+        query.append("?");
+      }
+      query.append(")");
+      Object id = database.executeInsert(query.toString(), values.toArray(new IPreparedStatementParameter[values.size()]));
+      if (id != null) {
+        _columns.put("id", id);
+        _new = false;
+      }
+    } else {
+      List<String> attrs = new ArrayList<String>();
+      List<IPreparedStatementParameter> values = new ArrayList<IPreparedStatementParameter>();
+      for (Map.Entry<String, Object> entry : _columns.entrySet()) {
+        if (entry.getKey().equals("id")) {
+          continue;
+        }
+        attrs.add("\"" + entry.getKey() + "\" = ?");
+        values.add(database.wrapParameter(entry.getValue(), _type.getTable().getColumn(entry.getKey())));
+      }
+      StringBuilder query = new StringBuilder("update \"");
+      query.append(getTableName()).append("\" set ");
+      for (String attr : attrs) {
+        query.append(attr);
+        if (attr != attrs.get(attrs.size() - 1)) {
+          query.append(", ");
+        }
+      }
+      query.append(" where \"id\" = ?");
+      values.add(database.wrapParameter(_columns.get("id"), _type.getTable().getColumn("id")));
+      database.executeInsert(query.toString(), values.toArray(new IPreparedStatementParameter[values.size()]));
     }
   }
 
   public void delete() throws SQLException {
-    Connection conn = _type.getTableTypeData().getDbTypeData().getConnection().connect();
+    Connection conn = _type.getTable().getDatabase().getConnection().connect();
     try {
       Statement stmt = conn.createStatement();
       try {

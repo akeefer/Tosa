@@ -1,11 +1,9 @@
 package tosa.loader.parser.tree;
 
-import gw.lang.reflect.IType;
-import gw.lang.reflect.TypeSystem;
-import gw.lang.reflect.java.IJavaType;
-import tosa.loader.DBTypeData;
+import gw.util.Pair;
 import tosa.loader.SQLParameterInfo;
-import tosa.loader.TableTypeData;
+import tosa.loader.data.ColumnType;
+import tosa.loader.data.DBData;
 import tosa.loader.parser.Token;
 
 import java.util.*;
@@ -15,7 +13,6 @@ public class SelectStatement extends SQLParsedElement {
   private SQLParsedElement _quantifier;
   private SQLParsedElement _selectList;
   private TableExpression _tableExpr;
-  private IType _type;
   private List<SQLParameterInfo> _parameters;
 
   public SelectStatement(Token start, Token end, SQLParsedElement quantifier, SQLParsedElement selectList, TableExpression tableExpr) {
@@ -44,45 +41,23 @@ public class SelectStatement extends SQLParsedElement {
     return _selectList;
   }
 
-  public void verify(DBTypeData dbData) {
-    _type = determineType(dbData);
-    _parameters = determineParameters();
+  public void verify(DBData dbData) {
+    super.verify(dbData);
+    _parameters = determineParameters(dbData);
   }
 
-  private List<SQLParameterInfo> determineParameters() {
+  private List<SQLParameterInfo> determineParameters(DBData dbData) {
     Map<String, SQLParameterInfo> pis = new HashMap<String, SQLParameterInfo>();
     List<VariableExpression> findDescendents = findDescendents(VariableExpression.class);
     for (int i = 0, findDescendentsSize = findDescendents.size(); i < findDescendentsSize; i++) {
       VariableExpression var = findDescendents.get(i);
       SQLParameterInfo pi = pis.get(var.getName());
       if (pi == null) {
-        pi = new SQLParameterInfo(var.getName(), IJavaType.OBJECT);
+        pi = new SQLParameterInfo(var.getName());
       }
-      pi.getIndexes().add(i);
+      pi.getIndexes().add(Pair.make(i, ColumnType.VARCHAR));
     }
     return new ArrayList<SQLParameterInfo>(pis.values());
-  }
-
-  private IType determineType(DBTypeData dbData) {
-    if (_selectList instanceof AsteriskSelectList) {
-      TableFromClause from = _tableExpr.getFrom();
-      if (from != null) {
-        if (from.getTableRefs().size() == 1) {
-          SimpleTableReference tableReference = from.getTableRefs().get(0);
-          Token token = tableReference.getName();
-          TableTypeData data = dbData.getTable(token.getValue());
-          if (data != null) {
-            return TypeSystem.getByFullName(data.getTypeName());
-          }
-        }
-      }
-    }
-    return IJavaType.OBJECT;
-  }
-
-
-  public IType getSelectType() {
-    return _type;
   }
 
   public List<SQLParameterInfo> getParameters() {

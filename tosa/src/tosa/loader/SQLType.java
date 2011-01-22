@@ -2,7 +2,6 @@ package tosa.loader;
 
 import gw.lang.reflect.IType;
 import gw.lang.reflect.ITypeInfo;
-import gw.lang.reflect.ITypeLoader;
 import gw.lang.reflect.TypeBase;
 import gw.lang.reflect.java.IJavaType;
 import gw.util.GosuClassUtil;
@@ -11,11 +10,11 @@ import java.util.Collections;
 import java.util.List;
 
 public class SQLType extends TypeBase implements IType {
-  private SQLTypeData _data;
+  private SQLFileInfo _data;
   private DBTypeLoader _typeLoader;
   private SQLTypeInfo _ti;
 
-  public SQLType(SQLTypeData data, DBTypeLoader loader) {
+  public SQLType(SQLFileInfo data, DBTypeLoader loader) {
     _data = data;
     _typeLoader = loader;
     _ti = new SQLTypeInfo(this);
@@ -51,7 +50,7 @@ public class SQLType extends TypeBase implements IType {
     return Collections.emptyList();
   }
 
-  public SQLTypeData getData() {
+  public SQLFileInfo getData() {
     return _data;
   }
 

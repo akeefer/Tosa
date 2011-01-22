@@ -1,19 +1,7 @@
 package tosa.loader;
 
 import gw.config.CommonServices;
-import gw.lang.reflect.BaseTypeInfo;
-import gw.lang.reflect.ConstructorInfoBuilder;
-import gw.lang.reflect.IConstructorHandler;
-import gw.lang.reflect.IConstructorInfo;
-import gw.lang.reflect.IMethodCallHandler;
-import gw.lang.reflect.IMethodInfo;
-import gw.lang.reflect.IPropertyAccessor;
-import gw.lang.reflect.IPropertyInfo;
-import gw.lang.reflect.IType;
-import gw.lang.reflect.MethodInfoBuilder;
-import gw.lang.reflect.ParameterInfoBuilder;
-import gw.lang.reflect.PropertyInfoBuilder;
-import gw.lang.reflect.TypeSystem;
+import gw.lang.reflect.*;
 import gw.lang.reflect.features.PropertyReference;
 import gw.lang.reflect.java.IJavaType;
 import gw.util.GosuStringUtil;
@@ -21,6 +9,11 @@ import gw.util.concurrent.LazyVar;
 import tosa.CachedDBObject;
 import tosa.Join;
 import tosa.JoinResult;
+import tosa.api.IDBColumn;
+import tosa.api.IDBTable;
+import tosa.dbmd.DBColumnImpl;
+import tosa.dbmd.DBTableImpl;
+import tosa.query.SelectHelper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -43,7 +36,7 @@ import java.util.Map;
  * Time: 10:35 PM
  * To change this template use File | Settings | File Templates.
  */
-public class DBTypeInfo extends BaseTypeInfo {
+public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
 
   private Map<String, IPropertyInfo> _properties;
   private List<IMethodInfo> _methods;
@@ -84,7 +77,7 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return selectById(args[0]);
+              return SelectHelper.selectById(getOwnersType(), args[0]);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -168,7 +161,7 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return findFromTemplate((CachedDBObject) args[0], null, false, -1, -1);
+              return SelectHelper.findFromTemplate(getOwnersType(), (CachedDBObject) args[0], null, false, -1, -1);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -183,7 +176,7 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return findFromTemplate((CachedDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2], -1, -1);
+              return SelectHelper.findFromTemplate(getOwnersType(), (CachedDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2], -1, -1);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -198,7 +191,7 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return findFromTemplate((CachedDBObject) args[0], null, false, (Integer) args[1], (Integer) args[2]);
+              return SelectHelper.findFromTemplate(getOwnersType(), (CachedDBObject) args[0], null, false, (Integer) args[1], (Integer) args[2]);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -215,7 +208,7 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return findFromTemplate((CachedDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2], (Integer) args[3], (Integer) args[4]);
+              return SelectHelper.findFromTemplate(getOwnersType(), (CachedDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2], (Integer) args[3], (Integer) args[4]);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -234,8 +227,9 @@ public class DBTypeInfo extends BaseTypeInfo {
           }
         }).build(this);
     _properties = new HashMap<String, IPropertyInfo>();
-    for (ColumnTypeData column : dbType.getTableTypeData().getColumns()) {
-      IPropertyInfo prop = makeProperty(column);
+    for (IDBColumn column : dbType.getTable().getColumns()) {
+      // TODO - AHK - Ideally this cast wouldn't be necessary
+      IPropertyInfo prop = makeProperty((DBColumnImpl) column);
       _properties.put(prop.getName(), prop);
     }
 
@@ -357,46 +351,7 @@ public class DBTypeInfo extends BaseTypeInfo {
   }
 
   private Connection connect() throws SQLException {
-    return getOwnersType().getTableTypeData().getDbTypeData().getConnection().connect();
-  }
-
-  CachedDBObject selectById(Object id) throws SQLException {
-    CachedDBObject obj = null;
-    Connection conn = connect();
-    try {
-      Statement stmt = conn.createStatement();
-      try {
-        stmt.executeQuery("select * from \"" + getOwnersType().getRelativeName() + "\" where \"id\" = '" + id.toString().replace("'", "''") + "'");
-        ResultSet result = stmt.getResultSet();
-        try {
-          if (result.first()) {
-            obj = buildObject(result);
-          }
-        } finally {
-          result.close();
-        }
-      } finally {
-        stmt.close();
-      }
-    } finally {
-      conn.close();
-    }
-    return obj;
-  }
-
-  List<CachedDBObject> findFromTemplate(CachedDBObject template, PropertyReference sortColumn, boolean ascending, int limit, int offset) throws SQLException {
-    StringBuilder query = new StringBuilder("select * from \"");
-    query.append(getOwnersType().getRelativeName()).append("\" where ");
-    addWhereClause(query, template);
-    if (sortColumn != null) {
-      query.append(" order by \"").append(sortColumn.getPropertyInfo().getName()).append("\" ").append(ascending ? "ASC" : "DESC").append(", \"id\" ASC");
-    } else {
-      query.append(" order by \"id\" ASC");
-    }
-    if (limit != -1) {
-      query.append(" limit ").append(limit).append(" offset ").append(offset);
-    }
-    return findFromSql(query.toString());
+    return getOwnersType().getTable().getDatabase().getConnection().connect();
   }
 
   int countFromTemplate(CachedDBObject template) throws SQLException {
@@ -542,11 +497,13 @@ public class DBTypeInfo extends BaseTypeInfo {
 
   private Map<String, IPropertyInfo> makeArrayProperties() {
     Map<String, IPropertyInfo> arrayProps = new HashMap<String, IPropertyInfo>();
-    for (String fkTable : getOwnersType().getTableTypeData().getIncomingFKs()) {
-      IPropertyInfo arrayProp = makeArrayProperty(fkTable);
+    for (IDBColumn fkColumn : getOwnersType().getTable().getIncomingFKs()) {
+      // TODO - AHK - Deal with multiple incoming fks
+      IPropertyInfo arrayProp = makeArrayProperty(fkColumn.getTable());
       arrayProps.put(arrayProp.getName(), arrayProp);
     }
-    for (Join joinTable : getOwnersType().getTableTypeData().getJoins()) {
+    // TODO - AHK - Ideally this cast wouldn't be necessary
+    for (Join joinTable : ((DBTableImpl) getOwnersType().getTable()).getJoins()) {
       IPropertyInfo joinProp = makeJoinProperty(joinTable);
       arrayProps.put(joinProp.getName(), joinProp);
     }
@@ -557,14 +514,14 @@ public class DBTypeInfo extends BaseTypeInfo {
     return new HashMap<String, IMethodInfo>();
   }
 
-  private DBPropertyInfo makeProperty(ColumnTypeData column) {
+  private DBPropertyInfo makeProperty(DBColumnImpl column) {
     return new DBPropertyInfo(this, column);
   }
 
-  private IPropertyInfo makeArrayProperty(String fkTable) {
+  private IPropertyInfo makeArrayProperty(IDBTable fkTable) {
     String namespace = getOwnersType().getNamespace();
-    final IType fkType = TypeSystem.getByFullName(namespace + "." + fkTable);
-    return new PropertyInfoBuilder().withName(fkTable + "s").withType(IJavaType.LIST.getGenericType().getParameterizedType(fkType))
+    final IType fkType = TypeSystem.getByFullName(namespace + "." + fkTable.getName());
+    return new PropertyInfoBuilder().withName(fkTable.getName() + "s").withType(IJavaType.LIST.getGenericType().getParameterizedType(fkType))
         .withWritable(false).withAccessor(new IPropertyAccessor() {
           @Override
           public void setValue(Object ctx, Object value) {
@@ -583,7 +540,7 @@ public class DBTypeInfo extends BaseTypeInfo {
 
   private IPropertyInfo makeJoinProperty(final Join join) {
     String namespace = getOwnersType().getNamespace();
-    final IType fkType = getOwnersType().getTypeLoader().getType(namespace + "." + join.getTargetTable());
+    final IType fkType = getOwnersType().getTypeLoader().getType(namespace + "." + join.getTargetTable().getName());
     return new PropertyInfoBuilder().withName(join.getPropName()).withType(IJavaType.LIST.getGenericType().getParameterizedType(fkType))
         .withWritable(false).withAccessor(new IPropertyAccessor() {
           @Override
@@ -592,8 +549,8 @@ public class DBTypeInfo extends BaseTypeInfo {
 
           @Override
           public Object getValue(Object ctx) {
-            String j = join.getJoinTable();
-            String t = join.getTargetTable();
+            String j = join.getJoinTable().getName();
+            String t = join.getTargetTable().getName();
             String o = getOwnersType().getRelativeName();
             if (GosuStringUtil.equals(t, o)) {
               o += "_src";
@@ -602,9 +559,9 @@ public class DBTypeInfo extends BaseTypeInfo {
             String id = ((CachedDBObject) ctx).getColumns().get("id").toString();
             try {
               List<CachedDBObject> result = ((DBTypeInfo) fkType.getTypeInfo()).findFromSql(
-                  "select * from \"" + join.getTargetTable() + "\", \"" + j + "\" as j where j.\"" + t + "_id\" = \"" + join.getTargetTable() + "\".\"id\" and j.\"" + o + "_id\" = " + id
+                  "select * from \"" + join.getTargetTable().getName() + "\", \"" + j + "\" as j where j.\"" + t + "_id\" = \"" + join.getTargetTable().getName() + "\".\"id\" and j.\"" + o + "_id\" = " + id
               );
-              return new JoinResult(result, getOwnersType().getTableTypeData().getDbTypeData(), j, o, t, id);
+              return new JoinResult(result, getOwnersType().getTable().getDatabase(), j, o, t, id);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
