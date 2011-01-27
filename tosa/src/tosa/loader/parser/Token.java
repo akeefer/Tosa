@@ -15,6 +15,7 @@ public class Token {
 
   private String _value;
   private Token _next;
+  private Token _previous;
 
 
   public Token(String value) {
@@ -23,6 +24,9 @@ public class Token {
 
   public void setNext(Token t) {
     _next = t;
+    if (!isEOF()||!t.isEOF()) {
+      t._previous = this;
+    }
   }
 
   public String getValue() {
@@ -112,5 +116,9 @@ public class Token {
       }
       return str + " " + _next.toString(false);
     }
+  }
+
+  public Token previous() {
+    return _previous;
   }
 }
