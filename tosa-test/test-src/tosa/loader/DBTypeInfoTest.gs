@@ -454,7 +454,7 @@ class DBTypeInfoTest {
   @Test
   function testRemoveJoin() {
       var foo = test.testdb.Foo.fromID(_fooId)
-      foo.Bazs.remove(test.testdb.Baz.fromID(_bazId))
+      Assert.assertTrue(foo.Bazs.remove(test.testdb.Baz.fromID(_bazId)))
       Assert.assertEquals(0, foo.Bazs.Count)
   }
 
@@ -470,7 +470,7 @@ class DBTypeInfoTest {
   @Test
   function testRemoveNamedJoin() {
       var bar = test.testdb.Bar.fromID(_barId)
-      bar.Relatives.remove(test.testdb.Baz.fromID(_bazId))
+      Assert.assertTrue(bar.Relatives.remove(test.testdb.Baz.fromID(_bazId)))
       Assert.assertEquals(0, bar.Relatives.Count)
   }
 
@@ -485,7 +485,7 @@ class DBTypeInfoTest {
     baz1.SelfJoins.add(baz2)
     Assert.assertTrue(baz1.SelfJoins.contains(baz2))
     Assert.assertTrue(baz2.SelfJoins.Empty)
-    baz1.SelfJoins.remove(baz2)
+    Assert.assertTrue(baz1.SelfJoins.remove(baz2))
     Assert.assertTrue(baz1.SelfJoins.Empty)
     Assert.assertTrue(baz2.SelfJoins.Empty)
   }

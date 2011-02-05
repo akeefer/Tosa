@@ -62,7 +62,7 @@ public class DBPropertyInfo extends PropertyInfoBase {
 
   @Override
   public boolean isWritable(IType whosAskin) {
-    return !_name.equals("id");
+    return !_name.equals(DBTypeInfo.ID_COLUMN);
   }
 
   @Override
@@ -93,7 +93,7 @@ public class DBPropertyInfo extends PropertyInfoBase {
     @Override
       public void setValue(Object ctx, Object value) {
         if (_column.isFK() && value != null) {
-          ((CachedDBObject) ctx).getColumns().put(getColumnName(), ((CachedDBObject) value).getColumns().get("id"));
+          ((CachedDBObject) ctx).getColumns().put(getColumnName(), ((CachedDBObject) value).getColumns().get(DBTypeInfo.ID_COLUMN));
         } else {
           ((CachedDBObject) ctx).getColumns().put(getColumnName(), value);
         }
@@ -102,9 +102,11 @@ public class DBPropertyInfo extends PropertyInfoBase {
       @Override
       public Object getValue(Object ctx) {
         Object columnValue = ((CachedDBObject) ctx).getColumns().get(getColumnName());
-        if (_column.isFK() && columnValue != null) {
+        if (_column.isFK() && columnValue != null && !(columnValue instanceof CachedDBObject)) {
           try {
-            return SelectHelper.selectById((IDBType) _type, columnValue);
+            CachedDBObject resolvedFK = SelectHelper.selectById((IDBType) _type, columnValue);
+            ((CachedDBObject) ctx).getColumns().put(getColumnName(), resolvedFK);
+            return resolvedFK;
           } catch (SQLException e) {
             throw new RuntimeException(e);
           }

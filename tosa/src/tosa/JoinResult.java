@@ -1,7 +1,7 @@
 package tosa;
 
 import tosa.api.IDatabase;
-import tosa.dbmd.DBTableImpl;
+import tosa.loader.DBTypeInfo;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -46,7 +46,7 @@ public class JoinResult implements List<CachedDBObject> {
       try {
         Statement stmt = conn.createStatement();
         try {
-          stmt.executeUpdate("insert into \"" + _joinTableName + "\" (\"" + _srcTableName + "_id\", \"" + _targetTableName + "_id\") values (" + _id + ", " + obj.getColumns().get("id") + ")");
+          stmt.executeUpdate("insert into \"" + _joinTableName + "\" (\"" + _srcTableName + "_id\", \"" + _targetTableName + "_id\") values (" + _id + ", " + obj.getColumns().get(DBTypeInfo.ID_COLUMN) + ")");
         } finally {
           stmt.close();
         }
@@ -56,6 +56,7 @@ public class JoinResult implements List<CachedDBObject> {
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
+    _result.add(obj);
     return true;
   }
 
@@ -64,7 +65,7 @@ public class JoinResult implements List<CachedDBObject> {
     StringBuilder query = new StringBuilder("insert into \"");
     query.append(_joinTableName).append("\" (\"").append(_srcTableName).append("_id\", \"").append(_targetTableName).append("_id\") values ");
     for (CachedDBObject obj : objs) {
-      query.append("(").append(_id).append(", ").append(obj.getColumns().get("id")).append(")");
+      query.append("(").append(_id).append(", ").append(obj.getColumns().get(DBTypeInfo.ID_COLUMN)).append(")");
       query.append(", ");
     }
     if (!objs.isEmpty()) {
@@ -85,6 +86,7 @@ public class JoinResult implements List<CachedDBObject> {
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
+    _result.addAll(objs);
     return true;
   }
 
@@ -98,18 +100,21 @@ public class JoinResult implements List<CachedDBObject> {
           Statement stmt = conn.createStatement();
           try {
             if (_database.getTable(_joinTableName).hasId()) {
-              ResultSet results = stmt.executeQuery("select * from \"" + _joinTableName + "\" where \"" + _srcTableName + "_id\" = " + _id + " and \"" + _targetTableName + "_id\" = " + obj.getColumns().get("id") + " limit 1");
+              ResultSet results = stmt.executeQuery("select * from \"" + _joinTableName + "\" where \"" + _srcTableName + "_id\" = " + _id + " and \"" + _targetTableName + "_id\" = " + obj.getColumns().get(DBTypeInfo.ID_COLUMN) + " limit 1");
               try {
                 if (results.first()) {
-                  Object id = results.getObject("id");
+                  Object id = results.getObject(DBTypeInfo.ID_COLUMN);
                   stmt.executeUpdate("delete from \"" + _joinTableName + "\" where \"id\" = '" + id.toString().replace("'", "''") + "'");
+                  _result.remove(obj);
                   return true;
                 }
               } finally {
                 results.close();
               }
             } else {
-              stmt.executeUpdate("delete from \"" + _joinTableName + "\" where \"" + _srcTableName + "_id\" = " + _id + " and \"" + _targetTableName + "_id\" = " + obj.getColumns().get("id"));
+              stmt.executeUpdate("delete from \"" + _joinTableName + "\" where \"" + _srcTableName + "_id\" = " + _id + " and \"" + _targetTableName + "_id\" = " + obj.getColumns().get(DBTypeInfo.ID_COLUMN));
+              _result.remove(obj);
+              return true;
             }
           } finally {
             stmt.close();
@@ -141,6 +146,7 @@ public class JoinResult implements List<CachedDBObject> {
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
+    _result.clear();
   }
 
 
@@ -181,12 +187,12 @@ public class JoinResult implements List<CachedDBObject> {
 
   @Override
   public boolean addAll(int index, Collection<? extends CachedDBObject> c) {
-    return _result.addAll(index, c);
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public boolean removeAll(Collection<?> c) {
-    return _result.removeAll(c);
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -196,7 +202,11 @@ public class JoinResult implements List<CachedDBObject> {
 
   @Override
   public boolean equals(Object o) {
-    return _result.equals(o);
+    if (o instanceof JoinResult) {
+      return o == this || _result.equals(((JoinResult)o)._result);
+    } else {
+      return o instanceof List && _result.equals(o);
+    }
   }
 
   @Override
@@ -211,17 +221,17 @@ public class JoinResult implements List<CachedDBObject> {
 
   @Override
   public CachedDBObject set(int index, CachedDBObject element) {
-    return _result.set(index, element);
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public void add(int index, CachedDBObject element) {
-    _result.add(index, element);
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public CachedDBObject remove(int index) {
-    return _result.remove(index);
+    throw new UnsupportedOperationException();
   }
 
   @Override

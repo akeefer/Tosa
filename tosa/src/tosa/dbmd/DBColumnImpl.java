@@ -2,6 +2,7 @@ package tosa.dbmd;
 
 import tosa.api.IDBColumn;
 import tosa.api.IDBTable;
+import tosa.loader.DBTypeInfo;
 import tosa.loader.data.ColumnData;
 import tosa.loader.data.ColumnType;
 
@@ -48,10 +49,12 @@ public class DBColumnImpl implements IDBColumn {
     return _columnData.getName();
   }
 
+  @Override
   public boolean isFK() {
     return _isFK;
   }
 
+  @Override
   public IDBTable getFKTarget() {
     return _table.getDatabase().getTable(_fkTarget);
   }
@@ -68,9 +71,10 @@ public class DBColumnImpl implements IDBColumn {
 
   public boolean isIdColumn() {
     // TODO - AHK - Some day, this should perhaps check to make sure that the column has the right attributes
-    return getName().equals("id");
+    return getName().equals(DBTypeInfo.ID_COLUMN);
   }
 
+  @Override
   public DBTableImpl getTable() {
     return _table;
   }
