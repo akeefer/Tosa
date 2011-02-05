@@ -20,7 +20,7 @@ var gosuHome = file( ghVar )
 var tosaHome = file( "." )
 
 function deps() {
-  Ivy.retrieve(:sync = true)
+  Ivy.retrieve(:sync = true, :log = "download-only")
 }
 
 function clean() {
