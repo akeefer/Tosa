@@ -19,10 +19,15 @@ var gosuHome = file( ghVar )
 
 var tosaHome = file( "." )
 
+function deps() {
+  Ivy.retrieve(:sync = true)
+}
+
 function clean() {
   file( "tosa/build" ).deleteRecursively()
 }
 
+@Depends({"deps"})
 function build() {
   buildModule( file("tosa"), classpath().withFileset( gosuHome.file( "jars" ).fileset() ).withFileset(tosaHome.file("lib").fileset()), "tosa.jar" )
 }
