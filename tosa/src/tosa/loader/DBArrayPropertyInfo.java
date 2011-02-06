@@ -78,7 +78,8 @@ public class DBArrayPropertyInfo extends PropertyInfoBase{
       try {
         Object value = ((CachedDBObject) ctx).getColumns().get(_name);
         if (value == null) {
-          value = ((DBTypeInfo) _fkType.getTypeInfo()).findInDb(Arrays.asList(_fkType.getTypeInfo().getProperty(getOwnersType().getRelativeName())), ctx);
+          value = ((DBTypeInfo) _fkType.getTypeInfo()).findInDb(getOwnersType().getName() + "." + _name,
+                  Arrays.asList(_fkType.getTypeInfo().getProperty(getOwnersType().getRelativeName())), ctx);
           ((CachedDBObject) ctx).getColumns().put(_name, value);
         }
         return value;

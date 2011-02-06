@@ -1,5 +1,6 @@
 package tosa.loader.parser.mysql;
 
+import org.slf4j.LoggerFactory;
 import tosa.loader.data.ColumnData;
 import tosa.loader.data.ColumnType;
 import tosa.loader.data.DBData;
@@ -48,7 +49,7 @@ public class MySQL51SQLParser implements SQLParserConstants, ISQLParser {
             ");\n";
 
     List<TableData> tables = new MySQL51SQLParser().parseDDLFile(testSQL);
-    System.out.println("Done");
+    LoggerFactory.getLogger("Tosa").trace("Done");
   }
 
   private SQLTokenizer _tokenizer;
@@ -442,7 +443,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
         return new ColumnType(Types.BIT, BIT, ColumnType.BOOLEAN_ITYPE);
       } else {
         // TODO - AHK
-        System.out.println("***Unhandled column type " + BIT);
+        LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + BIT);
         return null;
       }
     } else if (accept(TINYINT)) {
@@ -455,7 +456,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
         return new ColumnType(Types.TINYINT, TINYINT, ColumnType.BYTE_ITYPE);
       } else {
         // TODO - AHK
-        System.out.println("***Unhandled column type UNSIGNED " + TINYINT);
+        LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + TINYINT);
         return null;
       }
     } else if (accept(BOOL) || accept(BOOLEAN)) {
@@ -468,7 +469,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
         return new ColumnType(Types.SMALLINT, SMALLINT, ColumnType.SHORT_ITYPE);
       } else {
         // TODO - AHK
-        System.out.println("***Unhandled column type UNSIGNED " + SMALLINT);
+        LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + SMALLINT);
         return null;
       }
     } else if (accept(MEDIUMINT)) {
@@ -478,7 +479,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
         return new ColumnType(Types.INTEGER, MEDIUMINT, ColumnType.INTEGER_ITYPE);
       } else {
         // TODO - AHK
-        System.out.println("***Unhandled column type UNSIGNED " + MEDIUMINT);
+        LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + MEDIUMINT);
         return null;
       }
     } else if (accept(INT) || accept(INTEGER)) {
@@ -488,7 +489,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
         return new ColumnType(Types.INTEGER, INT, ColumnType.INTEGER_ITYPE);
       } else {
         // TODO - AHK
-        System.out.println("***Unhandled column type UNSIGNED " + INTEGER);
+        LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + INTEGER);
         return null;
       }
     } else if (accept(BIGINT)) {
@@ -498,7 +499,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
         return new ColumnType(Types.BIGINT, BIGINT, ColumnType.LONG_ITYPE);
       } else {
         // TODO - AHK
-        System.out.println("***Unhandled column type UNSIGNED " + BIGINT);
+        LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + BIGINT);
         return null;
       }
     } else if (accept(DOUBLE) || accept(DOUBLE, PRECISION) || accept(REAL)) {
@@ -548,73 +549,73 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
     } else if (accept(BINARY) || accept(CHAR, BYTE)) {
       Integer length = parseLength();
       // TODO - AHK
-      System.out.println("***Unhandled column type " + BINARY);
+      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + BINARY);
       return null;
     } else if (accept(VARBINARY)) {
       Integer length = parseLength();
       // TODO - AHK
-      System.out.println("***Unhandled column type " + VARBINARY);
+      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + VARBINARY);
       return null;
     } else if (accept(TINYBLOB)) {
       // TODO - AHK
-      System.out.println("***Unhandled column type " + TINYBLOB);
+      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + TINYBLOB);
       return null;
     } else if (accept(BLOB)) {
       // TODO - AHK
-      System.out.println("***Unhandled column type " + BLOB);
+      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + BLOB);
       return null;
     } else if (accept(MEDIUMBLOB)) {
       // TODO - AHK
-      System.out.println("***Unhandled column type " + MEDIUMBLOB);
+      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + MEDIUMBLOB);
       return null;
     } else if (accept(LONGBLOB)) {
       // TODO - AHK
-      System.out.println("***Unhandled column type " + LONGBLOB);
+      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + LONGBLOB);
       return null;
     } else if (accept(TINYTEXT)) {
       accept(BINARY);
       String charSetName = parseCharSet();
       String collation = parseCollation();
       // TODO - AHK
-      System.out.println("***Unhandled column type " + TINYTEXT);
+      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + TINYTEXT);
       return null;
     } else if (accept(TEXT)) {
       accept(BINARY);
       String charSetName = parseCharSet();
       String collation = parseCollation();
       // TODO - AHK
-      System.out.println("***Unhandled column type " + TEXT);
+      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + TEXT);
       return null;
     } else if (accept(MEDIUMTEXT)) {
       accept(BINARY);
       String charSetName = parseCharSet();
       String collation = parseCollation();
       // TODO - AHK
-      System.out.println("***Unhandled column type " + MEDIUMTEXT);
+      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + MEDIUMTEXT);
       return null;
     } else if (accept(LONGTEXT)) {
       accept(BINARY);
       String charSetName = parseCharSet();
       String collation = parseCollation();
       // TODO - AHK
-      System.out.println("***Unhandled column type " + LONGTEXT);
+      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + LONGTEXT);
       return null;
     } else if (accept(ENUM)) {
       List<String> values = parseEnumOrSetValueList();
       String charSetName = parseCharSet();
       String collation = parseCollation();
       // TODO - AHK
-      System.out.println("***Unhandled column type " + ENUM);
+      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + ENUM);
       return null;
     } else if (accept(SET)) {
       List<String> values = parseEnumOrSetValueList();
       String charSetName = parseCharSet();
       String collation = parseCollation();
       // TODO - AHK
-      System.out.println("***Unhandled column type " + SET);
+      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + SET);
       return null;
     } else {
-      System.out.println("***Unexpected column type");
+      LoggerFactory.getLogger("Tosa").debug("***Unexpected column type");
       return null;
     }
   }

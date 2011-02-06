@@ -90,6 +90,7 @@ public class DBJoinPropertyInfo extends PropertyInfoBase{
         String id = ((CachedDBObject) ctx).getColumns().get(DBTypeInfo.ID_COLUMN).toString();
         try {
           List<CachedDBObject> result = ((DBTypeInfo) _fkType.getTypeInfo()).findFromSqlMutable(
+                  getOwnersType().getName() + "." + _name,
                   "select * from \"" + _join.getTargetTable().getName() + "\", \"" + j + "\" as j where j.\"" + t + "_id\" = \"" + _join.getTargetTable().getName() + "\".\"id\" and j.\"" + o + "_id\" = " + id
           );
           value = new JoinResult(result, ((IDBType)getOwnersType()).getTable().getDatabase(), j, o, t, id);

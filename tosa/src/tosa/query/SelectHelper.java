@@ -4,6 +4,7 @@ import gw.lang.reflect.IPropertyInfo;
 import gw.lang.reflect.features.PropertyReference;
 import gw.lang.reflect.java.IJavaType;
 import gw.util.GosuStringUtil;
+import org.slf4j.profiler.Profiler;
 import tosa.CachedDBObject;
 import tosa.api.IDBColumn;
 import tosa.api.IDBTable;
@@ -13,6 +14,7 @@ import tosa.api.IQueryResultProcessor;
 import tosa.loader.DBPropertyInfo;
 import tosa.loader.DBTypeInfo;
 import tosa.loader.IDBType;
+import tosa.loader.Util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -32,7 +34,7 @@ import java.util.Map;
  */
 public class SelectHelper {
 
-  public static CachedDBObject selectById(IDBType entityType, Object id) throws SQLException {
+  public static CachedDBObject selectById(String feature, IDBType entityType, Object id) throws SQLException {
     // TODO - AHK - Input validation (i.e. id should not be null)
     IDBTable table = entityType.getTable();
     IDBColumn idColumn = table.getColumn(DBTypeInfo.ID_COLUMN);
@@ -40,7 +42,10 @@ public class SelectHelper {
 
     // TODO - AHK - Use some DB-aware utility to decide when to quote things, etc.
     // TODO - AHK - Make the colum name a constant
-    List<CachedDBObject> results = db.executeSelect("select * from \"" + table.getName() + "\" where \"id\" = ?",
+    String query = "select * from \"" + table.getName() + "\" where \"id\" = ?";
+    Profiler profiler = Util.newProfiler(feature);
+    profiler.start(query + " (" + id + ")");
+    List<CachedDBObject> results = db.executeSelect(query,
         new CachedDBQueryResultProcessor(entityType),
         db.wrapParameter(id, idColumn));
 

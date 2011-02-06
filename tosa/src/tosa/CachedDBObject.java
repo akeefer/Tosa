@@ -3,11 +3,13 @@ package tosa;
 import gw.lang.reflect.IType;
 import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.gs.IGosuObject;
+import org.slf4j.profiler.Profiler;
 import tosa.api.IDBColumn;
 import tosa.api.IDatabase;
 import tosa.api.IPreparedStatementParameter;
 import tosa.loader.DBTypeInfo;
 import tosa.loader.IDBType;
+import tosa.loader.Util;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -55,6 +57,7 @@ public class CachedDBObject implements IGosuObject {
   }
 
   public void update() throws SQLException {
+    Profiler profiler = Util.newProfiler(_type.getName() + ".update()");
     IDatabase database = _type.getTable().getDatabase();
     List<String> attrs = new ArrayList<String>();
     List<IPreparedStatementParameter> values = new ArrayList<IPreparedStatementParameter>();
@@ -89,6 +92,7 @@ public class CachedDBObject implements IGosuObject {
         query.append("?");
       }
       query.append(")");
+      profiler.start(query.toString() + " (" + values + ")");
       Object id = database.executeInsert(query.toString(), values.toArray(new IPreparedStatementParameter[values.size()]));
       if (id != null) {
         _columns.put(DBTypeInfo.ID_COLUMN, id);
@@ -104,22 +108,28 @@ public class CachedDBObject implements IGosuObject {
         }
       }
       query.append(" where \"id\" = ?");
+      profiler.start(query.toString() + " (" + values + ")");
       values.add(database.wrapParameter(_columns.get(DBTypeInfo.ID_COLUMN), _type.getTable().getColumn(DBTypeInfo.ID_COLUMN)));
       database.executeInsert(query.toString(), values.toArray(new IPreparedStatementParameter[values.size()]));
     }
+    profiler.stop();
   }
 
   public void delete() throws SQLException {
+    Profiler profiler = Util.newProfiler(_type.getName() + ".delete()");
+    String query = "delete from \"" + getTableName() + "\" where \"id\" = '" + (_columns.get(DBTypeInfo.ID_COLUMN).toString().replace("'", "''")) + "'";
+    profiler.start(query);
     Connection conn = _type.getTable().getDatabase().getConnection().connect();
     try {
       Statement stmt = conn.createStatement();
       try {
-        stmt.execute("delete from \"" + getTableName() + "\" where \"id\" = '" + (_columns.get(DBTypeInfo.ID_COLUMN).toString().replace("'", "''")) + "'");
+        stmt.execute(query);
       } finally {
         stmt.close();
       }
     } finally {
       conn.close();
+      profiler.stop();
     }
   }
 
