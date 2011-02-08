@@ -20,6 +20,7 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="H2" level="project" />
+    <orderEntry type="library" name="SLF4J" level="project" />
   </component>
 </module>
 

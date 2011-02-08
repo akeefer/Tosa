@@ -3,13 +3,15 @@ package tosa;
 import gw.lang.reflect.IType;
 import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.gs.IGosuObject;
+import org.slf4j.profiler.Profiler;
+import tosa.api.IDBColumn;
 import tosa.api.IDatabase;
 import tosa.api.IPreparedStatementParameter;
-import tosa.loader.DBType;
+import tosa.loader.DBTypeInfo;
 import tosa.loader.IDBType;
+import tosa.loader.Util;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -55,60 +57,66 @@ public class CachedDBObject implements IGosuObject {
   }
 
   public void update() throws SQLException {
+    Profiler profiler = Util.newProfiler(_type.getName() + ".update()");
     IDatabase database = _type.getTable().getDatabase();
-    if (_new) {
-      List<String> keys = new ArrayList<String>();
-      List<IPreparedStatementParameter> values = new ArrayList<IPreparedStatementParameter>();
-      for (Map.Entry<String, Object> entry : _columns.entrySet()) {
-        keys.add(entry.getKey());
-        values.add(database.wrapParameter(entry.getValue(), _type.getTable().getColumn(entry.getKey())));
+    List<String> attrs = new ArrayList<String>();
+    List<IPreparedStatementParameter> values = new ArrayList<IPreparedStatementParameter>();
+    for (Map.Entry<String, Object> entry : _columns.entrySet()) {
+      if (entry.getKey().equals(DBTypeInfo.ID_COLUMN)) {
+        continue;
       }
+      IDBColumn column = _type.getTable().getColumn(entry.getKey());
+      if (column != null) {
+        attrs.add("\"" + entry.getKey() + "\"");
+        Object value = entry.getValue();
+        if (column.isFK() && value instanceof CachedDBObject) {
+          value = ((CachedDBObject) value).getColumns().get(DBTypeInfo.ID_COLUMN);
+        }
+        values.add(database.wrapParameter(value, column));
+      }
+    }
+    if (_new) {
       StringBuilder query = new StringBuilder("insert into \"");
       query.append(getTableName()).append("\" (");
-      for (String key : keys) {
-        query.append("\"").append(key).append("\"");
-        if (key != keys.get(keys.size() - 1)) {
+      for (String key : attrs) {
+        query.append(key);
+        if (key != attrs.get(attrs.size() - 1)) {
           query.append(", ");
         }
       }
       query.append(") values (");
-      for (int i = 0; i < keys.size(); i++) {
+      for (int i = 0; i < attrs.size(); i++) {
         if (i > 0) {
           query.append(", ");
         }
         query.append("?");
       }
       query.append(")");
+      profiler.start(query.toString() + " (" + values + ")");
       Object id = database.executeInsert(query.toString(), values.toArray(new IPreparedStatementParameter[values.size()]));
       if (id != null) {
-        _columns.put("id", id);
+        _columns.put(DBTypeInfo.ID_COLUMN, id);
         _new = false;
       }
     } else {
-      List<String> attrs = new ArrayList<String>();
-      List<IPreparedStatementParameter> values = new ArrayList<IPreparedStatementParameter>();
-      for (Map.Entry<String, Object> entry : _columns.entrySet()) {
-        if (entry.getKey().equals("id")) {
-          continue;
-        }
-        attrs.add("\"" + entry.getKey() + "\" = ?");
-        values.add(database.wrapParameter(entry.getValue(), _type.getTable().getColumn(entry.getKey())));
-      }
       StringBuilder query = new StringBuilder("update \"");
       query.append(getTableName()).append("\" set ");
       for (String attr : attrs) {
-        query.append(attr);
+        query.append(attr).append(" = ?");
         if (attr != attrs.get(attrs.size() - 1)) {
           query.append(", ");
         }
       }
       query.append(" where \"id\" = ?");
-      values.add(database.wrapParameter(_columns.get("id"), _type.getTable().getColumn("id")));
+      profiler.start(query.toString() + " (" + values + ")");
+      values.add(database.wrapParameter(_columns.get(DBTypeInfo.ID_COLUMN), _type.getTable().getColumn(DBTypeInfo.ID_COLUMN)));
       database.executeInsert(query.toString(), values.toArray(new IPreparedStatementParameter[values.size()]));
     }
+    profiler.stop();
   }
 
   public void delete() throws SQLException {
+    // TODO - AHK - Add profiling
     // TODO - AHK - Determine if we need to quote the table name or column names or not
     String query = "delete from \"" + getTableName() + "\" where \"id\" = ?";
     IDatabase database = _type.getTable().getDatabase();

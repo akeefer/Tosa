@@ -1,21 +1,27 @@
 package tosa.query;
 
 import gw.lang.reflect.IPropertyInfo;
-import gw.lang.reflect.IType;
 import gw.lang.reflect.features.PropertyReference;
 import gw.lang.reflect.java.IJavaType;
 import gw.util.GosuStringUtil;
+import org.slf4j.profiler.Profiler;
 import tosa.CachedDBObject;
-import tosa.api.*;
+import tosa.api.IDBColumn;
+import tosa.api.IDBTable;
+import tosa.api.IDatabase;
+import tosa.api.IPreparedStatementParameter;
+import tosa.api.IQueryResultProcessor;
 import tosa.loader.DBPropertyInfo;
-import tosa.loader.DBType;
+import tosa.loader.DBTypeInfo;
 import tosa.loader.IDBType;
+import tosa.loader.Util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Clob;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -28,15 +34,18 @@ import java.util.Map;
  */
 public class SelectHelper {
 
-  public static CachedDBObject selectById(IDBType entityType, Object id) throws SQLException {
+  public static CachedDBObject selectById(String feature, IDBType entityType, Object id) throws SQLException {
     // TODO - AHK - Input validation (i.e. id should not be null)
     IDBTable table = entityType.getTable();
-    IDBColumn idColumn = table.getColumn("id"); // TODO - AHK - Make the colum name a constant
+    IDBColumn idColumn = table.getColumn(DBTypeInfo.ID_COLUMN);
     IDatabase db = entityType.getTable().getDatabase();
 
     // TODO - AHK - Use some DB-aware utility to decide when to quote things, etc.
     // TODO - AHK - Make the colum name a constant
-    List<CachedDBObject> results = db.executeSelect("select * from \"" + table.getName() + "\" where \"id\" = ?",
+    String query = "select * from \"" + table.getName() + "\" where \"id\" = ?";
+    Profiler profiler = Util.newProfiler(feature);
+    profiler.start(query + " (" + id + ")");
+    List<CachedDBObject> results = db.executeSelect(query,
         new CachedDBQueryResultProcessor(entityType),
         db.wrapParameter(id, idColumn));
 
@@ -142,7 +151,7 @@ public class SelectHelper {
 //        DBPropertyInfo dbProperty = (DBPropertyInfo) p;
 //        String value;
 //        if (dbProperty.getColumnName().endsWith("_id")) {
-//          value = ((CachedDBObject) args[i]).getColumns().get("id").toString();
+//          value = ((CachedDBObject) args[i]).getColumns().get(DBTypeInfo.ID_COLUMN).toString();
 //        } else {
 //          value = "'" + args[i].toString().replace("'", "''") + "'";
 //        }

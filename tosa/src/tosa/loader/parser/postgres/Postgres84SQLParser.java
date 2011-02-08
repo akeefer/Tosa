@@ -1,5 +1,6 @@
 package tosa.loader.parser.postgres;
 
+import org.slf4j.LoggerFactory;
 import tosa.loader.data.ColumnData;
 import tosa.loader.data.ColumnType;
 import tosa.loader.data.DBData;
@@ -82,7 +83,7 @@ index_parameters in UNIQUE and PRIMARY KEY constraints are:
 //        "    date_prod   date,\n" +
 //        "    kind        varchar(10)\n" +
 //        ");");
-    System.out.println("Here");
+    LoggerFactory.getLogger("Tosa").trace("Here");
   }
 
   public DBData parseFile(String fileContents) {
@@ -356,7 +357,7 @@ index_parameters in UNIQUE and PRIMARY KEY constraints are:
   private void parseConstraintName() {
     if (accept(CONSTRAINT)) {
       String constraintName = consumeToken();
-      System.out.println("Constraint name is " + constraintName);
+      LoggerFactory.getLogger("Tosa").trace("Constraint name is " + constraintName);
     }
   }
 
