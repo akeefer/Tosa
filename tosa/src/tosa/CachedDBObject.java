@@ -114,7 +114,7 @@ public class CachedDBObject implements IGosuObject {
         query.append(" where \"id\" = ?");
         values.add(database.wrapParameter(_columns.get(DBTypeInfo.ID_COLUMN), _type.getTable().getColumn(DBTypeInfo.ID_COLUMN)));
         profiler.start(query.toString() + " (" + values + ")");
-        database.executeInsert(query.toString(), values.toArray(new IPreparedStatementParameter[values.size()]));
+        database.executeUpdate(query.toString(), values.toArray(new IPreparedStatementParameter[values.size()]));
       }
     } finally {
       profiler.stop();

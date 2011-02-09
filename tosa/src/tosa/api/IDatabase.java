@@ -36,9 +36,9 @@ public interface IDatabase {
   // TODO - AHK - This should probably return more than just one object
   Object executeInsert(String sql, IPreparedStatementParameter... arguments);
 
-  <T> List<T> executeSelect(String sql, IQueryResultProcessor<T> resultProcessor, IPreparedStatementParameter... arguments);
+  void executeUpdate(String sql, IPreparedStatementParameter... arguments);
 
-  List<Object> executeUpdate(String sql, IPreparedStatementParameter... arguments);
+  <T> List<T> executeSelect(String sql, IQueryResultProcessor<T> resultProcessor, IPreparedStatementParameter... arguments);
 
   void executeDelete(String sql, IPreparedStatementParameter... arguments);
 

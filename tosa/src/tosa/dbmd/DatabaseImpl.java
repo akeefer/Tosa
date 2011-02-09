@@ -115,10 +115,9 @@ public class DatabaseImpl implements IDatabase {
   }
 
   @Override
-  public List<Object> executeUpdate(String sql, IPreparedStatementParameter... arguments) {
+  public void executeUpdate(String sql, IPreparedStatementParameter... arguments) {
     UpdateExecuteCallback callback = new UpdateExecuteCallback();
     execute(sql, arguments, callback);
-    return callback.getUpdatedIds();
   }
 
   @Override
@@ -154,8 +153,6 @@ public class DatabaseImpl implements IDatabase {
 
   private static class UpdateExecuteCallback implements ExecuteCallback {
 
-    private List<Object> _updatedIds;
-
     @Override
     public PreparedStatement prepareStatement(Connection connection, String sql) throws SQLException {
       return connection.prepareStatement(sql);
@@ -163,23 +160,6 @@ public class DatabaseImpl implements IDatabase {
 
     @Override
     public void processStatementPostExecute(PreparedStatement statement) throws SQLException {
-      ResultSet result = statement.getResultSet();
-      _updatedIds = new ArrayList<Object>();
-      if (result != null) {
-        try {
-          if (result.first()) {
-            do {
-              _updatedIds.add(result.getObject(DBTypeInfo.ID_COLUMN));
-            } while (result.next());
-          }
-        } finally {
-          result.close();
-        }
-      }
-    }
-
-    public List<Object> getUpdatedIds() {
-      return _updatedIds;
     }
   }
 

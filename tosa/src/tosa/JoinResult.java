@@ -96,21 +96,21 @@ public class JoinResult implements List<CachedDBObject> {
         if (_database.getTable(_joinTable.getName()).hasId()) {
           String query = "select * from \"" + _joinTable.getName() + "\" where \"" + _srcColumn.getName() + "\" = ? and \"" + _targetColumn.getName() + "\" = ? limit 1";
           profiler.start(query + " (" + parameters + ")");
-          List<Object> results = _database.executeUpdate(query, parameters.toArray(new IPreparedStatementParameter[parameters.size()]));
-          if (!results.isEmpty()) {
-            Object id = results.get(0);
+          List<Object> results = _database.executeSelect(query, new JoinQueryResultProcessor(),
+                  parameters.toArray(new IPreparedStatementParameter[parameters.size()]));
+          if (!results.isEmpty() && results.get(0) != null) {
             parameters.clear();
-            parameters.add(_database.wrapParameter(id, _idColumn));
+            parameters.add(_database.wrapParameter(results.get(0), _idColumn));
             query = "delete from \"" + _joinTable.getName() + "\" where \"id\" = ?";
             profiler.start(query + " (" + parameters + ")");
-            _database.executeUpdate(query, parameters.toArray(new IPreparedStatementParameter[parameters.size()]));
+            _database.executeDelete(query, parameters.toArray(new IPreparedStatementParameter[parameters.size()]));
             _result.remove(obj);
             return true;
           }
         } else {
           String query = "delete from \"" + _joinTable.getName() + "\" where \"" + _srcColumn.getName() + "\" = ? and \"" + _targetColumn.getName() + "\" = ?";
           profiler.start(query + " (" + parameters + ")");
-          _database.executeUpdate(query, parameters.toArray(new IPreparedStatementParameter[parameters.size()]));
+          _database.executeDelete(query, parameters.toArray(new IPreparedStatementParameter[parameters.size()]));
           _result.remove(obj);
           return true;
         }
@@ -245,4 +245,10 @@ public class JoinResult implements List<CachedDBObject> {
     return _result.subList(fromIndex, toIndex);
   }
 
+  private static class JoinQueryResultProcessor implements IQueryResultProcessor<Object> {
+    @Override
+    public Object processResult(ResultSet result) throws SQLException {
+      return result.getObject(DBTypeInfo.ID_COLUMN);
+    }
+  }
 }
