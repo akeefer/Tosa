@@ -9,8 +9,6 @@ import tosa.CachedDBObject;
 import tosa.api.IDBColumn;
 import tosa.api.IDBTable;
 import tosa.api.IDatabase;
-import tosa.api.IPreparedStatementParameter;
-import tosa.api.IQueryResultProcessor;
 import tosa.loader.DBPropertyInfo;
 import tosa.loader.DBTypeInfo;
 import tosa.loader.IDBType;
@@ -58,7 +56,7 @@ public class SelectHelper {
     }
   }
 
-  public static class CachedDBQueryResultProcessor implements IQueryResultProcessor<CachedDBObject> {
+  public static class CachedDBQueryResultProcessor implements IDatabase.IQueryResultProcessor<CachedDBObject> {
     private IDBType _type;
 
     public CachedDBQueryResultProcessor(IDBType type) {
@@ -78,7 +76,7 @@ public class SelectHelper {
 
     StringBuilder query = new StringBuilder("select * from \"");
     query.append(table.getName()).append("\" where ");
-    List<IPreparedStatementParameter> queryParameters = new ArrayList<IPreparedStatementParameter>();
+    List<IDatabase.IPreparedStatementParameter> queryParameters = new ArrayList<IDatabase.IPreparedStatementParameter>();
     addWhereClause(query, template, table, queryParameters);
     if (sortColumn != null) {
       query.append(" order by \"").append(sortColumn.getPropertyInfo().getName()).append("\" ").append(ascending ? "ASC" : "DESC").append(", \"id\" ASC");
@@ -93,7 +91,7 @@ public class SelectHelper {
     try {
       return db.executeSelect(query.toString(),
               new CachedDBQueryResultProcessor(type),
-              queryParameters.toArray(new IPreparedStatementParameter[queryParameters.size()]));
+              queryParameters.toArray(new IDatabase.IPreparedStatementParameter[queryParameters.size()]));
     } finally {
       profiler.stop();
     }
@@ -129,7 +127,7 @@ public class SelectHelper {
 //    }
 //  }
 //
-  public static void addWhereClause(StringBuilder query, CachedDBObject template, IDBTable table, List<IPreparedStatementParameter> parameters) {
+  public static void addWhereClause(StringBuilder query, CachedDBObject template, IDBTable table, List<IDatabase.IPreparedStatementParameter> parameters) {
     List<String> whereClause = new ArrayList<String>();
     if (template != null) {
       for (Map.Entry<String, Object> column : template.getColumns().entrySet()) {
