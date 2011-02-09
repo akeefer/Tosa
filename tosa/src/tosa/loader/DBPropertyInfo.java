@@ -102,11 +102,14 @@ public class DBPropertyInfo extends PropertyInfoBase {
       @Override
       public Object getValue(Object ctx) {
         Object columnValue = ((CachedDBObject) ctx).getColumns().get(getColumnName());
-        if (_column.isFK() && columnValue != null && !(columnValue instanceof CachedDBObject)) {
+        if (_column.isFK() && columnValue != null) {
           try {
-            CachedDBObject resolvedFK = SelectHelper.selectById(getOwnersType().getName() + "." + getName(),
-                    (IDBType) _type, columnValue);
-            ((CachedDBObject) ctx).getColumns().put(getColumnName(), resolvedFK);
+            Object resolvedFK = ((CachedDBObject) ctx).getCachedValues().get(getColumnName());
+            if (resolvedFK == null) {
+              resolvedFK = SelectHelper.selectById(getOwnersType().getName() + "." + getName(),
+                      (IDBType) _type, columnValue);
+              ((CachedDBObject) ctx).getCachedValues().put(getColumnName(), resolvedFK);
+            }
             return resolvedFK;
           } catch (SQLException e) {
             throw new RuntimeException(e);

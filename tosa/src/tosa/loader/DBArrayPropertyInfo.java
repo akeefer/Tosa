@@ -76,11 +76,11 @@ public class DBArrayPropertyInfo extends PropertyInfoBase{
     @Override
     public Object getValue(Object ctx) {
       try {
-        Object value = ((CachedDBObject) ctx).getColumns().get(_name);
+        Object value = ((CachedDBObject) ctx).getCachedValues().get(_name);
         if (value == null) {
           value = ((DBTypeInfo) _fkType.getTypeInfo()).findInDb(getOwnersType().getName() + "." + _name,
                   Arrays.asList(_fkType.getTypeInfo().getProperty(getOwnersType().getRelativeName())), ctx);
-          ((CachedDBObject) ctx).getColumns().put(_name, value);
+          ((CachedDBObject) ctx).getCachedValues().put(_name, value);
         }
         return value;
       } catch (SQLException e) {

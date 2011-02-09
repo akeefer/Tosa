@@ -29,6 +29,7 @@ import java.util.Map;
  */
 public class CachedDBObject implements IGosuObject {
   private Map<String, Object> _columns;
+  private Map<String, Object> _cachedValues;
   private IDBType _type;
   private boolean _new;
 
@@ -49,11 +50,16 @@ public class CachedDBObject implements IGosuObject {
     return _columns;
   }
 
+  public Map<String, Object> getCachedValues() {
+    return _cachedValues;
+  }
+
   public CachedDBObject(IDBType type, boolean isNew) {
     // TODO - AHK
     _type = (IDBType) TypeSystem.getOrCreateTypeReference(type);
     _new = isNew;
     _columns = new HashMap<String, Object>();
+    _cachedValues = new HashMap<String, Object>();
   }
 
   public void update() throws SQLException {
@@ -69,9 +75,6 @@ public class CachedDBObject implements IGosuObject {
       if (column != null) {
         attrs.add("\"" + entry.getKey() + "\"");
         Object value = entry.getValue();
-        if (column.isFK() && value instanceof CachedDBObject) {
-          value = ((CachedDBObject) value).getColumns().get(DBTypeInfo.ID_COLUMN);
-        }
         values.add(database.wrapParameter(value, column));
       }
     }

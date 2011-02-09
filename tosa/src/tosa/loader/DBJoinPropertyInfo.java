@@ -82,7 +82,7 @@ public class DBJoinPropertyInfo extends PropertyInfoBase{
   private class DBJoinPropertyAccessor implements IPropertyAccessor {
     @Override
     public Object getValue(Object ctx) {
-      Object value = ((CachedDBObject) ctx).getColumns().get(_name);
+      Object value = ((CachedDBObject) ctx).getCachedValues().get(_name);
       if (value == null) {
         String j = _join.getJoinTable().getName();
         String t = _join.getTargetTable().getName();
@@ -100,7 +100,7 @@ public class DBJoinPropertyInfo extends PropertyInfoBase{
           List<CachedDBObject> result = db.executeSelect(query, new SelectHelper.CachedDBQueryResultProcessor(_fkType),
                   db.wrapParameter(id, _join.getJoinTable().getColumn(o + "_id")));
           value = new JoinResult(result, _join.getJoinTable().getDatabase(), _join.getJoinTable(), _join.getJoinTable().getColumn(o + "_id"), _join.getJoinTable().getColumn(t + "_id"), id);
-          ((CachedDBObject) ctx).getColumns().put(_name, value);
+          ((CachedDBObject) ctx).getCachedValues().put(_name, value);
         } finally {
           profiler.stop();
         }
