@@ -19,6 +19,7 @@ import gw.util.GosuStringUtil;
 import tosa.CachedDBObject;
 import tosa.Join;
 import tosa.JoinResult;
+import tosa.api.IDBTable;
 
 import java.sql.SQLException;
 import java.util.Collections;
@@ -93,7 +94,7 @@ public class DBJoinPropertyInfo extends PropertyInfoBase{
                   getOwnersType().getName() + "." + _name,
                   "select * from \"" + _join.getTargetTable().getName() + "\", \"" + j + "\" as j where j.\"" + t + "_id\" = \"" + _join.getTargetTable().getName() + "\".\"id\" and j.\"" + o + "_id\" = " + id
           );
-          value = new JoinResult(result, ((IDBType)getOwnersType()).getTable().getDatabase(), j, o, t, id);
+          value = new JoinResult(result, _join.getJoinTable().getDatabase(), _join.getJoinTable(), _join.getJoinTable().getColumn(o + "_id"), _join.getJoinTable().getColumn(t + "_id"), id);;
           ((CachedDBObject) ctx).getColumns().put(_name, value);
         } catch (SQLException e) {
           throw new RuntimeException(e);

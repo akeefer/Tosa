@@ -116,21 +116,12 @@ public class CachedDBObject implements IGosuObject {
   }
 
   public void delete() throws SQLException {
-    Profiler profiler = Util.newProfiler(_type.getName() + ".delete()");
-    String query = "delete from \"" + getTableName() + "\" where \"id\" = '" + (_columns.get(DBTypeInfo.ID_COLUMN).toString().replace("'", "''")) + "'";
-    profiler.start(query);
-    Connection conn = _type.getTable().getDatabase().getConnection().connect();
-    try {
-      Statement stmt = conn.createStatement();
-      try {
-        stmt.execute(query);
-      } finally {
-        stmt.close();
-      }
-    } finally {
-      conn.close();
-      profiler.stop();
-    }
+    // TODO - AHK - Add profiling
+    // TODO - AHK - Determine if we need to quote the table name or column names or not
+    String query = "delete from \"" + getTableName() + "\" where \"id\" = ?";
+    IDatabase database = _type.getTable().getDatabase();
+    IPreparedStatementParameter parameter = database.wrapParameter(_columns.get("id"), _type.getTable().getColumn("id"));
+    database.executeDelete(query, parameter);
   }
 
   @Override
