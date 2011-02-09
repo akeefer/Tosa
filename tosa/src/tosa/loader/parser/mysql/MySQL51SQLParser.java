@@ -2,8 +2,7 @@ package tosa.loader.parser.mysql;
 
 import org.slf4j.LoggerFactory;
 import tosa.loader.data.ColumnData;
-import tosa.loader.data.ColumnType;
-import tosa.loader.data.DBData;
+import tosa.loader.data.DBColumnTypeImpl;
 import tosa.loader.data.TableData;
 import tosa.loader.parser.ISQLParser;
 import tosa.loader.parser.SQLParserConstants;
@@ -321,7 +320,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
     // production, but I'm moving it in there for the sake of sanity
     String name = consumeToken();
     name = stripQuotes(name);
-    ColumnType columnType = parseDataType();
+    DBColumnTypeImpl columnType = parseDataType();
     while (parseColumnOption()) {
       // Keep looping to consume all the options
     }
@@ -435,12 +434,12 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       [CHARACTER SET charset_name] [COLLATE collation_name]
   | spatial_type
    */
-  private ColumnType parseDataType() {
+  private DBColumnTypeImpl parseDataType() {
     // TODO - Handle Serial
     if (accept(BIT)) {
       Integer length = parseLength();
       if (length == null || length == 1) {
-        return new ColumnType(Types.BIT, BIT, ColumnType.BOOLEAN_ITYPE);
+        return new DBColumnTypeImpl(BIT, BIT, DBColumnTypeImpl.BOOLEAN_ITYPE, Types.BIT);
       } else {
         // TODO - AHK
         LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + BIT);
@@ -451,9 +450,9 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       boolean signed = parseNumericModifiers();
       if (length != null && length == 1) {
         // Treat TINYINT(1) as a boolean type
-        return new ColumnType(Types.TINYINT, TINYINT, ColumnType.BOOLEAN_ITYPE);
+        return new DBColumnTypeImpl(TINYINT, TINYINT, DBColumnTypeImpl.BOOLEAN_ITYPE, Types.TINYINT);
       } else if (signed) {
-        return new ColumnType(Types.TINYINT, TINYINT, ColumnType.BYTE_ITYPE);
+        return new DBColumnTypeImpl(TINYINT, TINYINT, DBColumnTypeImpl.BYTE_ITYPE, Types.TINYINT);
       } else {
         // TODO - AHK
         LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + TINYINT);
@@ -461,12 +460,12 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       }
     } else if (accept(BOOL) || accept(BOOLEAN)) {
       // BOOL and BOOLEAN are equivalent to TINYINT(1)
-      return new ColumnType(Types.TINYINT, TINYINT, ColumnType.BOOLEAN_ITYPE);
+      return new DBColumnTypeImpl(TINYINT, TINYINT, DBColumnTypeImpl.BOOLEAN_ITYPE, Types.TINYINT);
     } else if (accept(SMALLINT)) {
       Integer length = parseLength();
       boolean signed = parseNumericModifiers();
       if (signed) {
-        return new ColumnType(Types.SMALLINT, SMALLINT, ColumnType.SHORT_ITYPE);
+        return new DBColumnTypeImpl(SMALLINT, SMALLINT, DBColumnTypeImpl.SHORT_ITYPE ,Types.SMALLINT);
       } else {
         // TODO - AHK
         LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + SMALLINT);
@@ -476,7 +475,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       Integer length = parseLength();
       boolean signed = parseNumericModifiers();
       if (signed) {
-        return new ColumnType(Types.INTEGER, MEDIUMINT, ColumnType.INTEGER_ITYPE);
+        return new DBColumnTypeImpl(MEDIUMINT, MEDIUMINT, DBColumnTypeImpl.INTEGER_ITYPE, Types.INTEGER);
       } else {
         // TODO - AHK
         LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + MEDIUMINT);
@@ -486,7 +485,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       Integer length = parseLength();
       boolean signed = parseNumericModifiers();
       if (signed) {
-        return new ColumnType(Types.INTEGER, INT, ColumnType.INTEGER_ITYPE);
+        return new DBColumnTypeImpl(INT, INT, DBColumnTypeImpl.INTEGER_ITYPE, Types.INTEGER);
       } else {
         // TODO - AHK
         LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + INTEGER);
@@ -496,7 +495,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       Integer length = parseLength();
       boolean signed = parseNumericModifiers();
       if (signed) {
-        return new ColumnType(Types.BIGINT, BIGINT, ColumnType.LONG_ITYPE);
+        return new DBColumnTypeImpl(BIGINT, BIGINT, DBColumnTypeImpl.LONG_ITYPE, Types.BIGINT);
       } else {
         // TODO - AHK
         LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + BIGINT);
@@ -506,46 +505,46 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       // TODO - AHK - If the REAL_AS_FLOAT mode is set on the DB, this will be incorrect
       parseLengthAndDecimals();
       boolean signed = parseNumericModifiers();
-      return new ColumnType(Types.DOUBLE, DOUBLE, ColumnType.DOUBLE_ITYPE);
+      return new DBColumnTypeImpl(DOUBLE, DOUBLE, DBColumnTypeImpl.DOUBLE_ITYPE, Types.DOUBLE);
     } else if (accept(FLOAT)) {
       // TODO - AHK - It's a different deal if there's a length and a precision versus just a single number
       parseLengthAndDecimals();
       boolean signed = parseNumericModifiers();
-      return new ColumnType(Types.FLOAT, FLOAT, ColumnType.FLOAT_ITYPE);
+      return new DBColumnTypeImpl(FLOAT, FLOAT, DBColumnTypeImpl.FLOAT_ITYPE, Types.FLOAT);
     } else if (accept(DECIMAL) || accept(DEC) || accept(NUMERIC) || accept(FIXED)) {
       parseLengthAndDecimals();
       boolean signed = parseNumericModifiers();
       // TODO - AHK - The precision and size are probably important here
       // TODO - AHK - If there precision is 0, should this be a BigInteger?
-      return new ColumnType(Types.DECIMAL, DECIMAL, ColumnType.BIG_DECIMAL_ITYPE);
+      return new DBColumnTypeImpl(DECIMAL, DECIMAL, DBColumnTypeImpl.BIG_DECIMAL_ITYPE, Types.DECIMAL);
     } else if (accept(DATE)) {
       // TODO - AHK
-//      return new ColumnType(Types.DATE, DATE, ColumnType.DATE_ITYPE);
-      return new ColumnType(Types.DATE, DATE, "java.sql.Date");
+//      return new DBColumnTypeImpl(Types.DATE, DATE, DBColumnTypeImpl.DATE_ITYPE);
+      return new DBColumnTypeImpl(DATE, DATE, "java.sql.Date", Types.DATE);
     } else if (accept(TIME)) {
       // TODO - AHK
-      return new ColumnType(Types.TIME, TIME, ColumnType.DATE_ITYPE);
+      return new DBColumnTypeImpl(TIME, TIME, DBColumnTypeImpl.DATE_ITYPE, Types.TIME);
     } else if (accept(TIMESTAMP)) {
       // TODO - AHK
-      return new ColumnType(Types.TIMESTAMP, TIMESTAMP, ColumnType.DATE_ITYPE);
+      return new DBColumnTypeImpl(TIMESTAMP, TIMESTAMP, DBColumnTypeImpl.DATE_ITYPE, Types.TIMESTAMP);
     } else if (accept(DATETIME)) {
       // TODO - AHK
-      return new ColumnType(Types.TIMESTAMP, DATETIME, ColumnType.DATE_ITYPE);
+      return new DBColumnTypeImpl(DATETIME, DATETIME, DBColumnTypeImpl.DATE_ITYPE, Types.TIMESTAMP);
     } else if (accept(YEAR)) {
       // TODO - AHK
-      return new ColumnType(Types.INTEGER, YEAR, ColumnType.INTEGER_ITYPE);
+      return new DBColumnTypeImpl(YEAR, YEAR, DBColumnTypeImpl.INTEGER_ITYPE, Types.INTEGER);
     } else if (accept(CHAR) || accept(CHARACTER) || accept(NATIONAL, CHAR) || accept(NCHAR)) {
       // TODO - AHK - If the charSetName is "binary", then it's really a binary column . . . ugh
       Integer length = parseLength();
       String charSetName = parseCharSet();
       String collation = parseCollation();
-      return new ColumnType(Types.CHAR, CHAR, ColumnType.STRING_ITYPE);
+      return new DBColumnTypeImpl(CHAR, CHAR, DBColumnTypeImpl.STRING_ITYPE, Types.CHAR);
     } else if (accept(VARCHAR)) {
       // TODO - AHK - If the charSetName is "binary", then it's really a binary column . . . ugh
       Integer length = parseLength();
       String charSetName = parseCharSet();
       String collation = parseCollation();
-      return new ColumnType(Types.VARCHAR, VARCHAR, ColumnType.STRING_ITYPE);
+      return new DBColumnTypeImpl(VARCHAR, VARCHAR, DBColumnTypeImpl.STRING_ITYPE, Types.VARCHAR);
     } else if (accept(BINARY) || accept(CHAR, BYTE)) {
       Integer length = parseLength();
       // TODO - AHK

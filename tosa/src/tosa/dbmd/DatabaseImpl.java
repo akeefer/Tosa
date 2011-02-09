@@ -97,7 +97,7 @@ public class DatabaseImpl implements IDatabase {
   @Override
   public IPreparedStatementParameter wrapParameter(Object value, IDBColumn column) {
     // TODO - AHK - Do data conversions here
-    return new PreparedStatementParameterImpl(value, column.getColumnType().getJdbcTypeNumber());
+    return new PreparedStatementParameterImpl(value, column.getColumnType().getJdbcType());
   }
 
   @Override

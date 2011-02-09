@@ -1,10 +1,11 @@
 package tosa.dbmd;
 
 import tosa.api.IDBColumn;
+import tosa.api.IDBColumnType;
 import tosa.api.IDBTable;
 import tosa.loader.DBTypeInfo;
 import tosa.loader.data.ColumnData;
-import tosa.loader.data.ColumnType;
+import tosa.loader.data.DBColumnTypeImpl;
 
 /**
  * Created by IntelliJ IDEA.
@@ -60,7 +61,7 @@ public class DBColumnImpl implements IDBColumn {
   }
 
   @Override
-  public ColumnType getColumnType() {
+  public IDBColumnType getColumnType() {
     return _columnData.getColumnType();
   }
 

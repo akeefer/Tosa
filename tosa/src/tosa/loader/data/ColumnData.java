@@ -1,5 +1,7 @@
 package tosa.loader.data;
 
+import java.sql.Types;
+
 /**
  * Created by IntelliJ IDEA.
  * User: alan
@@ -9,15 +11,15 @@ package tosa.loader.data;
  */
 public class ColumnData {
   private String _name;
-  private ColumnType _columnType;
+  private DBColumnTypeImpl _columnType;
 
-  public ColumnData(String name, ColumnType columnType) {
+  public ColumnData(String name, DBColumnTypeImpl columnType) {
     _name = name;
     _columnType = columnType;
 
     // TODO - AHK - Total hack
     if (_columnType == null) {
-      _columnType = ColumnType.VARCHAR;
+      _columnType = new DBColumnTypeImpl("PlaceHolder", "place holder", DBColumnTypeImpl.STRING_ITYPE, Types.VARCHAR);
     }
   }
 
@@ -25,7 +27,7 @@ public class ColumnData {
     return _name;
   }
 
-  public ColumnType getColumnType() {
+  public DBColumnTypeImpl getColumnType() {
     return _columnType;
   }
 }

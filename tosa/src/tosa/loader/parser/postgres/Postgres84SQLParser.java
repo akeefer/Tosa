@@ -2,7 +2,7 @@ package tosa.loader.parser.postgres;
 
 import org.slf4j.LoggerFactory;
 import tosa.loader.data.ColumnData;
-import tosa.loader.data.ColumnType;
+import tosa.loader.data.DBColumnTypeImpl;
 import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
 import tosa.loader.parser.SQLParserConstants;
@@ -152,7 +152,7 @@ index_parameters in UNIQUE and PRIMARY KEY constraints are:
   private ColumnData parseColumn() {
     // column_name data_type [ DEFAULT default_expr ] [ column_constraint [ ... ] ]
     String name = parseColumnName();
-    ColumnType type = parseDataType();
+    DBColumnTypeImpl type = parseDataType();
     parseDefault();
     parseColumnConstraint();
 
@@ -164,11 +164,13 @@ index_parameters in UNIQUE and PRIMARY KEY constraints are:
     return name;
   }
 
-  private ColumnType parseDataType() {
+  private DBColumnTypeImpl parseDataType() {
     if (accept(bigint) || accept(int8)) {
-      return ColumnType.BIGINT;
+//      return DBColumnTypeImpl.BIGINT;
+      return null;
     } else if (accept(bigserial) || accept(serial8)) {
-      return ColumnType.BIGINT;
+//      return DBColumnTypeImpl.BIGINT;
+      return null;
     } else if (accept(bit)) {
       if (accept(varying)) {
 
@@ -186,34 +188,40 @@ index_parameters in UNIQUE and PRIMARY KEY constraints are:
     } else if (accept(character)) {
       if (accept(varying)) {
         Integer size = parseOptionalSize();
-        return ColumnType.VARCHAR;
+//        return DBColumnTypeImpl.VARCHAR;
+        return null;
       } else {
         Integer size = parseOptionalSize();
-        return ColumnType.CHAR;
+//        return DBColumnTypeImpl.CHAR;
+        return null;
       }
     } else if (accept(varchar)) {
       Integer size = parseOptionalSize();
-      return ColumnType.VARCHAR;
+//      return DBColumnTypeImpl.VARCHAR;
+      return null;
     } else if (accept(_char)) {
       Integer size = parseOptionalSize();
-      return ColumnType.CHAR;
+//      return DBColumnTypeImpl.CHAR;
+      return null;
     } else if (accept(cidr)) {
 
     } else if (accept(circle)) {
 
     } else if (accept(date)) {
-      return ColumnType.DATE;
+//      return DBColumnTypeImpl.DATE;
+      return null;
     } else if ((accept(_double) && accept(precision)) || accept(float8)) {
-      return ColumnType.DOUBLE;
+//      return DBColumnTypeImpl.DOUBLE;
+      return null;
     } else if (accept(inet)) {
 
     } else if (accept(integer) || accept(_int) || accept(int4)) {
-      return ColumnType.INTEGER;
+//      return DBColumnTypeImpl.INTEGER;
     } else if (accept(interval)) {
       parseIntervalFields();
       Integer precision = parseOptionalSize();
       // TODO - AHK - I have no idea what this data type is
-//      return new ColumnType(_int, "java.lang.Integer");
+//      return new DBColumnTypeImpl(_int, "java.lang.Integer");
     } else if (accept(line)) {
 
     } else if (accept(lseg)) {
@@ -223,7 +231,7 @@ index_parameters in UNIQUE and PRIMARY KEY constraints are:
     } else if (accept(money)) {
 
     } else if (accept(numeric) || accept(decimal)) {
-      return ColumnType.NUMERIC;
+//      return DBColumnTypeImpl.NUMERIC;
     } else if (accept(path)) {
 
     } else if (accept(point)) {
