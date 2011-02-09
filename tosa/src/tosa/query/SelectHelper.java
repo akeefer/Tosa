@@ -1,21 +1,25 @@
 package tosa.query;
 
 import gw.lang.reflect.IPropertyInfo;
-import gw.lang.reflect.IType;
 import gw.lang.reflect.features.PropertyReference;
 import gw.lang.reflect.java.IJavaType;
 import gw.util.GosuStringUtil;
+import org.slf4j.profiler.Profiler;
 import tosa.CachedDBObject;
-import tosa.api.*;
+import tosa.api.IDBColumn;
+import tosa.api.IDBTable;
+import tosa.api.IDatabase;
 import tosa.loader.DBPropertyInfo;
-import tosa.loader.DBType;
+import tosa.loader.DBTypeInfo;
 import tosa.loader.IDBType;
+import tosa.loader.Util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Clob;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -28,15 +32,18 @@ import java.util.Map;
  */
 public class SelectHelper {
 
-  public static CachedDBObject selectById(IDBType entityType, Object id) throws SQLException {
+  public static CachedDBObject selectById(String feature, IDBType entityType, Object id) throws SQLException {
     // TODO - AHK - Input validation (i.e. id should not be null)
     IDBTable table = entityType.getTable();
-    IDBColumn idColumn = table.getColumn("id"); // TODO - AHK - Make the colum name a constant
+    IDBColumn idColumn = table.getColumn(DBTypeInfo.ID_COLUMN);
     IDatabase db = entityType.getTable().getDatabase();
 
     // TODO - AHK - Use some DB-aware utility to decide when to quote things, etc.
     // TODO - AHK - Make the colum name a constant
-    List<CachedDBObject> results = db.executeSelect("select * from \"" + table.getName() + "\" where \"id\" = ?",
+    String query = "select * from \"" + table.getName() + "\" where \"id\" = ?";
+    Profiler profiler = Util.newProfiler(feature);
+    profiler.start(query + " (" + id + ")");
+    List<CachedDBObject> results = db.executeSelect(query,
         new CachedDBQueryResultProcessor(entityType),
         db.wrapParameter(id, idColumn));
 
@@ -49,10 +56,10 @@ public class SelectHelper {
     }
   }
 
-  private static class CachedDBQueryResultProcessor implements IQueryResultProcessor<CachedDBObject> {
+  public static class CachedDBQueryResultProcessor implements IDatabase.IQueryResultProcessor<CachedDBObject> {
     private IDBType _type;
 
-    private CachedDBQueryResultProcessor(IDBType type) {
+    public CachedDBQueryResultProcessor(IDBType type) {
       _type = type;
     }
 
@@ -62,14 +69,14 @@ public class SelectHelper {
     }
   }
 
-  // TODO - AHK - Should we just infer the type from the template?
   public static List<CachedDBObject> findFromTemplate(IDBType type, CachedDBObject template, PropertyReference sortColumn, boolean ascending, int limit, int offset) throws SQLException {
+    Profiler profiler = Util.newProfiler(type.getName() + ".find()");
     IDBTable table = type.getTable();
     IDatabase db = table.getDatabase();
 
     StringBuilder query = new StringBuilder("select * from \"");
     query.append(table.getName()).append("\" where ");
-    List<IPreparedStatementParameter> queryParameters = new ArrayList<IPreparedStatementParameter>();
+    List<IDatabase.IPreparedStatementParameter> queryParameters = new ArrayList<IDatabase.IPreparedStatementParameter>();
     addWhereClause(query, template, table, queryParameters);
     if (sortColumn != null) {
       query.append(" order by \"").append(sortColumn.getPropertyInfo().getName()).append("\" ").append(ascending ? "ASC" : "DESC").append(", \"id\" ASC");
@@ -80,9 +87,14 @@ public class SelectHelper {
       query.append(" limit ").append(limit).append(" offset ").append(offset);
     }
 
-    return db.executeSelect(query.toString(),
-        new CachedDBQueryResultProcessor(type),
-        queryParameters.toArray(new IPreparedStatementParameter[queryParameters.size()]));
+    profiler.start(query + " (" + queryParameters + ")");
+    try {
+      return db.executeSelect(query.toString(),
+              new CachedDBQueryResultProcessor(type),
+              queryParameters.toArray(new IDatabase.IPreparedStatementParameter[queryParameters.size()]));
+    } finally {
+      profiler.stop();
+    }
   }
 //
 //  public static int countFromTemplate(CachedDBObject template) throws SQLException {
@@ -115,7 +127,7 @@ public class SelectHelper {
 //    }
 //  }
 //
-  public static void addWhereClause(StringBuilder query, CachedDBObject template, IDBTable table, List<IPreparedStatementParameter> parameters) {
+  public static void addWhereClause(StringBuilder query, CachedDBObject template, IDBTable table, List<IDatabase.IPreparedStatementParameter> parameters) {
     List<String> whereClause = new ArrayList<String>();
     if (template != null) {
       for (Map.Entry<String, Object> column : template.getColumns().entrySet()) {
@@ -142,7 +154,7 @@ public class SelectHelper {
 //        DBPropertyInfo dbProperty = (DBPropertyInfo) p;
 //        String value;
 //        if (dbProperty.getColumnName().endsWith("_id")) {
-//          value = ((CachedDBObject) args[i]).getColumns().get("id").toString();
+//          value = ((CachedDBObject) args[i]).getColumns().get(DBTypeInfo.ID_COLUMN).toString();
 //        } else {
 //          value = "'" + args[i].toString().replace("'", "''") + "'";
 //        }

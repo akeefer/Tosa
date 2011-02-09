@@ -1,5 +1,4 @@
-classpath "../../lib,../test-src,../src,../build/tosa.jar"
-typeloader tosa.loader.DBTypeLoader
+classpath "../../lib,../test-src,../src,../../tosa/build/tosa.jar"
 
 var result = org.junit.runner.JUnitCore.runClasses({tosa.loader.DBTypeInfoTest})
 print("Ran ${result.RunCount} tests")

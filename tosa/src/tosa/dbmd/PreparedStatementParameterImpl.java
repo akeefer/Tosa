@@ -1,6 +1,6 @@
 package tosa.dbmd;
 
-import tosa.api.IPreparedStatementParameter;
+import tosa.api.IDatabase;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -12,7 +12,7 @@ import java.sql.SQLException;
  * Time: 10:27 PM
  * To change this template use File | Settings | File Templates.
  */
-public class PreparedStatementParameterImpl implements IPreparedStatementParameter {
+public class PreparedStatementParameterImpl implements IDatabase.IPreparedStatementParameter {
 
   private Object _value;
   private int _jdbcType;
@@ -31,5 +31,10 @@ public class PreparedStatementParameterImpl implements IPreparedStatementParamet
       // TODO - AHK - Deal with lots of other potential types more specifically
       statement.setObject(index, _value, _jdbcType);
     }
+  }
+
+  @Override
+  public String toString() {
+    return _value == null ? "null" : _value.toString();
   }
 }

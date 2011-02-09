@@ -3,6 +3,7 @@ package test;
 import gw.lang.init.GosuInitialization;
 import junit.framework.TestCase;
 import org.junit.runner.RunWith;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by IntelliJ IDEA.
@@ -15,7 +16,7 @@ import org.junit.runner.RunWith;
 public abstract class GosuTestWrapper implements ITestWrapper {
 
   public GosuTestWrapper() {
-    System.out.println("Here");
+    LoggerFactory.getLogger("Tosa").trace("Here");
   }
 
   @Override

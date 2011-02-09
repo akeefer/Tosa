@@ -6,9 +6,9 @@ import gw.lang.reflect.features.PropertyReference;
 import gw.lang.reflect.java.IJavaType;
 import gw.util.GosuStringUtil;
 import gw.util.concurrent.LazyVar;
+import org.slf4j.profiler.Profiler;
 import tosa.CachedDBObject;
 import tosa.Join;
-import tosa.JoinResult;
 import tosa.api.IDBColumn;
 import tosa.api.IDBTable;
 import tosa.dbmd.DBColumnImpl;
@@ -38,18 +38,13 @@ import java.util.Map;
  */
 public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
 
+  public static final String ID_COLUMN = "id";
   private Map<String, IPropertyInfo> _properties;
   private List<IMethodInfo> _methods;
   private LazyVar<Map<String, IPropertyInfo>> _arrayProperties = new LazyVar<Map<String, IPropertyInfo>>() {
     @Override
     protected Map<String, IPropertyInfo> init() {
       return makeArrayProperties();
-    }
-  };
-  private LazyVar<Map<String, IMethodInfo>> _joinArrayMethods = new LazyVar<Map<String, IMethodInfo>>() {
-    @Override
-    protected Map<String, IMethodInfo> init() {
-      return makeJoinArrayMethods();
     }
   };
 
@@ -71,13 +66,13 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
     super(dbType);
 
     _getMethod = new MethodInfoBuilder().withName("fromID").withStatic()
-        .withParameters(new ParameterInfoBuilder().withName("id").withType(IJavaType.pLONG))
+        .withParameters(new ParameterInfoBuilder().withName(ID_COLUMN).withType(IJavaType.pLONG))
         .withReturnType(dbType)
         .withCallHandler(new IMethodCallHandler() {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return SelectHelper.selectById(getOwnersType(), args[0]);
+              return SelectHelper.selectById(getOwnersType().getName() + ".fromID()", getOwnersType(), args[0]);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -88,7 +83,7 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
         .withCallHandler(new IMethodCallHandler() {
           @Override
           public Object handleCall(Object ctx, Object... args) {
-            return ((CachedDBObject) ctx).getColumns().get("id");
+            return ((CachedDBObject) ctx).getColumns().get(ID_COLUMN);
           }
         }).build(this);
     _updateMethod = new MethodInfoBuilder().withName("update")
@@ -122,7 +117,7 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return countFromSql((String) args[0]);
+              return countFromSql(getOwnersType().getName() + ".countWithSql()", (String) args[0]);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -135,7 +130,7 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return countFromTemplate((CachedDBObject) args[0]);
+              return countFromTemplate(getOwnersType().getName() + ".count()", (CachedDBObject) args[0]);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -148,7 +143,7 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return findFromSql((String) args[0]);
+              return findFromSql(getOwnersType().getName() + ".findWithSql()", (String) args[0]);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -354,13 +349,15 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
     return getOwnersType().getTable().getDatabase().getConnection().connect();
   }
 
-  int countFromTemplate(CachedDBObject template) throws SQLException {
+  int countFromTemplate(String feature, CachedDBObject template) throws SQLException {
     StringBuilder query = new StringBuilder("select count(*) as count from \"").append(getOwnersType().getRelativeName()).append("\" where ");
     addWhereClause(query, template);
-    return countFromSql(query.toString());
+    return countFromSql(feature, query.toString());
   }
 
-  private int countFromSql(String query) throws SQLException {
+  private int countFromSql(String feature, String query) throws SQLException {
+    Profiler profiler = Util.newProfiler(feature);
+    profiler.start(query);
     Connection conn = connect();
     try {
       Statement stmt = conn.createStatement();
@@ -381,6 +378,7 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
       }
     } finally {
       conn.close();
+      profiler.stop();
     }
   }
 
@@ -403,7 +401,7 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
     }
   }
 
-  List<CachedDBObject> findInDb(List<IPropertyInfo> props, Object... args) throws SQLException {
+  List<CachedDBObject> findInDb(String feature, List<IPropertyInfo> props, Object... args) throws SQLException {
     List<String> whereClause = new ArrayList<String>();
     for (int i = 0; i < props.size(); i++) {
       IPropertyInfo p = props.get(i);
@@ -411,18 +409,20 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
         DBPropertyInfo dbProperty = (DBPropertyInfo) p;
         String value;
         if (dbProperty.getColumnName().endsWith("_id")) {
-          value = ((CachedDBObject) args[i]).getColumns().get("id").toString();
+          value = ((CachedDBObject) args[i]).getColumns().get(ID_COLUMN).toString();
         } else {
           value = "'" + args[i].toString().replace("'", "''") + "'";
         }
         whereClause.add("\"" + dbProperty.getColumnName() + "\" = " + value);
       }
     }
-    return findFromSql("select * from \"" + getOwnersType().getRelativeName() + "\" where " + GosuStringUtil.join(whereClause, " and "));
+    return findFromSql(feature, "select * from \"" + getOwnersType().getRelativeName() + "\" where " + GosuStringUtil.join(whereClause, " and "));
   }
 
-  List<CachedDBObject> findFromSql(String query) throws SQLException {
+  List<CachedDBObject> findFromSql(String feature, String query) throws SQLException {
     List<CachedDBObject> objs = new ArrayList<CachedDBObject>();
+    Profiler profiler = Util.newProfiler(feature);
+    profiler.start(query);
     Connection conn = connect();
     try {
       Statement stmt = conn.createStatement();
@@ -441,6 +441,7 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
       }
     } finally {
       conn.close();
+      profiler.stop();
     }
     return Collections.unmodifiableList(objs);
   }
@@ -510,63 +511,16 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
     return arrayProps;
   }
 
-  private Map<String, IMethodInfo> makeJoinArrayMethods() {
-    return new HashMap<String, IMethodInfo>();
-  }
-
   private DBPropertyInfo makeProperty(DBColumnImpl column) {
     return new DBPropertyInfo(this, column);
   }
 
   private IPropertyInfo makeArrayProperty(IDBTable fkTable) {
-    String namespace = getOwnersType().getNamespace();
-    final IType fkType = TypeSystem.getByFullName(namespace + "." + fkTable.getName());
-    return new PropertyInfoBuilder().withName(fkTable.getName() + "s").withType(IJavaType.LIST.getGenericType().getParameterizedType(fkType))
-        .withWritable(false).withAccessor(new IPropertyAccessor() {
-          @Override
-          public void setValue(Object ctx, Object value) {
-          }
-
-          @Override
-          public Object getValue(Object ctx) {
-            try {
-              return ((DBTypeInfo) fkType.getTypeInfo()).findInDb(Arrays.asList(fkType.getTypeInfo().getProperty(getOwnersType().getRelativeName())), ctx);
-            } catch (SQLException e) {
-              throw new RuntimeException(e);
-            }
-          }
-        }).build(this);
+    return new DBArrayPropertyInfo(this, fkTable);
   }
 
   private IPropertyInfo makeJoinProperty(final Join join) {
-    String namespace = getOwnersType().getNamespace();
-    final IType fkType = getOwnersType().getTypeLoader().getType(namespace + "." + join.getTargetTable().getName());
-    return new PropertyInfoBuilder().withName(join.getPropName()).withType(IJavaType.LIST.getGenericType().getParameterizedType(fkType))
-        .withWritable(false).withAccessor(new IPropertyAccessor() {
-          @Override
-          public void setValue(Object ctx, Object value) {
-          }
-
-          @Override
-          public Object getValue(Object ctx) {
-            String j = join.getJoinTable().getName();
-            String t = join.getTargetTable().getName();
-            String o = getOwnersType().getRelativeName();
-            if (GosuStringUtil.equals(t, o)) {
-              o += "_src";
-              t += "_dest";
-            }
-            String id = ((CachedDBObject) ctx).getColumns().get("id").toString();
-            try {
-              List<CachedDBObject> result = ((DBTypeInfo) fkType.getTypeInfo()).findFromSql(
-                  "select * from \"" + join.getTargetTable().getName() + "\", \"" + j + "\" as j where j.\"" + t + "_id\" = \"" + join.getTargetTable().getName() + "\".\"id\" and j.\"" + o + "_id\" = " + id
-              );
-              return new JoinResult(result, getOwnersType().getTable().getDatabase(), j, o, t, id);
-            } catch (SQLException e) {
-              throw new RuntimeException(e);
-            }
-          }
-        }).build(this);
+    return new DBJoinPropertyInfo(this, join);
   }
 
   @Override

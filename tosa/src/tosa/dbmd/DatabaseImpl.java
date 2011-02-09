@@ -4,8 +4,6 @@ import tosa.DBConnection;
 import tosa.Join;
 import tosa.api.IDBColumn;
 import tosa.api.IDatabase;
-import tosa.api.IPreparedStatementParameter;
-import tosa.api.IQueryResultProcessor;
 import tosa.loader.DBTypeLoader;
 import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
@@ -38,14 +36,17 @@ public class DatabaseImpl implements IDatabase {
     _connection = new DBConnection(dbData.getConnectionString(), typeLoader);
   }
 
+  @Override
   public String getNamespace() {
     return _namespace;
   }
 
+  @Override
   public DBTableImpl getTable(String tableName) {
     return _tables.get(tableName);
   }
 
+  @Override
   public Collection<DBTableImpl> getAllTables() {
     return _tables.values();
   }
@@ -54,6 +55,7 @@ public class DatabaseImpl implements IDatabase {
     return _dbData;
   }
 
+  @Override
   public DBConnection getConnection() {
     return _connection;
   }
@@ -93,11 +95,13 @@ public class DatabaseImpl implements IDatabase {
   }
 
 
+  @Override
   public IPreparedStatementParameter wrapParameter(Object value, IDBColumn column) {
     // TODO - AHK - Do data conversions here
-    return new PreparedStatementParameterImpl(value, column.getColumnType().getJdbcTypeNumber());
+    return new PreparedStatementParameterImpl(value, column.getColumnType().getJdbcType());
   }
 
+  @Override
   public Object executeInsert(String sql, IPreparedStatementParameter... arguments) {
     InsertExecuteCallback callback = new InsertExecuteCallback();
     execute(sql, arguments, callback);
@@ -109,6 +113,17 @@ public class DatabaseImpl implements IDatabase {
     SelectExecuteCallback<T> callback = new SelectExecuteCallback<T>(resultProcessor);
     execute(sql, arguments, callback);
     return callback.getResults();
+  }
+
+  @Override
+  public void executeUpdate(String sql, IPreparedStatementParameter... arguments) {
+    UpdateExecuteCallback callback = new UpdateExecuteCallback();
+    execute(sql, arguments, callback);
+  }
+
+  @Override
+  public void executeDelete(String sql, IPreparedStatementParameter... arguments) {
+    execute(sql, arguments, new DeleteExecuteCallback());
   }
 
   private static class InsertExecuteCallback implements ExecuteCallback {
@@ -134,6 +149,18 @@ public class DatabaseImpl implements IDatabase {
 
     public Object getGeneratedKey() {
       return _generatedKey;
+    }
+  }
+
+  private static class UpdateExecuteCallback implements ExecuteCallback {
+
+    @Override
+    public PreparedStatement prepareStatement(Connection connection, String sql) throws SQLException {
+      return connection.prepareStatement(sql);
+    }
+
+    @Override
+    public void processStatementPostExecute(PreparedStatement statement) throws SQLException {
     }
   }
 
@@ -170,6 +197,18 @@ public class DatabaseImpl implements IDatabase {
 
     public List<T> getResults() {
       return _results;
+    }
+  }
+
+  private static class DeleteExecuteCallback implements ExecuteCallback {
+    @Override
+    public PreparedStatement prepareStatement(Connection connection, String sql) throws SQLException {
+      return connection.prepareStatement(sql);
+    }
+
+    @Override
+    public void processStatementPostExecute(PreparedStatement statement) throws SQLException {
+      // Nothing to do here
     }
   }
 
