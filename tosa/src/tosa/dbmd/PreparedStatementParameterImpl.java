@@ -32,4 +32,9 @@ public class PreparedStatementParameterImpl implements IPreparedStatementParamet
       statement.setObject(index, _value, _jdbcType);
     }
   }
+
+  @Override
+  public String toString() {
+    return _value == null ? "null" : _value.toString();
+  }
 }

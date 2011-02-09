@@ -16,10 +16,13 @@ import gw.lang.reflect.PropertyInfoBase;
 import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.java.IJavaType;
 import gw.util.GosuStringUtil;
+import org.slf4j.profiler.Profiler;
 import tosa.CachedDBObject;
 import tosa.Join;
 import tosa.JoinResult;
 import tosa.api.IDBTable;
+import tosa.api.IDatabase;
+import tosa.query.SelectHelper;
 
 import java.sql.SQLException;
 import java.util.Collections;
@@ -34,7 +37,7 @@ public class DBJoinPropertyInfo extends PropertyInfoBase{
 
   private String _name;
   private IType _type;
-  private IType _fkType;
+  private IDBType _fkType;
   private Join _join;
 
   DBJoinPropertyInfo(ITypeInfo container, Join join) {
@@ -42,7 +45,7 @@ public class DBJoinPropertyInfo extends PropertyInfoBase{
     _join = join;
     _name = _join.getPropName();
     String namespace = getOwnersType().getNamespace();
-    _fkType = TypeSystem.getByFullName(namespace + "." + join.getTargetTable().getName());
+    _fkType = (IDBType) TypeSystem.getByFullName(namespace + "." + join.getTargetTable().getName());
     _type = IJavaType.LIST.getGenericType().getParameterizedType(_fkType);
   }
 
@@ -89,15 +92,17 @@ public class DBJoinPropertyInfo extends PropertyInfoBase{
           t += "_dest";
         }
         String id = ((CachedDBObject) ctx).getColumns().get(DBTypeInfo.ID_COLUMN).toString();
+        String query = "select * from \"" + _join.getTargetTable().getName() + "\", \"" + j + "\" as j where j.\"" + t + "_id\" = \"" + _join.getTargetTable().getName() + "\".\"id\" and j.\"" + o + "_id\" = ?";
+        Profiler profiler = Util.newProfiler(getOwnersType().getName() + "." + _name);
+        profiler.start(query + " (" + id + ")");
         try {
-          List<CachedDBObject> result = ((DBTypeInfo) _fkType.getTypeInfo()).findFromSqlMutable(
-                  getOwnersType().getName() + "." + _name,
-                  "select * from \"" + _join.getTargetTable().getName() + "\", \"" + j + "\" as j where j.\"" + t + "_id\" = \"" + _join.getTargetTable().getName() + "\".\"id\" and j.\"" + o + "_id\" = " + id
-          );
-          value = new JoinResult(result, _join.getJoinTable().getDatabase(), _join.getJoinTable(), _join.getJoinTable().getColumn(o + "_id"), _join.getJoinTable().getColumn(t + "_id"), id);;
+          IDatabase db = _join.getTargetTable().getDatabase();
+          List<CachedDBObject> result = db.executeSelect(query, new SelectHelper.CachedDBQueryResultProcessor(_fkType),
+                  db.wrapParameter(id, _join.getJoinTable().getColumn(o + "_id")));
+          value = new JoinResult(result, _join.getJoinTable().getDatabase(), _join.getJoinTable(), _join.getJoinTable().getColumn(o + "_id"), _join.getJoinTable().getColumn(t + "_id"), id);
           ((CachedDBObject) ctx).getColumns().put(_name, value);
-        } catch (SQLException e) {
-          throw new RuntimeException(e);
+        } finally {
+          profiler.stop();
         }
       }
       return value;

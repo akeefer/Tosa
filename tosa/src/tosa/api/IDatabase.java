@@ -2,6 +2,7 @@ package tosa.api;
 
 import tosa.DBConnection;
 
+import java.sql.ResultSet;
 import java.util.Collection;
 import java.util.List;
 
@@ -33,10 +34,11 @@ public interface IDatabase {
   IPreparedStatementParameter wrapParameter(Object value, IDBColumn column);
 
   // TODO - AHK - This should probably return more than just one object
-  // TODO - AHK - Should there also be an executeUpdate method?  probably . . .
   Object executeInsert(String sql, IPreparedStatementParameter... arguments);
 
   <T> List<T> executeSelect(String sql, IQueryResultProcessor<T> resultProcessor, IPreparedStatementParameter... arguments);
+
+  List<Object> executeUpdate(String sql, IPreparedStatementParameter... arguments);
 
   void executeDelete(String sql, IPreparedStatementParameter... arguments);
 

@@ -432,11 +432,6 @@ public class DBTypeInfo extends BaseTypeInfo {
   }
 
   List<CachedDBObject> findFromSql(String feature, String query) throws SQLException {
-    List<CachedDBObject> objs = findFromSqlMutable(feature, query);
-    return Collections.unmodifiableList(objs);
-  }
-
-  List<CachedDBObject> findFromSqlMutable(String feature, String query) throws SQLException {
     List<CachedDBObject> objs = new ArrayList<CachedDBObject>();
     Profiler profiler = Util.newProfiler(feature);
     profiler.start(query);
@@ -460,7 +455,7 @@ public class DBTypeInfo extends BaseTypeInfo {
       conn.close();
       profiler.stop();
     }
-    return objs;
+    return Collections.unmodifiableList(objs);
   }
 
   private ArrayList<CachedDBObject> buildObjects(ResultSet result) throws SQLException {

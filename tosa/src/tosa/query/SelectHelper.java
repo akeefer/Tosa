@@ -58,10 +58,10 @@ public class SelectHelper {
     }
   }
 
-  private static class CachedDBQueryResultProcessor implements IQueryResultProcessor<CachedDBObject> {
+  public static class CachedDBQueryResultProcessor implements IQueryResultProcessor<CachedDBObject> {
     private IDBType _type;
 
-    private CachedDBQueryResultProcessor(IDBType type) {
+    public CachedDBQueryResultProcessor(IDBType type) {
       _type = type;
     }
 
@@ -71,8 +71,8 @@ public class SelectHelper {
     }
   }
 
-  // TODO - AHK - Should we just infer the type from the template?
   public static List<CachedDBObject> findFromTemplate(IDBType type, CachedDBObject template, PropertyReference sortColumn, boolean ascending, int limit, int offset) throws SQLException {
+    Profiler profiler = Util.newProfiler(type.getName() + ".find()");
     IDBTable table = type.getTable();
     IDatabase db = table.getDatabase();
 
@@ -89,9 +89,14 @@ public class SelectHelper {
       query.append(" limit ").append(limit).append(" offset ").append(offset);
     }
 
-    return db.executeSelect(query.toString(),
-        new CachedDBQueryResultProcessor(type),
-        queryParameters.toArray(new IPreparedStatementParameter[queryParameters.size()]));
+    profiler.start(query + " (" + queryParameters + ")");
+    try {
+      return db.executeSelect(query.toString(),
+              new CachedDBQueryResultProcessor(type),
+              queryParameters.toArray(new IPreparedStatementParameter[queryParameters.size()]));
+    } finally {
+      profiler.stop();
+    }
   }
 //
 //  public static int countFromTemplate(CachedDBObject template) throws SQLException {

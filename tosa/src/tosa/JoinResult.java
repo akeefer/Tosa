@@ -25,31 +25,32 @@ public class JoinResult implements List<CachedDBObject> {
 
   private IDatabase _database;
   private IDBTable _joinTable;
+  private IDBColumn _idColumn;
   private IDBColumn _srcColumn;
   private IDBColumn _targetColumn;
-  private String _id;
+  private String _srcId;
 
   public JoinResult(List<CachedDBObject> result, IDatabase database, IDBTable joinTable,
-                    IDBColumn srcColumn, IDBColumn targetColumn, String id) {
+                    IDBColumn srcColumn, IDBColumn targetColumn, String srcId) {
     _result = result;
     _database = database;
     _joinTable = joinTable;
+    _idColumn = _joinTable.getColumn(DBTypeInfo.ID_COLUMN);
     _srcColumn = srcColumn;
     _targetColumn = targetColumn;
-    _id = id;
+    _srcId = srcId;
   }
 
   @Override
   public boolean add(CachedDBObject obj) {
-    // TODO - AHK - Hardcode ID as a column name somewhere
     // TODO - AHK - Determine dynamically if table names should be quoted or not
-    String query = "insert into \"" + _joinTable.getName() + "\" (\"" + _srcColumn.getName() + "\", \"" + _targetColumn.getName() + "\") values (?, ?)";
     Profiler profiler = Util.newProfiler(_srcColumn.getTable().getName() + "." + _joinTable.getName() + ".add()");
-    profiler.start(query);
+    String query = "insert into \"" + _joinTable.getName() + "\" (\"" + _srcColumn.getName() + "\", \"" + _targetColumn.getName() + "\") values (?, ?)";
     try {
       IPreparedStatementParameter[] parameters = new IPreparedStatementParameter[2];
-      parameters[0] = _database.wrapParameter(_id, _srcColumn);
-      parameters[1] = _database.wrapParameter(obj.getColumns().get("id"), _targetColumn);
+      parameters[0] = _database.wrapParameter(_srcId, _srcColumn);
+      parameters[1] = _database.wrapParameter(obj.getColumns().get(DBTypeInfo.ID_COLUMN), _targetColumn);
+      profiler.start(query + "( " + parameters[0] + ", " + parameters[1] + ")");
       _database.executeInsert(query, parameters);
     } finally {
       profiler.stop();
@@ -64,8 +65,8 @@ public class JoinResult implements List<CachedDBObject> {
     StringBuilder query = new StringBuilder("insert into \"");
     query.append(_joinTable.getName()).append("\" (\"").append(_srcColumn.getName()).append("\", \"").append(_targetColumn.getName()).append("\") values ");
     for (CachedDBObject obj : objs) {
-      parameters.add(_database.wrapParameter(_id, _srcColumn));
-      parameters.add(_database.wrapParameter(obj.getColumns().get("id"), _targetColumn));
+      parameters.add(_database.wrapParameter(_srcId, _srcColumn));
+      parameters.add(_database.wrapParameter(obj.getColumns().get(DBTypeInfo.ID_COLUMN), _targetColumn));
       query.append("(?, ?)");
       query.append(", ");
     }
@@ -73,7 +74,7 @@ public class JoinResult implements List<CachedDBObject> {
       query.setLength(query.length() - 2);
     }
     Profiler profiler = Util.newProfiler(_srcColumn.getTable().getName() + "." + _joinTable.getName() + ".addAll()");
-    profiler.start(query.toString());
+    profiler.start(query.toString() + " (" + parameters + ")");
     try {
     _database.executeInsert(query.toString(), parameters.toArray(new IPreparedStatementParameter[parameters.size()]));
     } finally {
@@ -89,41 +90,30 @@ public class JoinResult implements List<CachedDBObject> {
     if (o instanceof CachedDBObject) {
       CachedDBObject obj = (CachedDBObject) o;
       try {
-        Connection conn = _database.getConnection().connect();
-        try {
-          Statement stmt = conn.createStatement();
-          try {
-            if (_database.getTable(_joinTable.getName()).hasId()) {
-              String query = "select * from \"" + _joinTable.getName() + "\" where \"" + _srcColumn.getName() + "\" = " + _id + " and \"" + _targetColumn.getName() + "\" = " + obj.getColumns().get(DBTypeInfo.ID_COLUMN) + " limit 1";
-              profiler.start(query);
-              ResultSet results = stmt.executeQuery(query);
-              try {
-                if (results.first()) {
-                  Object id = results.getObject(DBTypeInfo.ID_COLUMN);
-                  query = "delete from \"" + _joinTable.getName() + "\" where \"id\" = '" + id.toString().replace("'", "''") + "'";
-                  profiler.start(query);
-                  stmt.executeUpdate(query);
-                  _result.remove(obj);
-                  return true;
-                }
-              } finally {
-                results.close();
-              }
-            } else {
-              String query = "delete from \"" + _joinTable.getName() + "\" where \"" + _srcColumn.getName() + "\" = " + _id + " and \"" + _targetColumn.getName() + "\" = " + obj.getColumns().get(DBTypeInfo.ID_COLUMN);
-              profiler.start(query);
-              stmt.executeUpdate(query);
-              _result.remove(obj);
-              return true;
-            }
-          } finally {
-            stmt.close();
+        List<IPreparedStatementParameter> parameters = new ArrayList<IPreparedStatementParameter>();
+        parameters.add(_database.wrapParameter(_srcId, _srcColumn));
+        parameters.add(_database.wrapParameter(obj.getColumns().get(DBTypeInfo.ID_COLUMN), _targetColumn));
+        if (_database.getTable(_joinTable.getName()).hasId()) {
+          String query = "select * from \"" + _joinTable.getName() + "\" where \"" + _srcColumn.getName() + "\" = ? and \"" + _targetColumn.getName() + "\" = ? limit 1";
+          profiler.start(query + " (" + parameters + ")");
+          List<Object> results = _database.executeUpdate(query, parameters.toArray(new IPreparedStatementParameter[parameters.size()]));
+          if (!results.isEmpty()) {
+            Object id = results.get(0);
+            parameters.clear();
+            parameters.add(_database.wrapParameter(id, _idColumn));
+            query = "delete from \"" + _joinTable.getName() + "\" where \"id\" = ?";
+            profiler.start(query + " (" + parameters + ")");
+            _database.executeUpdate(query, parameters.toArray(new IPreparedStatementParameter[parameters.size()]));
+            _result.remove(obj);
+            return true;
           }
-        } finally {
-          conn.close();
+        } else {
+          String query = "delete from \"" + _joinTable.getName() + "\" where \"" + _srcColumn.getName() + "\" = ? and \"" + _targetColumn.getName() + "\" = ?";
+          profiler.start(query + " (" + parameters + ")");
+          _database.executeUpdate(query, parameters.toArray(new IPreparedStatementParameter[parameters.size()]));
+          _result.remove(obj);
+          return true;
         }
-      } catch (SQLException e) {
-        throw new RuntimeException(e);
       } finally {
         profiler.stop();
       }
@@ -135,9 +125,10 @@ public class JoinResult implements List<CachedDBObject> {
   public void clear() {
     Profiler profiler = Util.newProfiler(_srcColumn.getTable().getName() + "." + _joinTable.getName() + ".clear()");
     String query = "delete from \"" + _joinTable.getName() + "\" where \"" + _srcColumn.getName() + "\" = ?";
-    profiler.start(query);
+    IPreparedStatementParameter parameter = _database.wrapParameter(_srcId, _srcColumn);
+    profiler.start(query + " (" + parameter + ")");
     try {
-      _database.executeDelete(query, _database.wrapParameter(_id, _srcColumn));
+      _database.executeDelete(query, parameter);
     } finally {
       profiler.stop();
     }

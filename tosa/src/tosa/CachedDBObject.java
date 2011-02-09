@@ -33,7 +33,7 @@ public class CachedDBObject implements IGosuObject {
   private boolean _new;
 
   @Override
-  public IType getIntrinsicType() {
+  public IDBType getIntrinsicType() {
     return _type;
   }
 
@@ -75,53 +75,61 @@ public class CachedDBObject implements IGosuObject {
         values.add(database.wrapParameter(value, column));
       }
     }
-    if (_new) {
-      StringBuilder query = new StringBuilder("insert into \"");
-      query.append(getTableName()).append("\" (");
-      for (String key : attrs) {
-        query.append(key);
-        if (key != attrs.get(attrs.size() - 1)) {
-          query.append(", ");
+    try {
+      if (_new) {
+        StringBuilder query = new StringBuilder("insert into \"");
+        query.append(getTableName()).append("\" (");
+        for (String key : attrs) {
+          query.append(key);
+          if (key != attrs.get(attrs.size() - 1)) {
+            query.append(", ");
+          }
         }
-      }
-      query.append(") values (");
-      for (int i = 0; i < attrs.size(); i++) {
-        if (i > 0) {
-          query.append(", ");
+        query.append(") values (");
+        for (int i = 0; i < attrs.size(); i++) {
+          if (i > 0) {
+            query.append(", ");
+          }
+          query.append("?");
         }
-        query.append("?");
-      }
-      query.append(")");
-      profiler.start(query.toString() + " (" + values + ")");
-      Object id = database.executeInsert(query.toString(), values.toArray(new IPreparedStatementParameter[values.size()]));
-      if (id != null) {
-        _columns.put(DBTypeInfo.ID_COLUMN, id);
-        _new = false;
-      }
-    } else {
-      StringBuilder query = new StringBuilder("update \"");
-      query.append(getTableName()).append("\" set ");
-      for (String attr : attrs) {
-        query.append(attr).append(" = ?");
-        if (attr != attrs.get(attrs.size() - 1)) {
-          query.append(", ");
+        query.append(")");
+        profiler.start(query.toString() + " (" + values + ")");
+        Object id = database.executeInsert(query.toString(), values.toArray(new IPreparedStatementParameter[values.size()]));
+        if (id != null) {
+          _columns.put(DBTypeInfo.ID_COLUMN, id);
+          _new = false;
         }
+      } else {
+        StringBuilder query = new StringBuilder("update \"");
+        query.append(getTableName()).append("\" set ");
+        for (String attr : attrs) {
+          query.append(attr).append(" = ?");
+          if (attr != attrs.get(attrs.size() - 1)) {
+            query.append(", ");
+          }
+        }
+        query.append(" where \"id\" = ?");
+        values.add(database.wrapParameter(_columns.get(DBTypeInfo.ID_COLUMN), _type.getTable().getColumn(DBTypeInfo.ID_COLUMN)));
+        profiler.start(query.toString() + " (" + values + ")");
+        database.executeInsert(query.toString(), values.toArray(new IPreparedStatementParameter[values.size()]));
       }
-      query.append(" where \"id\" = ?");
-      profiler.start(query.toString() + " (" + values + ")");
-      values.add(database.wrapParameter(_columns.get(DBTypeInfo.ID_COLUMN), _type.getTable().getColumn(DBTypeInfo.ID_COLUMN)));
-      database.executeInsert(query.toString(), values.toArray(new IPreparedStatementParameter[values.size()]));
+    } finally {
+      profiler.stop();
     }
-    profiler.stop();
   }
 
   public void delete() throws SQLException {
-    // TODO - AHK - Add profiling
     // TODO - AHK - Determine if we need to quote the table name or column names or not
     String query = "delete from \"" + getTableName() + "\" where \"id\" = ?";
     IDatabase database = _type.getTable().getDatabase();
-    IPreparedStatementParameter parameter = database.wrapParameter(_columns.get("id"), _type.getTable().getColumn("id"));
-    database.executeDelete(query, parameter);
+    IPreparedStatementParameter parameter = database.wrapParameter(_columns.get(DBTypeInfo.ID_COLUMN), _type.getTable().getColumn(DBTypeInfo.ID_COLUMN));
+    Profiler profiler = Util.newProfiler(_type.getName() + ".delete()");
+    profiler.start(query + " (" + parameter + ")");
+    try {
+      database.executeDelete(query, parameter);
+    } finally {
+      profiler.stop();
+    }
   }
 
   @Override

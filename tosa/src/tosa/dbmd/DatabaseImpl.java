@@ -6,6 +6,7 @@ import tosa.api.IDBColumn;
 import tosa.api.IDatabase;
 import tosa.api.IPreparedStatementParameter;
 import tosa.api.IQueryResultProcessor;
+import tosa.loader.DBTypeInfo;
 import tosa.loader.DBTypeLoader;
 import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
@@ -38,18 +39,22 @@ public class DatabaseImpl implements IDatabase {
     _connection = new DBConnection(dbData.getConnectionString(), typeLoader);
   }
 
+  @Override
   public String getNamespace() {
     return _namespace;
   }
 
+  @Override
   public DBTableImpl getTable(String tableName) {
     return _tables.get(tableName);
   }
 
+  @Override
   public Collection<DBTableImpl> getAllTables() {
     return _tables.values();
   }
 
+  @Override
   public DBConnection getConnection() {
     return _connection;
   }
@@ -89,11 +94,13 @@ public class DatabaseImpl implements IDatabase {
   }
 
 
+  @Override
   public IPreparedStatementParameter wrapParameter(Object value, IDBColumn column) {
     // TODO - AHK - Do data conversions here
     return new PreparedStatementParameterImpl(value, column.getColumnType().getJdbcTypeNumber());
   }
 
+  @Override
   public Object executeInsert(String sql, IPreparedStatementParameter... arguments) {
     InsertExecuteCallback callback = new InsertExecuteCallback();
     execute(sql, arguments, callback);
@@ -105,6 +112,13 @@ public class DatabaseImpl implements IDatabase {
     SelectExecuteCallback<T> callback = new SelectExecuteCallback<T>(resultProcessor);
     execute(sql, arguments, callback);
     return callback.getResults();
+  }
+
+  @Override
+  public List<Object> executeUpdate(String sql, IPreparedStatementParameter... arguments) {
+    UpdateExecuteCallback callback = new UpdateExecuteCallback();
+    execute(sql, arguments, callback);
+    return callback.getUpdatedIds();
   }
 
   @Override
@@ -135,6 +149,37 @@ public class DatabaseImpl implements IDatabase {
 
     public Object getGeneratedKey() {
       return _generatedKey;
+    }
+  }
+
+  private static class UpdateExecuteCallback implements ExecuteCallback {
+
+    private List<Object> _updatedIds;
+
+    @Override
+    public PreparedStatement prepareStatement(Connection connection, String sql) throws SQLException {
+      return connection.prepareStatement(sql);
+    }
+
+    @Override
+    public void processStatementPostExecute(PreparedStatement statement) throws SQLException {
+      ResultSet result = statement.getResultSet();
+      _updatedIds = new ArrayList<Object>();
+      if (result != null) {
+        try {
+          if (result.first()) {
+            do {
+              _updatedIds.add(result.getObject(DBTypeInfo.ID_COLUMN));
+            } while (result.next());
+          }
+        } finally {
+          result.close();
+        }
+      }
+    }
+
+    public List<Object> getUpdatedIds() {
+      return _updatedIds;
     }
   }
 
