@@ -3,6 +3,7 @@ package tosa.dbmd;
 import tosa.DBConnection;
 import tosa.Join;
 import tosa.api.IDBColumn;
+import tosa.api.IDBConnection;
 import tosa.api.IDatabase;
 import tosa.loader.DBTypeLoader;
 import tosa.loader.data.DBData;
@@ -52,7 +53,7 @@ public class DatabaseImpl implements IDatabase {
   }
 
   @Override
-  public DBConnection getConnection() {
+  public IDBConnection getConnection() {
     return _connection;
   }
 
