@@ -286,7 +286,7 @@ public class DBTypeInfo extends BaseTypeInfo {
         .withConstructorHandler(new IConstructorHandler() {
           @Override
           public Object newInstance(Object... args) {
-            return create();
+            return new CachedDBObject(getOwnersType(), true);
           }
         }).build(this);
 
@@ -399,129 +399,11 @@ public class DBTypeInfo extends BaseTypeInfo {
     return getConstructor(params);
   }
 
-  private Connection connect() throws SQLException {
-    return getOwnersType().getTable().getDatabase().getConnection().connect();
-  }
-
-  private void addWhereClause(StringBuilder query, CachedDBObject template) {
-    List<String> whereClause = new ArrayList<String>();
-    if (template != null) {
-      for (Map.Entry<String, Object> column : template.getColumns().entrySet()) {
-        if (column.getValue() != null) {
-          String value = "'" + column.getValue().toString().replace("'", "''") + "'";
-          whereClause.add("\"" + column.getKey() + "\" = " + value);
-        }
-      }
-      if (!whereClause.isEmpty()) {
-        query.append(GosuStringUtil.join(whereClause, " and "));
-      } else {
-        query.append("true");
-      }
-    } else {
-      query.append("true");
-    }
-  }
-
-  List<CachedDBObject> findInDb(String feature, List<IPropertyInfo> props, Object... args) throws SQLException {
-    List<String> whereClause = new ArrayList<String>();
-    for (int i = 0; i < props.size(); i++) {
-      IPropertyInfo p = props.get(i);
-      if (p instanceof DBPropertyInfo) {
-        DBPropertyInfo dbProperty = (DBPropertyInfo) p;
-        String value;
-        if (dbProperty.getColumnName().endsWith("_id")) {
-          value = ((CachedDBObject) args[i]).getColumns().get(ID_COLUMN).toString();
-        } else {
-          value = "'" + args[i].toString().replace("'", "''") + "'";
-        }
-        whereClause.add("\"" + dbProperty.getColumnName() + "\" = " + value);
-      }
-    }
-    return findFromSql(feature, "select * from \"" + getOwnersType().getRelativeName() + "\" where " + GosuStringUtil.join(whereClause, " and "));
-  }
-
-  List<CachedDBObject> findFromSql(String feature, String query) throws SQLException {
-    List<CachedDBObject> objs = new ArrayList<CachedDBObject>();
-    Profiler profiler = Util.newProfiler(feature);
-    profiler.start(query);
-    Connection conn = connect();
-    try {
-      Statement stmt = conn.createStatement();
-      try {
-        stmt.executeQuery(query);
-        ResultSet result = stmt.getResultSet();
-        try {
-          if (result.first()) {
-            objs = buildObjects(result);
-          }
-        } finally {
-          result.close();
-        }
-      } finally {
-        stmt.close();
-      }
-    } finally {
-      conn.close();
-      profiler.stop();
-    }
-    return Collections.unmodifiableList(objs);
-  }
-
-  private ArrayList<CachedDBObject> buildObjects(ResultSet result) throws SQLException {
-    ArrayList<CachedDBObject> objs = new ArrayList<CachedDBObject>();
-    while (!result.isAfterLast()) {
-      objs.add(buildObject(result));
-      result.next();
-    }
-    return objs;
-  }
-
-  private CachedDBObject buildObject(ResultSet result) throws SQLException {
-    CachedDBObject obj = new CachedDBObject(getOwnersType(), false);
-    for (IPropertyInfo prop : getProperties()) {
-      if (prop instanceof DBPropertyInfo) {
-        DBPropertyInfo dbProp = (DBPropertyInfo) prop;
-        Object resultObject = result.getObject(getOwnersType().getRelativeName() + "." + dbProp.getColumnName());
-        if (resultObject instanceof BufferedReader) {
-          obj.getColumns().put(dbProp.getColumnName(), readAll((BufferedReader) resultObject));
-        } else if (resultObject instanceof Clob) {
-          obj.getColumns().put(dbProp.getColumnName(), readAll(new BufferedReader(((Clob) resultObject).getCharacterStream())));
-        } else if (dbProp.getFeatureType().equals(IJavaType.pBOOLEAN) && resultObject == null) {
-          obj.getColumns().put(dbProp.getColumnName(), Boolean.FALSE);
-        } else {
-          obj.getColumns().put(dbProp.getColumnName(), resultObject);
-        }
-      }
-    }
-    return obj;
-  }
-
-  private Object readAll(BufferedReader r) {
-    try {
-      StringBuilder b = new StringBuilder();
-      String line = r.readLine();
-      while (line != null) {
-        b.append(line).append("\n");
-        line = r.readLine();
-      }
-      if (b.length() > 0) {
-        b.setLength(b.length() - 1);
-      }
-      return b.toString();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  CachedDBObject create() {
-    return new CachedDBObject(getOwnersType(), true);
-  }
-
   private Map<String, IPropertyInfo> makeArrayProperties() {
     Map<String, IPropertyInfo> arrayProps = new HashMap<String, IPropertyInfo>();
     for (IDBColumn fkColumn : getOwnersType().getTable().getIncomingFKs()) {
       // TODO - AHK - Deal with multiple incoming fks
-      IPropertyInfo arrayProp = makeArrayProperty(fkColumn.getTable());
+      IPropertyInfo arrayProp = makeArrayProperty(fkColumn);
       arrayProps.put(arrayProp.getName(), arrayProp);
     }
     // TODO - AHK - Ideally this cast wouldn't be necessary
@@ -536,8 +418,8 @@ public class DBTypeInfo extends BaseTypeInfo {
     return new DBPropertyInfo(this, column);
   }
 
-  private IPropertyInfo makeArrayProperty(IDBTable fkTable) {
-    return new DBArrayPropertyInfo(this, fkTable);
+  private IPropertyInfo makeArrayProperty(IDBColumn fkColumn) {
+    return new DBArrayPropertyInfo(this, fkColumn);
   }
 
   private IPropertyInfo makeJoinProperty(final Join join) {
