@@ -23,6 +23,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -35,25 +36,20 @@ import java.util.Map;
  */
 public class QueryExecutor {
 
-  private IDatabase _database;
-
-  public QueryExecutor(IDatabase database) {
-    _database = database;
-  }
-
-  public CachedDBObject selectById(String feature, IDBType entityType, Object id) throws SQLException {
+  public CachedDBObject selectById(String feature, IDBType type, Object id) throws SQLException {
     // TODO - AHK - Input validation (i.e. id should not be null)
-    IDBTable table = entityType.getTable();
+    IDBTable table = type.getTable();
     IDBColumn idColumn = table.getColumn(DBTypeInfo.ID_COLUMN);
+    IDatabase db = table.getDatabase();
 
     // TODO - AHK - Use some DB-aware utility to decide when to quote things, etc.
-    // TODO - AHK - Make the colum name a constant
+    // TODO - AHK - Make the column name a constant
     String query = "select * from \"" + table.getName() + "\" where \"id\" = ?";
     Profiler profiler = Util.newProfiler(feature);
     profiler.start(query + " (" + id + ")");
-    List<CachedDBObject> results = _database.getDBExecutionKernel().executeSelect(query,
-        new CachedDBQueryResultProcessor(entityType),
-        _database.wrapParameter(id, idColumn));
+    List<CachedDBObject> results = db.getDBExecutionKernel().executeSelect(query,
+        new CachedDBQueryResultProcessor(type),
+        db.wrapParameter(id, idColumn));
 
     if (results.size() == 0) {
       return null;
@@ -64,8 +60,7 @@ public class QueryExecutor {
     }
   }
 
-  public List<CachedDBObject> findFromTemplate(IDBType type, CachedDBObject template, PropertyReference sortColumn, boolean ascending, int limit, int offset) throws SQLException {
-    Profiler profiler = Util.newProfiler(type.getName() + ".find()");
+  public List<CachedDBObject> findFromTemplate(String feature, IDBType type, CachedDBObject template, PropertyReference sortColumn, boolean ascending, int limit, int offset) throws SQLException {
     IDBTable table = type.getTable();
 
     StringBuilder query = new StringBuilder("select * from \"");
@@ -81,9 +76,14 @@ public class QueryExecutor {
       query.append(" limit ").append(limit).append(" offset ").append(offset);
     }
 
+    return findFromSql(feature, type, query.toString(), queryParameters);
+  }
+
+  public List<CachedDBObject> findFromSql(String feature, IDBType type, String query, List<IDBExecutionKernel.IPreparedStatementParameter> queryParameters) throws SQLException {
+    Profiler profiler = Util.newProfiler(feature);
     profiler.start(query + " (" + queryParameters + ")");
     try {
-      return _database.getDBExecutionKernel().executeSelect(query.toString(),
+      return type.getTable().getDatabase().getDBExecutionKernel().executeSelect(query,
           new CachedDBQueryResultProcessor(type),
           queryParameters.toArray(new IDBExecutionKernel.IPreparedStatementParameter[queryParameters.size()]));
     } finally {
@@ -96,14 +96,14 @@ public class QueryExecutor {
     StringBuilder query = new StringBuilder("select count(*) as count from \"").append(table.getName()).append("\" where ");
     List<IDBExecutionKernel.IPreparedStatementParameter> queryParameters = new ArrayList<IDBExecutionKernel.IPreparedStatementParameter>();
     addWhereClause(query, template, table, queryParameters);
-    return countFromSql(feature, query.toString(), queryParameters);
+    return countFromSql(feature, type, query.toString(), queryParameters);
   }
 
-  public int countFromSql(String feature, String query, List<IDBExecutionKernel.IPreparedStatementParameter> queryParameters) throws SQLException {
+  public int countFromSql(String feature, IDBType type, String query, List<IDBExecutionKernel.IPreparedStatementParameter> queryParameters) throws SQLException {
     Profiler profiler = Util.newProfiler(feature);
-    profiler.start(query);
+    profiler.start(query + " (" + queryParameters + ")");
     try {
-      List<Integer> results = _database.getDBExecutionKernel().executeSelect(query,
+      List<Integer> results = type.getTable().getDatabase().getDBExecutionKernel().executeSelect(query,
           new CountQueryResultProcessor(),
           queryParameters.toArray(new IDBExecutionKernel.IPreparedStatementParameter[queryParameters.size()]));
       if (results.size() == 0) {

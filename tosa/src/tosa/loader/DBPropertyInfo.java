@@ -106,7 +106,7 @@ public class DBPropertyInfo extends PropertyInfoBase {
           try {
             Object resolvedFK = ((CachedDBObject) ctx).getCachedValues().get(getColumnName());
             if (resolvedFK == null) {
-              resolvedFK = new QueryExecutor(_column.getTable().getDatabase()).selectById(getOwnersType().getName() + "." + getName(),
+              resolvedFK = new QueryExecutor().selectById(getOwnersType().getName() + "." + getName(),
                   (IDBType) _type, columnValue);
               ((CachedDBObject) ctx).getCachedValues().put(getColumnName(), resolvedFK);
             }

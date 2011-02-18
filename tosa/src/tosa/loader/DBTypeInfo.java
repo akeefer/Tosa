@@ -78,7 +78,7 @@ public class DBTypeInfo extends BaseTypeInfo {
 
   public DBTypeInfo(DBType dbType) {
     super(dbType);
-    _queryExecutor = new QueryExecutor(dbType.getTable().getDatabase());
+    _queryExecutor = new QueryExecutor();
 
     _getMethod = new MethodInfoBuilder().withName("fromID").withStatic()
         .withParameters(new ParameterInfoBuilder().withName(ID_COLUMN).withType(IJavaType.pLONG))
@@ -132,7 +132,9 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return _queryExecutor.countFromSql(getOwnersType().getName() + ".countWithSql()",
+              return _queryExecutor.countFromSql(
+                  getOwnersType().getName() + ".countWithSql()",
+                  getOwnersType(),
                   (String) args[0],
                   Collections.<IDBExecutionKernel.IPreparedStatementParameter>emptyList());
             } catch (SQLException e) {
@@ -147,7 +149,10 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return _queryExecutor.countFromTemplate(getOwnersType().getName() + ".count()", getOwnersType(), (CachedDBObject) args[0]);
+              return _queryExecutor.countFromTemplate(
+                  getOwnersType().getName() + ".count()",
+                  getOwnersType(),
+                  (CachedDBObject) args[0]);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -160,7 +165,11 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return findFromSql(getOwnersType().getName() + ".findWithSql()", (String) args[0]);
+              return _queryExecutor.findFromSql(
+                  getOwnersType().getName() + ".findWithSql()",
+                  getOwnersType(),
+                  (String) args[0],
+                  Collections.<IDBExecutionKernel.IPreparedStatementParameter>emptyList());
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -173,7 +182,14 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return _queryExecutor.findFromTemplate(getOwnersType(), (CachedDBObject) args[0], null, false, -1, -1);
+              return _queryExecutor.findFromTemplate(
+                  getOwnersType().getName() + ".find()",
+                  getOwnersType(),
+                  (CachedDBObject) args[0],
+                  null,
+                  false,
+                  -1,
+                  -1);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -188,7 +204,14 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return _queryExecutor.findFromTemplate(getOwnersType(), (CachedDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2], -1, -1);
+              return _queryExecutor.findFromTemplate(
+                  getOwnersType().getName() + ".findSorted()",
+                  getOwnersType(),
+                  (CachedDBObject) args[0],
+                  (PropertyReference) args[1],
+                  (Boolean) args[2],
+                  -1,
+                  -1);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -203,7 +226,14 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return _queryExecutor.findFromTemplate(getOwnersType(), (CachedDBObject) args[0], null, false, (Integer) args[1], (Integer) args[2]);
+              return _queryExecutor.findFromTemplate(
+                  getOwnersType().getName() + ".findPaged()",
+                  getOwnersType(),
+                  (CachedDBObject) args[0],
+                  null,
+                  false,
+                  (Integer) args[1],
+                  (Integer) args[2]);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -220,7 +250,14 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return _queryExecutor.findFromTemplate(getOwnersType(), (CachedDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2], (Integer) args[3], (Integer) args[4]);
+              return _queryExecutor.findFromTemplate(
+                  getOwnersType().getName() + ".findSortedPaged()",
+                  getOwnersType(),
+                  (CachedDBObject) args[0],
+                  (PropertyReference) args[1],
+                  (Boolean) args[2],
+                  (Integer) args[3],
+                  (Integer) args[4]);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -364,39 +401,6 @@ public class DBTypeInfo extends BaseTypeInfo {
 
   private Connection connect() throws SQLException {
     return getOwnersType().getTable().getDatabase().getConnection().connect();
-  }
-
-  int countFromTemplate(String feature, CachedDBObject template) throws SQLException {
-    StringBuilder query = new StringBuilder("select count(*) as count from \"").append(getOwnersType().getRelativeName()).append("\" where ");
-    addWhereClause(query, template);
-    return countFromSql(feature, query.toString());
-  }
-
-  private int countFromSql(String feature, String query) throws SQLException {
-    Profiler profiler = Util.newProfiler(feature);
-    profiler.start(query);
-    Connection conn = connect();
-    try {
-      Statement stmt = conn.createStatement();
-      try {
-        stmt.executeQuery(query);
-        ResultSet result = stmt.getResultSet();
-        try {
-          if (result.first()) {
-            return result.getInt("count");
-          } else {
-            return 0;
-          }
-        } finally {
-          result.close();
-        }
-      } finally {
-        stmt.close();
-      }
-    } finally {
-      conn.close();
-      profiler.stop();
-    }
   }
 
   private void addWhereClause(StringBuilder query, CachedDBObject template) {
