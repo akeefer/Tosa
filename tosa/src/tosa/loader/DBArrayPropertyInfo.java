@@ -16,7 +16,9 @@ import gw.lang.reflect.PropertyInfoBase;
 import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.java.IJavaType;
 import tosa.CachedDBObject;
+import tosa.api.IDBColumn;
 import tosa.api.IDBTable;
+import tosa.db.execution.QueryExecutor;
 
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -28,17 +30,20 @@ import java.util.List;
  *
  * @author kprevas
  */
-public class DBArrayPropertyInfo extends PropertyInfoBase{
+public class DBArrayPropertyInfo extends PropertyInfoBase {
 
   private IType _type;
+  private IDBColumn _fkColumn;
   private IType _fkType;
   private String _name;
 
-  DBArrayPropertyInfo(ITypeInfo container, IDBTable fkTable) {
+  DBArrayPropertyInfo(ITypeInfo container, IDBColumn fkColumn) {
     super(container);
-    _name = fkTable.getName() + "s";
+    _fkColumn = fkColumn;
+    // TODO - AHK - This algorithm probably needs to be a bit more complicated . . .
+    _name = fkColumn.getTable().getName() + "s";
     String namespace = getOwnersType().getNamespace();
-    _fkType = TypeSystem.getByFullName(namespace + "." + fkTable.getName());
+    _fkType = TypeSystem.getByFullName(namespace + "." + _fkColumn.getTable().getName());
     _type = IJavaType.LIST.getGenericType().getParameterizedType(_fkType);
   }
 
@@ -75,11 +80,16 @@ public class DBArrayPropertyInfo extends PropertyInfoBase{
   private class DBArrayPropertyAccessor implements IPropertyAccessor {
     @Override
     public Object getValue(Object ctx) {
+      CachedDBObject dbObject = (CachedDBObject) ctx;
       try {
-        Object value = ((CachedDBObject) ctx).getCachedValues().get(_name);
+        Object value = dbObject.getCachedValues().get(_name);
         if (value == null) {
-          value = ((DBTypeInfo) _fkType.getTypeInfo()).findInDb(getOwnersType().getName() + "." + _name,
-                  Arrays.asList(_fkType.getTypeInfo().getProperty(getOwnersType().getRelativeName())), ctx);
+          Object id = dbObject.getColumns().get(DBTypeInfo.ID_COLUMN);
+          value = new QueryExecutor().findFromSql(
+              getOwnersType().getName() + "." + _name,
+              (IDBType) _fkType,
+              "select * from \"" + _fkColumn.getTable().getName() + "\" where \"" + _fkColumn.getName() + "\" = ?",
+              Collections.singletonList(_fkColumn.getTable().getDatabase().wrapParameter(id, dbObject.getIntrinsicType().getTable().getColumn(DBTypeInfo.ID_COLUMN))));
           ((CachedDBObject) ctx).getCachedValues().put(_name, value);
         }
         return value;

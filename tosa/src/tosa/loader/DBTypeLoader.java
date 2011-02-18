@@ -103,11 +103,11 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     if ("Transaction".equals(relativeName)) {
       return new TransactionType(databaseImpl, this);
     } else {
-      DBTableImpl DBTableImpl = databaseImpl.getTable(relativeName);
-      if (DBTableImpl == null) {
+      IDBTable dbTable = databaseImpl.getTable(relativeName);
+      if (dbTable == null) {
         return null;
       } else {
-        return new DBType(this, DBTableImpl);
+        return new DBType(this, dbTable);
       }
     }
   }
