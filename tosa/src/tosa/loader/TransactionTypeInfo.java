@@ -11,6 +11,7 @@ import gw.lang.reflect.PropertyInfoBuilder;
 import gw.lang.reflect.TypeSystem;
 import tosa.ConnectionWrapper;
 import tosa.DBConnection;
+import tosa.api.IDBConnection;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -29,7 +30,7 @@ public class TransactionTypeInfo extends BaseTypeInfo {
 
   private IMethodInfo _commitMethod;
   private IPropertyInfo _lockProperty;
-  private DBConnection _connInfo;
+  private IDBConnection _connInfo;
   private ThreadLocal<Lock> _lock = new ThreadLocal<Lock>();
 
   public TransactionTypeInfo(TransactionType type) {
@@ -39,9 +40,9 @@ public class TransactionTypeInfo extends BaseTypeInfo {
         .withCallHandler(new IMethodCallHandler() {
           @Override
           public Object handleCall(Object ctx, Object... args) {
-            Connection conn = _connInfo.getTransaction().get();
+            // TODO - AHK - I'm not sure we want to swallow exceptions here
             try {
-              conn.commit();
+              _connInfo.commitTransaction();
             } catch (SQLException e) {
               e.printStackTrace();
             }
@@ -105,23 +106,18 @@ public class TransactionTypeInfo extends BaseTypeInfo {
 
   public class Lock {
     public void lock() {
+      // TODO - AHK - I'm not sure we want to swallow exceptions here
       try {
-        Connection conn = _connInfo.connect();
-        conn.setAutoCommit(false);
-        ConnectionWrapper wrapper = new ConnectionWrapper(conn);
-        _connInfo.getTransaction().set(wrapper);
+        _connInfo.startTransaction();
       } catch (SQLException e) {
         e.printStackTrace();
       }
     }
 
     public void unlock() {
-      Connection conn = _connInfo.getTransaction().get();
+      // TODO - AHK - I'm not sure we want to swallow exceptions here
       try {
-        conn.rollback();
-        conn.close();
-        _connInfo.getTransaction().set(null);
-        conn.setAutoCommit(true);
+        _connInfo.endTransaction();
       } catch (SQLException e) {
         e.printStackTrace();
       }

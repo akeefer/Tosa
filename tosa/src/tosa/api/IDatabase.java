@@ -18,8 +18,12 @@ import java.util.List;
  */
 public interface IDatabase {
 
-  // TODO - AHK - This should be an interface to something in the API Package
-  DBConnection getConnection();
+  /**
+   * Returns the IDBConnection object associated with this database.
+   *
+   * @return the IDBConnection object for this database
+   */
+  IDBConnection getConnection();
 
   /**
    * Retrieves the associated table object, or null if no such table is found.  Table names

@@ -7,6 +7,7 @@ import org.apache.commons.dbcp.PoolableConnectionFactory;
 import org.apache.commons.dbcp.PoolingDataSource;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
+import tosa.api.IDBConnection;
 import tosa.loader.DBTypeLoader;
 
 import javax.sql.DataSource;
@@ -26,7 +27,7 @@ import java.util.Set;
  * Time: 10:34 PM
  * To change this template use File | Settings | File Templates.
  */
-public class DBConnection {
+public class DBConnection implements IDBConnection {
   private String _connectURL;
   private ThreadLocal<Connection> _transaction;
 
@@ -41,6 +42,7 @@ public class DBConnection {
     _dataSource = setupDataSource(connUrl);
   }
 
+  @Override
   public Connection connect() throws SQLException {
     Connection trans = _transaction.get();
     if (trans == null) {
@@ -48,6 +50,41 @@ public class DBConnection {
     } else {
       return trans;
     }
+  }
+
+  @Override
+  public void startTransaction() throws SQLException {
+    if (_transaction.get() != null) {
+      throw new IllegalStateException("An existing thread-local transaction has already been opened");
+    }
+
+    Connection conn = connect();
+    conn.setAutoCommit(false);
+    ConnectionWrapper wrapper = new ConnectionWrapper(conn);
+    _transaction.set(wrapper);
+  }
+
+  @Override
+  public void commitTransaction() throws SQLException {
+    if (_transaction.get() == null) {
+      throw new IllegalStateException("No thread-local transaction has been opened");
+    }
+
+    _transaction.get().commit();
+  }
+
+  @Override
+  public void endTransaction() throws SQLException {
+    if (_transaction.get() == null) {
+      throw new IllegalStateException("No thread-local transaction has been opened");
+    }
+
+    // TODO - AHK - This code is suspicious:  I don't believe that the connection will actually get closed here
+    Connection conn = _transaction.get();
+    conn.rollback();
+    conn.close();
+    _transaction.set(null);
+    conn.setAutoCommit(true);
   }
 
   private static String getDriverName(String url) {
@@ -61,11 +98,7 @@ public class DBConnection {
     return System.getProperty("db.driver." + dbType);
   }
 
-  public ThreadLocal<Connection> getTransaction() {
-    return _transaction;
-  }
-
-  public DataSource setupDataSource(String connectURI) {
+  private DataSource setupDataSource(String connectURI) {
     // Ensure the JDBC driver class is loaded
     try {
       Class.forName(getDriverName(_connectURL), true, _typeLoader.getModule().getClassLoader());
