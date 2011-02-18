@@ -6,6 +6,7 @@ import org.junit.Test;
 public class TokenizerTest {
   @Test
   public void bootstrapTokenizerTest() {
+    assertMatches(Token.tokenize(""));
     assertMatches(Token.tokenize("."), ".");
     assertMatches(Token.tokenize("a"), "a");
     assertMatches(Token.tokenize("ab"), "ab");

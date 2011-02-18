@@ -50,22 +50,6 @@ public class Token {
     return _value != null && _value.equalsIgnoreCase(value);
   }
 
-  public boolean match(String... tokens) {
-    return next(Arrays.asList(tokens).iterator()) != null;
-  }
-
-  private Token next(Iterator<String> stringIterator) {
-    if (stringIterator.hasNext()) {
-      if (match(stringIterator.next())) {
-        return _next.next(stringIterator);
-      } else {
-        return null;
-      }
-    } else {
-      return this;
-    }
-  }
-
   public static Token tokenize(String contents) {
     Token first = null;
     Token previous = null;
@@ -83,16 +67,10 @@ public class Token {
     if (previous != null) {
       previous.setNext(Token.EOF);
     }
-    return first;
-  }
-
-  public boolean matchAny(String... strings) {
-    for (String s : strings) {
-      if (match(s)) {
-        return true;
-      }
+    if (first == null) {
+      first = Token.EOF;
     }
-    return false;
+    return first;
   }
 
   @Override

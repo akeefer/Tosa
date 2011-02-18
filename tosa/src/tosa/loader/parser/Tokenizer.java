@@ -6,7 +6,7 @@ import java.util.Set;
 
 public class Tokenizer {
 
-  private static final Set<String> OPERATORS = new HashSet<String>(Arrays.asList(".", "+", "(", ")"));
+  private static final String[] OPERATORS = {".", "+", "(", ")"};
 
   private String _currentStringValue;
   private String _contents;
@@ -35,7 +35,7 @@ public class Tokenizer {
   private boolean moveToNextToken() {
     eatWhitespace();
 
-    if (stringIsConsumed()) {
+    if (atEndOfInput()) {
       return false;
     }
 
@@ -63,15 +63,11 @@ public class Tokenizer {
 
   private boolean consumeNumber() {
     if (Character.isDigit(currentChar())) {
-      while (!stringIsConsumed() && Character.isDigit(currentChar())) {
-        incrementOffset();
-      }
-      if (!stringIsConsumed() && currentChar() == '.') {
-        if (canPeek(2) && Character.isDigit(_contents.charAt(_offset+1))) {
+      consumeDigit();
+      if (!atEndOfInput() && currentChar() == '.') {
+        if (canPeek(2) && Character.isDigit(peek())) {
           incrementOffset();
-          while (!stringIsConsumed() && Character.isDigit(currentChar())) {
-            incrementOffset();
-          }
+          consumeDigit();
         }
       }
       return true;
@@ -79,12 +75,22 @@ public class Tokenizer {
     return false;
   }
 
+  private char peek() {
+    return _contents.charAt(_offset+1);
+  }
+
+  private void consumeDigit() {
+    while (!atEndOfInput() && Character.isDigit(currentChar())) {
+      incrementOffset();
+    }
+  }
+
   private boolean consumeString() {
     if ('\'' == currentChar() || '"' == currentChar()) {
       char initial = currentChar();
       char previous = initial;
       incrementOffset();
-      while (!stringIsConsumed() && currentChar() != '\n') {
+      while (!atEndOfInput() && currentChar() != '\n') {
         char current = currentChar();
         if (current == initial && previous != '\\') {
           incrementOffset();
@@ -102,7 +108,7 @@ public class Tokenizer {
   private boolean consumeSymbol() {
     if (Character.isLetter(currentChar()) || ':' == currentChar()) {
       incrementOffset();
-      while (!stringIsConsumed() && Character.isLetter(currentChar())) {
+      while (!atEndOfInput() && Character.isLetter(currentChar())) {
         incrementOffset();
       }
       return true;
@@ -111,18 +117,26 @@ public class Tokenizer {
   }
 
   private boolean consumeOperator() {
-    if (OPERATORS.contains(Character.toString(currentChar()))) {
-      incrementOffset();
-      return true;
-    } else if (canPeek(2) && OPERATORS.contains(peek(2))) {
-      _offset+=2;
-      return true;
+    for (String operator : OPERATORS) {
+      boolean matched = true;
+      for (int i = 0; i < operator.length(); i++) {
+        if (!canPeek(i) || peek(i) != operator.charAt(i)) {
+          matched = false;
+          break;
+        }
+      }
+      if (matched) {
+        // consume additional pylons (er, tokens)
+        for (int i = 1 /* NOTE WE START AT 1! */; i < operator.length(); i++) {
+          incrementOffset();
+        }
+      }
     }
     return false;
   }
 
-  private String peek(int i) {
-    return _contents.substring(_offset, _offset + i);
+  private char peek(int i) {
+    return _contents.charAt(_offset + i);
   }
 
   private boolean canPeek(int count) {
@@ -130,12 +144,12 @@ public class Tokenizer {
   }
 
 
-  private boolean stringIsConsumed() {
+  private boolean atEndOfInput() {
     return _offset >= _contents.length();
   }
 
   private void eatWhitespace() {
-    while (!stringIsConsumed() && Character.isWhitespace(currentChar())) {
+    while (!atEndOfInput() && Character.isWhitespace(currentChar())) {
       if ('\n' == currentChar()) {
         _line++;
         _col = 0;

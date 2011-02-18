@@ -6,6 +6,7 @@ import tosa.loader.parser.Token;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 public abstract class SQLParsedElement {
 
@@ -13,6 +14,7 @@ public abstract class SQLParsedElement {
   private Token _last;
   private List<SQLParsedElement> _children;
   private SQLParsedElement _parent;
+  private Set<SQLParseError> _errors;
 
   public SQLParsedElement(Token token, SQLParsedElement... children) {
     this(token, token, children);
@@ -110,5 +112,9 @@ public abstract class SQLParsedElement {
     for (SQLParsedElement child : getChildren()) {
       child.verify(dbData);
     }
+  }
+
+  public void addParseError(SQLParseError error){
+    _errors.add(error);
   }
 }

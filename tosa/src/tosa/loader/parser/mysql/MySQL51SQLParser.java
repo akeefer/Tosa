@@ -13,7 +13,7 @@ import tosa.loader.parser.tree.*;
 
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -1096,7 +1096,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
   private SQLParsedElement parseBooleanPrimaryExpression() {
     if (match(OPEN_PAREN)) {
       SQLParsedElement elt = parseSearchOrExpression();
-      if(!match(CLOSE_PAREN)) throw new IllegalStateException("Expected a )"); //TODO cgross expect
+      expectToken(elt, CLOSE_PAREN);
       return elt;
     }
 
@@ -1107,7 +1107,20 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
         return new ComparisonPredicate(initialValue, initialValue.nextToken(), comparisonValue);
       }
     }
-    return new UnexpectedTokenExpression(_currentToken);
+    return unexpectedToken();
+  }
+
+  private UnexpectedTokenExpression unexpectedToken() {
+    Token unexpectedToken = takeToken();
+    UnexpectedTokenExpression utExpr = new UnexpectedTokenExpression(unexpectedToken);
+    utExpr.addParseError(new SQLParseError(unexpectedToken, "Unexpected Token"));
+    return utExpr;
+  }
+
+  private void expectToken(SQLParsedElement elt, String str) {
+    if (!match(str)) {
+      elt.addParseError(new SQLParseError(_currentToken, "Expected " + str));
+    }
   }
 
   private SQLParsedElement parseRowValueOrVariable() {
@@ -1224,19 +1237,25 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
   }
 
   private TableFromClause parseFromClause() {
-    if(!match(FROM)) throw new IllegalStateException("Expected FROM"); //TODO cgross - expect
-    Token start = lastMatch();
-    ArrayList<SimpleTableReference> refs = new ArrayList<SimpleTableReference>();
-    do {
-      SimpleTableReference ref = parseTableReference();
-      refs.add(ref);
+    if (match(FROM)) {
+      Token start = lastMatch();
+      ArrayList<SimpleTableReference> refs = new ArrayList<SimpleTableReference>();
+      do {
+        SimpleTableReference ref = parseTableReference();
+        refs.add(ref);
+      }
+      while (match(COMMA));
+      return new TableFromClause(start, refs);
+    } else {
+      TableFromClause from = new TableFromClause(_currentToken, Collections.<SimpleTableReference>emptyList());
+      expectToken(from, FROM);
+      takeToken();
+      return from;
     }
-    while (match(COMMA));
-    return new TableFromClause(start, refs);
   }
 
   private SimpleTableReference parseTableReference() {
-    return new SimpleTableReference(_currentToken);
+    return new SimpleTableReference(takeToken());
     //TODO cgross more exotic table references
   }
 
@@ -1265,12 +1284,12 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
   }
 
   private boolean matchAny(String... tokens) {
-    if (_currentToken.matchAny(tokens)) {
-      _currentToken = _currentToken.nextToken();
-      return true;
-    } else {
-      return false;
+    for (String s : tokens) {
+      if (match(s)) {
+        return true;
+      }
     }
+    return false;
   }
 
   /*CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
