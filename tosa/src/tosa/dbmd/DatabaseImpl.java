@@ -4,6 +4,7 @@ import tosa.DBConnection;
 import tosa.Join;
 import tosa.api.IDBColumn;
 import tosa.api.IDBConnection;
+import tosa.api.IDBTable;
 import tosa.api.IDatabase;
 import tosa.loader.DBTypeLoader;
 import tosa.loader.data.DBData;
@@ -43,7 +44,7 @@ public class DatabaseImpl implements IDatabase {
   }
 
   @Override
-  public DBTableImpl getTable(String tableName) {
+  public IDBTable getTable(String tableName) {
     return _tables.get(tableName);
   }
 

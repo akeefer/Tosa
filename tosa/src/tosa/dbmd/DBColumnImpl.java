@@ -57,7 +57,11 @@ public class DBColumnImpl implements IDBColumn {
 
   @Override
   public IDBTable getFKTarget() {
-    return _table.getDatabase().getTable(_fkTarget);
+    if (_fkTarget == null) {
+      return null;
+    } else {
+      return _table.getDatabase().getTable(_fkTarget);
+    }
   }
 
   @Override
@@ -76,7 +80,7 @@ public class DBColumnImpl implements IDBColumn {
   }
 
   @Override
-  public DBTableImpl getTable() {
+  public IDBTable getTable() {
     return _table;
   }
 }

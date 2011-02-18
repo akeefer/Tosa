@@ -22,9 +22,9 @@ public class DBType extends TypeBase implements IDBType {
 
   private DBTypeLoader _typeLoader;
   private LazyVar<DBTypeInfo> _typeInfo;
-  private DBTableImpl _table;
+  private IDBTable _table;
 
-  public DBType(DBTypeLoader dbTypeLoader, DBTableImpl table) {
+  public DBType(DBTypeLoader dbTypeLoader, IDBTable table) {
     _typeLoader = dbTypeLoader;
     _table = table;
     _typeInfo = new LazyVar<DBTypeInfo>() {
