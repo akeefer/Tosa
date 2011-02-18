@@ -1,14 +1,11 @@
 package tosa.loader.parser;
 
-import gw.util.GosuStringUtil;
-
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.StringTokenizer;
 
 public class Token {
 
-  private static final Token EOF = new Token(null);
+  private static final Token EOF = new Token(null, 0, 0, 0, 0);
   static {
     EOF._next = EOF;
   }
@@ -16,10 +13,18 @@ public class Token {
   private String _value;
   private Token _next;
   private Token _previous;
+  private int _line;
+  private int _col;
+  private int _start;
+  private int _end;
 
 
-  public Token(String value) {
+  public Token(String value, int line, int col, int start, int end) {
     _value = value;
+    _line = line;
+    _col = col;
+    _start = start;
+    _end = end;
   }
 
   public void setNext(Token t) {
@@ -66,21 +71,18 @@ public class Token {
   }
 
   public static Token tokenize(String contents) {
-    StringTokenizer tokenizer = new StringTokenizer(contents, " \n\t\r,;().", true);
     Token first = null;
     Token previous = null;
+    Tokenizer tokenizer = new Tokenizer(contents);
     while (tokenizer.hasMoreTokens()) {
-      String value = tokenizer.nextToken();
-      if (!GosuStringUtil.isWhitespace(value)) {
-        Token t = new Token(value);
-        if (previous != null) {
-          previous.setNext(t);
-        }
-        if (first == null) {
-          first = t;
-        }
-        previous = t;
+      Token t = tokenizer.nextToken();
+      if (previous != null) {
+        previous.setNext(t);
       }
+      if (first == null) {
+        first = t;
+      }
+      previous = t;
     }
     if (previous != null) {
       previous.setNext(Token.EOF);

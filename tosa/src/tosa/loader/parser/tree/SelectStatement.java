@@ -1,8 +1,9 @@
 package tosa.loader.parser.tree;
 
 import gw.util.Pair;
+import tosa.api.IDBColumnType;
 import tosa.loader.SQLParameterInfo;
-import tosa.loader.data.ColumnType;
+import tosa.loader.data.DBColumnTypeImpl;
 import tosa.loader.data.DBData;
 import tosa.loader.parser.Token;
 
@@ -55,7 +56,7 @@ public class SelectStatement extends SQLParsedElement {
       if (pi == null) {
         pi = new SQLParameterInfo(var.getName());
       }
-      pi.getIndexes().add(Pair.make(i, ColumnType.VARCHAR));
+      pi.getIndexes().add(Pair.<Integer, IDBColumnType>make(i, null));
     }
     return new ArrayList<SQLParameterInfo>(pis.values());
   }

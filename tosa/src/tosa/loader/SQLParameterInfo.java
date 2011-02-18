@@ -2,7 +2,7 @@ package tosa.loader;
 
 import gw.lang.reflect.IType;
 import gw.util.Pair;
-import tosa.loader.data.ColumnType;
+import tosa.api.IDBColumnType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +10,7 @@ import java.util.List;
 public class SQLParameterInfo {
 
   private String _name;
-  private List<Pair<Integer, ColumnType>> _indexes;
+  private List<Pair<Integer, IDBColumnType>> _indexes;
 
   public SQLParameterInfo(String name) {
     _name = name;
@@ -21,7 +21,7 @@ public class SQLParameterInfo {
     return _name;
   }
 
-  public List<Pair<Integer, ColumnType>> getIndexes() {
+  public List<Pair<Integer, IDBColumnType>> getIndexes() {
     return _indexes;
   }
 }

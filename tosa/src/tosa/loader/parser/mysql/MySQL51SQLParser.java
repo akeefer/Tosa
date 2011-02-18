@@ -3,6 +3,7 @@ package tosa.loader.parser.mysql;
 import org.slf4j.LoggerFactory;
 import tosa.loader.data.ColumnData;
 import tosa.loader.data.DBColumnTypeImpl;
+import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
 import tosa.loader.parser.ISQLParser;
 import tosa.loader.parser.SQLParserConstants;
@@ -1045,17 +1046,6 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
     SQLParsedElement whereClause = parseWhereClause();
     TableExpression table = new TableExpression(start, lastMatch(), fromClause, whereClause);
     return table;
-  }
-
-  private Token lastTokenOf(Token defaultTok, SQLParsedElement... possibleElts) {
-    List<SQLParsedElement> lst = new ArrayList<SQLParsedElement>(Arrays.asList(possibleElts));
-    Collections.reverse(lst);
-    for (SQLParsedElement elt : lst) {
-      if (elt != null) {
-        return elt.lastToken();
-      }
-    }
-    return defaultTok;
   }
 
   private SQLParsedElement parseWhereClause() {
