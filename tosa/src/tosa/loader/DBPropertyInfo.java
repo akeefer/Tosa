@@ -8,7 +8,7 @@ import gw.lang.reflect.PropertyInfoBase;
 import gw.lang.reflect.TypeSystem;
 import tosa.CachedDBObject;
 import tosa.dbmd.DBColumnImpl;
-import tosa.query.SelectHelper;
+import tosa.db.execution.QueryExecutor;
 
 import java.sql.SQLException;
 import java.util.Collections;
@@ -106,8 +106,8 @@ public class DBPropertyInfo extends PropertyInfoBase {
           try {
             Object resolvedFK = ((CachedDBObject) ctx).getCachedValues().get(getColumnName());
             if (resolvedFK == null) {
-              resolvedFK = SelectHelper.selectById(getOwnersType().getName() + "." + getName(),
-                      (IDBType) _type, columnValue);
+              resolvedFK = new QueryExecutor(_column.getTable().getDatabase()).selectById(getOwnersType().getName() + "." + getName(),
+                  (IDBType) _type, columnValue);
               ((CachedDBObject) ctx).getCachedValues().put(getColumnName(), resolvedFK);
             }
             return resolvedFK;

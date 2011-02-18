@@ -1,4 +1,4 @@
-package tosa.query;
+package tosa.db.execution;
 
 import gw.lang.reflect.IPropertyInfo;
 import gw.lang.reflect.features.PropertyReference;
@@ -18,8 +18,10 @@ import tosa.loader.Util;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.sql.Clob;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,22 +33,27 @@ import java.util.Map;
  * Time: 9:05 PM
  * To change this template use File | Settings | File Templates.
  */
-public class SelectHelper {
+public class QueryExecutor {
 
-  public static CachedDBObject selectById(String feature, IDBType entityType, Object id) throws SQLException {
+  private IDatabase _database;
+
+  public QueryExecutor(IDatabase database) {
+    _database = database;
+  }
+
+  public CachedDBObject selectById(String feature, IDBType entityType, Object id) throws SQLException {
     // TODO - AHK - Input validation (i.e. id should not be null)
     IDBTable table = entityType.getTable();
     IDBColumn idColumn = table.getColumn(DBTypeInfo.ID_COLUMN);
-    IDatabase db = entityType.getTable().getDatabase();
 
     // TODO - AHK - Use some DB-aware utility to decide when to quote things, etc.
     // TODO - AHK - Make the colum name a constant
     String query = "select * from \"" + table.getName() + "\" where \"id\" = ?";
     Profiler profiler = Util.newProfiler(feature);
     profiler.start(query + " (" + id + ")");
-    List<CachedDBObject> results = db.getDBExecutionKernel().executeSelect(query,
+    List<CachedDBObject> results = _database.getDBExecutionKernel().executeSelect(query,
         new CachedDBQueryResultProcessor(entityType),
-        db.wrapParameter(id, idColumn));
+        _database.wrapParameter(id, idColumn));
 
     if (results.size() == 0) {
       return null;
@@ -57,23 +64,9 @@ public class SelectHelper {
     }
   }
 
-  public static class CachedDBQueryResultProcessor implements IDBExecutionKernel.IQueryResultProcessor<CachedDBObject> {
-    private IDBType _type;
-
-    public CachedDBQueryResultProcessor(IDBType type) {
-      _type = type;
-    }
-
-    @Override
-    public CachedDBObject processResult(ResultSet result) throws SQLException {
-      return buildObject(_type, result);
-    }
-  }
-
-  public static List<CachedDBObject> findFromTemplate(IDBType type, CachedDBObject template, PropertyReference sortColumn, boolean ascending, int limit, int offset) throws SQLException {
+  public List<CachedDBObject> findFromTemplate(IDBType type, CachedDBObject template, PropertyReference sortColumn, boolean ascending, int limit, int offset) throws SQLException {
     Profiler profiler = Util.newProfiler(type.getName() + ".find()");
     IDBTable table = type.getTable();
-    IDatabase db = table.getDatabase();
 
     StringBuilder query = new StringBuilder("select * from \"");
     query.append(table.getName()).append("\" where ");
@@ -90,45 +83,42 @@ public class SelectHelper {
 
     profiler.start(query + " (" + queryParameters + ")");
     try {
-      return db.getDBExecutionKernel().executeSelect(query.toString(),
+      return _database.getDBExecutionKernel().executeSelect(query.toString(),
           new CachedDBQueryResultProcessor(type),
           queryParameters.toArray(new IDBExecutionKernel.IPreparedStatementParameter[queryParameters.size()]));
     } finally {
       profiler.stop();
     }
   }
-//
-//  public static int countFromTemplate(CachedDBObject template) throws SQLException {
-//    StringBuilder query = new StringBuilder("select count(*) as count from \"").append(getOwnersType().getRelativeName()).append("\" where ");
-//    addWhereClause(query, template);
-//    return countFromSql(query.toString());
-//  }
-//
-//  public static int countFromSql(String query) throws SQLException {
-//    Connection conn = connect();
-//    try {
-//      Statement stmt = conn.createStatement();
-//      try {
-//        stmt.executeQuery(query);
-//        ResultSet result = stmt.getResultSet();
-//        try {
-//          if (result.first()) {
-//            return result.getInt("count");
-//          } else {
-//            return 0;
-//          }
-//        } finally {
-//          result.close();
-//        }
-//      } finally {
-//        stmt.close();
-//      }
-//    } finally {
-//      conn.close();
-//    }
-//  }
-//
-  public static void addWhereClause(StringBuilder query, CachedDBObject template, IDBTable table, List<IDBExecutionKernel.IPreparedStatementParameter> parameters) {
+
+  public int countFromTemplate(String feature, IDBType type, CachedDBObject template) throws SQLException {
+    IDBTable table = type.getTable();
+    StringBuilder query = new StringBuilder("select count(*) as count from \"").append(table.getName()).append("\" where ");
+    List<IDBExecutionKernel.IPreparedStatementParameter> queryParameters = new ArrayList<IDBExecutionKernel.IPreparedStatementParameter>();
+    addWhereClause(query, template, table, queryParameters);
+    return countFromSql(feature, query.toString(), queryParameters);
+  }
+
+  public int countFromSql(String feature, String query, List<IDBExecutionKernel.IPreparedStatementParameter> queryParameters) throws SQLException {
+    Profiler profiler = Util.newProfiler(feature);
+    profiler.start(query);
+    try {
+      List<Integer> results = _database.getDBExecutionKernel().executeSelect(query,
+          new CountQueryResultProcessor(),
+          queryParameters.toArray(new IDBExecutionKernel.IPreparedStatementParameter[queryParameters.size()]));
+      if (results.size() == 0) {
+        return 0;
+      } else if (results.size() == 1) {
+        return results.get(0);
+      } else {
+        throw new IllegalStateException("Expected count query " + query + " to return 0 or 1 result, but got " + results.size());
+      }
+    } finally {
+      profiler.stop();
+    }
+  }
+
+  private void addWhereClause(StringBuilder query, CachedDBObject template, IDBTable table, List<IDBExecutionKernel.IPreparedStatementParameter> parameters) {
     List<String> whereClause = new ArrayList<String>();
     if (template != null) {
       for (Map.Entry<String, Object> column : template.getColumns().entrySet()) {
@@ -147,35 +137,28 @@ public class SelectHelper {
     }
   }
 
-//  public static List<CachedDBObject> findInDb(List<IPropertyInfo> props, Object... args) throws SQLException {
-//    List<String> whereClause = new ArrayList<String>();
-//    for (int i = 0; i < props.size(); i++) {
-//      IPropertyInfo p = props.get(i);
-//      if (p instanceof DBPropertyInfo) {
-//        DBPropertyInfo dbProperty = (DBPropertyInfo) p;
-//        String value;
-//        if (dbProperty.getColumnName().endsWith("_id")) {
-//          value = ((CachedDBObject) args[i]).getColumns().get(DBTypeInfo.ID_COLUMN).toString();
-//        } else {
-//          value = "'" + args[i].toString().replace("'", "''") + "'";
-//        }
-//        whereClause.add("\"" + dbProperty.getColumnName() + "\" = " + value);
-//      }
-//    }
-//    return findFromSql("select * from \"" + getOwnersType().getRelativeName() + "\" where " + GosuStringUtil.join(whereClause, " and "));
-//  }
-//
-//
-//  public static ArrayList<CachedDBObject> buildObjects(ResultSet result) throws SQLException {
-//    ArrayList<CachedDBObject> objs = new ArrayList<CachedDBObject>();
-//    while (!result.isAfterLast()) {
-//      objs.add(buildObject(result));
-//      result.next();
-//    }
-//    return objs;
-//  }
-//
-  public static CachedDBObject buildObject(IDBType objectType, ResultSet result) throws SQLException {
+  private static class CountQueryResultProcessor implements IDBExecutionKernel.IQueryResultProcessor<Integer> {
+    @Override
+    public Integer processResult(ResultSet result) throws SQLException {
+      return result.getInt("count");
+    }
+  }
+
+  // TODO - AHK - I don't really like having this be public
+  public static class CachedDBQueryResultProcessor implements IDBExecutionKernel.IQueryResultProcessor<CachedDBObject> {
+    private IDBType _type;
+
+    public CachedDBQueryResultProcessor(IDBType type) {
+      _type = type;
+    }
+
+    @Override
+    public CachedDBObject processResult(ResultSet result) throws SQLException {
+      return buildObject(_type, result);
+    }
+  }
+
+  private static CachedDBObject buildObject(IDBType objectType, ResultSet result) throws SQLException {
     CachedDBObject obj = new CachedDBObject(objectType, false);
     // TODO - AHK - This should probably just iterate over columns rather than properties
     for (IPropertyInfo prop : objectType.getTypeInfo().getProperties()) {

@@ -22,10 +22,11 @@ import org.slf4j.profiler.Profiler;
 import tosa.CachedDBObject;
 import tosa.Join;
 import tosa.api.IDBColumn;
+import tosa.api.IDBExecutionKernel;
 import tosa.api.IDBTable;
+import tosa.db.execution.QueryExecutor;
 import tosa.dbmd.DBColumnImpl;
 import tosa.dbmd.DBTableImpl;
-import tosa.query.SelectHelper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -73,9 +74,11 @@ public class DBTypeInfo extends BaseTypeInfo {
   private IMethodInfo _findWithSqlMethod;
   private IPropertyInfo _newProperty;
   private IConstructorInfo _ctor;
+  private QueryExecutor _queryExecutor; // TODO - AHK - I'm not sure if we really want to hold onto this here
 
   public DBTypeInfo(DBType dbType) {
     super(dbType);
+    _queryExecutor = new QueryExecutor(dbType.getTable().getDatabase());
 
     _getMethod = new MethodInfoBuilder().withName("fromID").withStatic()
         .withParameters(new ParameterInfoBuilder().withName(ID_COLUMN).withType(IJavaType.pLONG))
@@ -84,7 +87,7 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return SelectHelper.selectById(getOwnersType().getName() + ".fromID()", getOwnersType(), args[0]);
+              return _queryExecutor.selectById(getOwnersType().getName() + ".fromID()", getOwnersType(), args[0]);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -129,7 +132,9 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return countFromSql(getOwnersType().getName() + ".countWithSql()", (String) args[0]);
+              return _queryExecutor.countFromSql(getOwnersType().getName() + ".countWithSql()",
+                  (String) args[0],
+                  Collections.<IDBExecutionKernel.IPreparedStatementParameter>emptyList());
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -142,7 +147,7 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return countFromTemplate(getOwnersType().getName() + ".count()", (CachedDBObject) args[0]);
+              return _queryExecutor.countFromTemplate(getOwnersType().getName() + ".count()", getOwnersType(), (CachedDBObject) args[0]);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -168,7 +173,7 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return SelectHelper.findFromTemplate(getOwnersType(), (CachedDBObject) args[0], null, false, -1, -1);
+              return _queryExecutor.findFromTemplate(getOwnersType(), (CachedDBObject) args[0], null, false, -1, -1);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -183,7 +188,7 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return SelectHelper.findFromTemplate(getOwnersType(), (CachedDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2], -1, -1);
+              return _queryExecutor.findFromTemplate(getOwnersType(), (CachedDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2], -1, -1);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -198,7 +203,7 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return SelectHelper.findFromTemplate(getOwnersType(), (CachedDBObject) args[0], null, false, (Integer) args[1], (Integer) args[2]);
+              return _queryExecutor.findFromTemplate(getOwnersType(), (CachedDBObject) args[0], null, false, (Integer) args[1], (Integer) args[2]);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -215,7 +220,7 @@ public class DBTypeInfo extends BaseTypeInfo {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             try {
-              return SelectHelper.findFromTemplate(getOwnersType(), (CachedDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2], (Integer) args[3], (Integer) args[4]);
+              return _queryExecutor.findFromTemplate(getOwnersType(), (CachedDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2], (Integer) args[3], (Integer) args[4]);
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
