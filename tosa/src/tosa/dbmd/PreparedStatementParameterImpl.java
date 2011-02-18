@@ -1,5 +1,6 @@
 package tosa.dbmd;
 
+import tosa.api.IDBExecutionKernel;
 import tosa.api.IDatabase;
 
 import java.sql.PreparedStatement;
@@ -12,7 +13,7 @@ import java.sql.SQLException;
  * Time: 10:27 PM
  * To change this template use File | Settings | File Templates.
  */
-public class PreparedStatementParameterImpl implements IDatabase.IPreparedStatementParameter {
+public class PreparedStatementParameterImpl implements IDBExecutionKernel.IPreparedStatementParameter {
 
   private Object _value;
   private int _jdbcType;

@@ -97,7 +97,7 @@ public class DBJoinPropertyInfo extends PropertyInfoBase{
         profiler.start(query + " (" + id + ")");
         try {
           IDatabase db = _join.getTargetTable().getDatabase();
-          List<CachedDBObject> result = db.executeSelect(query, new SelectHelper.CachedDBQueryResultProcessor(_fkType),
+          List<CachedDBObject> result = db.getDBExecutionKernel().executeSelect(query, new SelectHelper.CachedDBQueryResultProcessor(_fkType),
                   db.wrapParameter(id, _join.getJoinTable().getColumn(o + "_id")));
           value = new JoinResult(result, _join.getJoinTable().getDatabase(), _join.getJoinTable(), _join.getJoinTable().getColumn(o + "_id"), _join.getJoinTable().getColumn(t + "_id"), id);
           ((CachedDBObject) ctx).getCachedValues().put(_name, value);

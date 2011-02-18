@@ -7,6 +7,7 @@ import gw.util.GosuStringUtil;
 import org.slf4j.profiler.Profiler;
 import tosa.CachedDBObject;
 import tosa.api.IDBColumn;
+import tosa.api.IDBExecutionKernel;
 import tosa.api.IDBTable;
 import tosa.api.IDatabase;
 import tosa.loader.DBPropertyInfo;
@@ -43,7 +44,7 @@ public class SelectHelper {
     String query = "select * from \"" + table.getName() + "\" where \"id\" = ?";
     Profiler profiler = Util.newProfiler(feature);
     profiler.start(query + " (" + id + ")");
-    List<CachedDBObject> results = db.executeSelect(query,
+    List<CachedDBObject> results = db.getDBExecutionKernel().executeSelect(query,
         new CachedDBQueryResultProcessor(entityType),
         db.wrapParameter(id, idColumn));
 
@@ -56,7 +57,7 @@ public class SelectHelper {
     }
   }
 
-  public static class CachedDBQueryResultProcessor implements IDatabase.IQueryResultProcessor<CachedDBObject> {
+  public static class CachedDBQueryResultProcessor implements IDBExecutionKernel.IQueryResultProcessor<CachedDBObject> {
     private IDBType _type;
 
     public CachedDBQueryResultProcessor(IDBType type) {
@@ -76,7 +77,7 @@ public class SelectHelper {
 
     StringBuilder query = new StringBuilder("select * from \"");
     query.append(table.getName()).append("\" where ");
-    List<IDatabase.IPreparedStatementParameter> queryParameters = new ArrayList<IDatabase.IPreparedStatementParameter>();
+    List<IDBExecutionKernel.IPreparedStatementParameter> queryParameters = new ArrayList<IDBExecutionKernel.IPreparedStatementParameter>();
     addWhereClause(query, template, table, queryParameters);
     if (sortColumn != null) {
       query.append(" order by \"").append(sortColumn.getPropertyInfo().getName()).append("\" ").append(ascending ? "ASC" : "DESC").append(", \"id\" ASC");
@@ -89,9 +90,9 @@ public class SelectHelper {
 
     profiler.start(query + " (" + queryParameters + ")");
     try {
-      return db.executeSelect(query.toString(),
-              new CachedDBQueryResultProcessor(type),
-              queryParameters.toArray(new IDatabase.IPreparedStatementParameter[queryParameters.size()]));
+      return db.getDBExecutionKernel().executeSelect(query.toString(),
+          new CachedDBQueryResultProcessor(type),
+          queryParameters.toArray(new IDBExecutionKernel.IPreparedStatementParameter[queryParameters.size()]));
     } finally {
       profiler.stop();
     }
@@ -127,7 +128,7 @@ public class SelectHelper {
 //    }
 //  }
 //
-  public static void addWhereClause(StringBuilder query, CachedDBObject template, IDBTable table, List<IDatabase.IPreparedStatementParameter> parameters) {
+  public static void addWhereClause(StringBuilder query, CachedDBObject template, IDBTable table, List<IDBExecutionKernel.IPreparedStatementParameter> parameters) {
     List<String> whereClause = new ArrayList<String>();
     if (template != null) {
       for (Map.Entry<String, Object> column : template.getColumns().entrySet()) {
