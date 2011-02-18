@@ -13,6 +13,7 @@ public class Tokenizer {
   private int _line;
   private int _col;
   private int _offset;
+  private int _currentCol;
   private int _currentStartOffset;
   private int _currentEndOffset;
   
@@ -20,7 +21,7 @@ public class Tokenizer {
   public Tokenizer(String contents) {
     _contents = contents;
     _line = 1;
-    _col = 0;
+    _col = 1;
     _offset = 0;
     _currentStartOffset = 0;
     _currentEndOffset = 0;
@@ -39,7 +40,8 @@ public class Tokenizer {
     }
 
     _currentStartOffset = _offset;
-
+    _currentCol = _col;
+    
     if (!consumeOperator()) {
       if (!consumeSymbol()) {
         if (!consumeString()) {
@@ -56,19 +58,19 @@ public class Tokenizer {
   }
 
   private void consumeChar() {
-    _offset++;
+    incrementOffset();
   }
 
   private boolean consumeNumber() {
     if (Character.isDigit(currentChar())) {
       while (!stringIsConsumed() && Character.isDigit(currentChar())) {
-        _offset++;
+        incrementOffset();
       }
       if (!stringIsConsumed() && currentChar() == '.') {
         if (canPeek(2) && Character.isDigit(_contents.charAt(_offset+1))) {
-          _offset++;
+          incrementOffset();
           while (!stringIsConsumed() && Character.isDigit(currentChar())) {
-            _offset++;
+            incrementOffset();
           }
         }
       }
@@ -81,14 +83,15 @@ public class Tokenizer {
     if ('\'' == currentChar() || '"' == currentChar()) {
       char initial = currentChar();
       char previous = initial;
-      _offset++;
+      incrementOffset();
       while (!stringIsConsumed() && currentChar() != '\n') {
         char current = currentChar();
         if (current == initial && previous != '\\') {
+          incrementOffset();
           break;
         } else {
           previous = current;
-          _offset++;
+          incrementOffset();
         }
       }
       return true;
@@ -98,9 +101,9 @@ public class Tokenizer {
 
   private boolean consumeSymbol() {
     if (Character.isLetter(currentChar()) || ':' == currentChar()) {
-      _offset++;
+      incrementOffset();
       while (!stringIsConsumed() && Character.isLetter(currentChar())) {
-        _offset++;
+        incrementOffset();
       }
       return true;
     }
@@ -109,8 +112,10 @@ public class Tokenizer {
 
   private boolean consumeOperator() {
     if (OPERATORS.contains(Character.toString(currentChar()))) {
+      incrementOffset();
       return true;
     } else if (canPeek(2) && OPERATORS.contains(peek(2))) {
+      _offset+=2;
       return true;
     }
     return false;
@@ -121,7 +126,7 @@ public class Tokenizer {
   }
 
   private boolean canPeek(int count) {
-    return _offset + count - 1 >= _contents.length();
+    return _offset + count < _contents.length();
   }
 
 
@@ -131,12 +136,17 @@ public class Tokenizer {
 
   private void eatWhitespace() {
     while (!stringIsConsumed() && Character.isWhitespace(currentChar())) {
-      _offset++;
       if ('\n' == currentChar()) {
         _line++;
         _col = 0;
       }
+      incrementOffset();
     }
+  }
+
+  private void incrementOffset() {
+    _offset++;
+    _col++;
   }
 
   private char currentChar() {
@@ -144,6 +154,6 @@ public class Tokenizer {
   }
 
   public Token nextToken() {
-    return new Token(_currentStringValue, _line, _col, _currentStartOffset, _currentEndOffset);
+    return new Token(_currentStringValue, _line, _currentCol, _currentStartOffset, _currentEndOffset);
   }
 }

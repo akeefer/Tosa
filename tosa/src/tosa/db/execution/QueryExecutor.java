@@ -158,7 +158,7 @@ public class QueryExecutor {
     }
   }
 
-  private static CachedDBObject buildObject(IDBType objectType, ResultSet result) throws SQLException {
+  public static CachedDBObject buildObject(IDBType objectType, ResultSet result) throws SQLException {
     CachedDBObject obj = new CachedDBObject(objectType, false);
     // TODO - AHK - This should probably just iterate over columns rather than properties
     for (IPropertyInfo prop : objectType.getTypeInfo().getProperties()) {

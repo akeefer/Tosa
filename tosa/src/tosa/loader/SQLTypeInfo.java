@@ -3,6 +3,7 @@ package tosa.loader;
 import gw.lang.reflect.*;
 import gw.lang.reflect.java.IJavaType;
 import gw.util.GosuExceptionUtil;
+import tosa.db.execution.QueryExecutor;
 import tosa.loader.parser.tree.*;
 
 import java.sql.Connection;
@@ -22,7 +23,7 @@ public class SQLTypeInfo extends BaseTypeInfo {
     super(sqlType);
     _sqlType = sqlType;
     _resultType = determineResultType();
-    _theOneTrueMethod = new MethodInfoBuilder().withName(getMethodName()).withStatic()
+    _theOneTrueMethod = new MethodInfoBuilder().withName("select").withStatic()
       .withStatic()
       .withParameters(determineParameters())
       .withReturnType(determineReturnType())
@@ -75,7 +76,7 @@ public class SQLTypeInfo extends BaseTypeInfo {
 
   private Object constructResultElement(ResultSet resultSet) {
     try {
-      IType returnType = get_resultType();
+      IType returnType = getResultType();
       if (IJavaType.OBJECT.equals(returnType)) {
         int count = resultSet.getMetaData().getColumnCount();
         Map hashMap = new HashMap();
@@ -85,8 +86,7 @@ public class SQLTypeInfo extends BaseTypeInfo {
         }
         return hashMap;
       } else if (returnType instanceof IDBType) {
-        DBTypeInfo typeInfo = (DBTypeInfo) returnType.getTypeInfo();
-        return typeInfo.buildObject(resultSet);
+        return QueryExecutor.buildObject((IDBType) returnType, resultSet);
       } else {
         throw new IllegalStateException("Do not know how to construct objects of type " + returnType.getName());
       }
@@ -96,7 +96,7 @@ public class SQLTypeInfo extends BaseTypeInfo {
   }
 
   private IType determineReturnType() {
-    return IJavaType.ITERABLE.getParameterizedType(get_resultType());
+    return IJavaType.ITERABLE.getParameterizedType(getResultType());
   }
 
   private ParameterInfoBuilder[] determineParameters() {
@@ -127,11 +127,8 @@ public class SQLTypeInfo extends BaseTypeInfo {
     return getMethod(method, params);
   }
 
-  public IType get_resultType() {
+  public IType getResultType() {
     return _resultType;
   }
 
-  public String getMethodName() {
-    return "select"; //TODO "insert" etc.
-  }
 }

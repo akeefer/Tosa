@@ -46,10 +46,6 @@ public class Token {
     return _next;
   }
 
-  public Token next(String... tokens) {
-    return _next;
-  }
-
   public boolean match(String value) {
     return _value != null && _value.equalsIgnoreCase(value);
   }
@@ -101,26 +97,54 @@ public class Token {
 
   @Override
   public String toString() {
-    return toString(true);
+    return getValue();
   }
-  
-  public String toString(boolean isRoot) {
+
+  public String toStringForDebug() {
+    return first().toStringForDebug(this);
+  }
+
+  private Token first() {
+    if (_previous == null) {
+      return this;
+    } else {
+      return _previous.first();
+    }
+  }
+
+  private String toStringForDebug(Token current) {
     if (isEOF()) {
-      if (isRoot) {
+      if (this == current) {
         return "[|EOF]";
       } else {
         return "|EOF";
       }
     } else {
       String str = getValue();
-      if (isRoot) {
+      if (this == current) {
         str = "[" + str + "]";
       }
-      return str + " " + _next.toString(false);
+      return str + " " + _next.toStringForDebug(current);
     }
   }
 
   public Token previous() {
     return _previous;
+  }
+
+  public int getLine() {
+    return _line;
+  }
+
+  public int getColumn() {
+    return _col;
+  }
+
+  public int getStart() {
+    return _start;
+  }
+
+  public int getEnd() {
+    return _end;
   }
 }
