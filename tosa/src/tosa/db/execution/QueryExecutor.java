@@ -43,7 +43,7 @@ public class QueryExecutor {
     profiler.start(query + " (" + id + ")");
     List<CachedDBObject> results = db.getDBExecutionKernel().executeSelect(query,
         new CachedDBQueryResultProcessor(type),
-        db.wrapParameter(id, idColumn));
+        idColumn.wrapParameterValue(id));
 
     if (results.size() == 0) {
       return null;
@@ -118,7 +118,7 @@ public class QueryExecutor {
       for (Map.Entry<String, Object> column : template.getColumns().entrySet()) {
         if (column.getValue() != null) {
           whereClause.add("\"" + column.getKey() + "\" = ?");
-          parameters.add(table.getDatabase().wrapParameter(column.getValue(), table.getColumn(column.getKey())));
+          parameters.add(table.getColumn(column.getKey()).wrapParameterValue(column.getValue()));
         }
       }
       if (!whereClause.isEmpty()) {

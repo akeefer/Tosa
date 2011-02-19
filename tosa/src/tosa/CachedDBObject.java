@@ -88,7 +88,7 @@ public class CachedDBObject implements IDBObject {
       if (column != null) {
         attrs.add("\"" + entry.getKey() + "\"");
         Object value = entry.getValue();
-        values.add(database.wrapParameter(value, column));
+        values.add(column.wrapParameterValue(value));
       }
     }
     try {
@@ -125,7 +125,7 @@ public class CachedDBObject implements IDBObject {
           }
         }
         query.append(" where \"id\" = ?");
-        values.add(database.wrapParameter(_columns.get(DBTypeInfo.ID_COLUMN), _type.getTable().getColumn(DBTypeInfo.ID_COLUMN)));
+        values.add(_type.getTable().getColumn(DBTypeInfo.ID_COLUMN).wrapParameterValue(_columns.get(DBTypeInfo.ID_COLUMN)));
         profiler.start(query.toString() + " (" + values + ")");
         database.getDBExecutionKernel().executeUpdate(query.toString(), values.toArray(new IPreparedStatementParameter[values.size()]));
       }
@@ -139,7 +139,7 @@ public class CachedDBObject implements IDBObject {
     // TODO - AHK - Determine if we need to quote the table name or column names or not
     String query = "delete from \"" + getTableName() + "\" where \"id\" = ?";
     IDatabase database = _type.getTable().getDatabase();
-    IPreparedStatementParameter parameter = database.wrapParameter(_columns.get(DBTypeInfo.ID_COLUMN), _type.getTable().getColumn(DBTypeInfo.ID_COLUMN));
+    IPreparedStatementParameter parameter = _type.getTable().getColumn(DBTypeInfo.ID_COLUMN).wrapParameterValue(_columns.get(DBTypeInfo.ID_COLUMN));
     Profiler profiler = Util.newProfiler(_type.getName() + ".delete()");
     profiler.start(query + " (" + parameter + ")");
     try {

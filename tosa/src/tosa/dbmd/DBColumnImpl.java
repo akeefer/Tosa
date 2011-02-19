@@ -3,9 +3,13 @@ package tosa.dbmd;
 import tosa.api.IDBColumn;
 import tosa.api.IDBColumnType;
 import tosa.api.IDBTable;
+import tosa.api.IPreparedStatementParameter;
 import tosa.loader.DBTypeInfo;
 import tosa.loader.data.ColumnData;
 import tosa.loader.data.DBColumnTypeImpl;
+
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -67,6 +71,16 @@ public class DBColumnImpl implements IDBColumn {
   @Override
   public IDBColumnType getColumnType() {
     return _columnData.getColumnType();
+  }
+
+  @Override
+  public IPreparedStatementParameter wrapParameterValue(final Object value) {
+    return new IPreparedStatementParameter() {
+      @Override
+      public void setParameter(PreparedStatement statement, int index) throws SQLException {
+        _columnData.getColumnType().getPersistenceHandler().setParameter(statement, index, value);
+      }
+    };
   }
 
   // TODO - AHK - It would be nice if this wasn't necessary

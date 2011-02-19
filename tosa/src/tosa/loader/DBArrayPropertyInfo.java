@@ -89,7 +89,7 @@ public class DBArrayPropertyInfo extends PropertyInfoBase {
               getOwnersType().getName() + "." + _name,
               (IDBType) _fkType,
               "select * from \"" + _fkColumn.getTable().getName() + "\" where \"" + _fkColumn.getName() + "\" = ?",
-              Collections.singletonList(_fkColumn.getTable().getDatabase().wrapParameter(id, dbObject.getIntrinsicType().getTable().getColumn(DBTypeInfo.ID_COLUMN))));
+              Collections.singletonList(dbObject.getIntrinsicType().getTable().getColumn(DBTypeInfo.ID_COLUMN).wrapParameterValue(id)));
           ((CachedDBObject) ctx).getCachedValues().put(_name, value);
         }
         return value;

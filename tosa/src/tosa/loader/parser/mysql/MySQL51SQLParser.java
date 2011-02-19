@@ -441,7 +441,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       if (length == null || length == 1) {
         return new DBColumnTypeImpl(BIT, BIT, DBColumnTypeImpl.BOOLEAN_ITYPE, Types.BIT);
       } else {
-        // TODO - AHK
+        // TODO - AHK - Handle bit fields that have a length greater than 1
         LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + BIT);
         return null;
       }
@@ -454,7 +454,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       } else if (signed) {
         return new DBColumnTypeImpl(TINYINT, TINYINT, DBColumnTypeImpl.BYTE_ITYPE, Types.TINYINT);
       } else {
-        // TODO - AHK
+        // TODO - AHK - Handle unsigned tiny ints
         LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + TINYINT);
         return null;
       }
@@ -467,7 +467,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       if (signed) {
         return new DBColumnTypeImpl(SMALLINT, SMALLINT, DBColumnTypeImpl.SHORT_ITYPE ,Types.SMALLINT);
       } else {
-        // TODO - AHK
+        // TODO - AHK  - Handle unsigned small ints
         LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + SMALLINT);
         return null;
       }
@@ -477,7 +477,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       if (signed) {
         return new DBColumnTypeImpl(MEDIUMINT, MEDIUMINT, DBColumnTypeImpl.INTEGER_ITYPE, Types.INTEGER);
       } else {
-        // TODO - AHK
+        // TODO - AHK - Handle unsigned medium ints
         LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + MEDIUMINT);
         return null;
       }
@@ -487,7 +487,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       if (signed) {
         return new DBColumnTypeImpl(INT, INT, DBColumnTypeImpl.INTEGER_ITYPE, Types.INTEGER);
       } else {
-        // TODO - AHK
+        // TODO - AHK - Handle unsigned integers
         LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + INTEGER);
         return null;
       }
@@ -497,7 +497,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       if (signed) {
         return new DBColumnTypeImpl(BIGINT, BIGINT, DBColumnTypeImpl.LONG_ITYPE, Types.BIGINT);
       } else {
-        // TODO - AHK
+        // TODO - AHK - Handle unsigned big ints
         LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + BIGINT);
         return null;
       }

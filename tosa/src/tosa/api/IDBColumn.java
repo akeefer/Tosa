@@ -43,4 +43,13 @@ public interface IDBColumn {
    */
   IDBColumnType getColumnType();
 
+  // TODO - AHK - Perhaps change the name of this method
+  /**
+   * Wraps the given value in an IPreparedStatementParameter.  The behavior of this method
+   * is undefined if the value is not of an appropriate type for this column.
+   *
+   * @return an IPreparedStatementParameter wrapping this value
+   */
+  IPreparedStatementParameter wrapParameterValue(Object value);
+
 }

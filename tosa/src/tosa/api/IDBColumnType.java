@@ -17,6 +17,7 @@ public interface IDBColumnType {
   String getGosuTypeName();
   IType getGosuType();
   int getJdbcType();
+  IDBColumnTypePersistenceHandler getPersistenceHandler();
   // TODO - AHK - Validation
   // TODO - AHK - PreparedStatement/ResultSet handling
   // TODO - AHK - Constraints (length, scale, precision, fk constraints, unique indexes, etc.)

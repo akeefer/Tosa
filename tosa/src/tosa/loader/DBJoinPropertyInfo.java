@@ -96,7 +96,7 @@ public class DBJoinPropertyInfo extends PropertyInfoBase{
         try {
           IDatabase db = _join.getTargetTable().getDatabase();
           List<CachedDBObject> result = db.getDBExecutionKernel().executeSelect(query, new QueryExecutor.CachedDBQueryResultProcessor(_fkType),
-              db.wrapParameter(id, _join.getJoinTable().getColumn(o + "_id")));
+              _join.getJoinTable().getColumn(o + "_id").wrapParameterValue(id));
           value = new JoinResult(result, _join.getJoinTable().getDatabase(), _join.getJoinTable(), _join.getJoinTable().getColumn(o + "_id"), _join.getJoinTable().getColumn(t + "_id"), id);
           ((CachedDBObject) ctx).getCachedValues().put(_name, value);
         } finally {
