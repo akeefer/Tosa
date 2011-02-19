@@ -17,9 +17,9 @@ import java.util.*;
  * Time: 10:36 PM
  * To change this template use File | Settings | File Templates.
  */
-public class JoinResult implements List<CachedDBObject> {
+public class JoinResult implements List<IDBObject> {
 
-  private List<CachedDBObject> _result;
+  private List<IDBObject> _result;
 
   private IDatabase _database;
   private IDBTable _joinTable;
@@ -28,7 +28,7 @@ public class JoinResult implements List<CachedDBObject> {
   private IDBColumn _targetColumn;
   private String _srcId;
 
-  public JoinResult(List<CachedDBObject> result, IDatabase database, IDBTable joinTable,
+  public JoinResult(List<IDBObject> result, IDatabase database, IDBTable joinTable,
                     IDBColumn srcColumn, IDBColumn targetColumn, String srcId) {
     _result = result;
     _database = database;
@@ -40,14 +40,14 @@ public class JoinResult implements List<CachedDBObject> {
   }
 
   @Override
-  public boolean add(CachedDBObject obj) {
+  public boolean add(IDBObject obj) {
     // TODO - AHK - Determine dynamically if table names should be quoted or not
     Profiler profiler = Util.newProfiler(_srcColumn.getTable().getName() + "." + _joinTable.getName() + ".add()");
     String query = "insert into \"" + _joinTable.getName() + "\" (\"" + _srcColumn.getName() + "\", \"" + _targetColumn.getName() + "\") values (?, ?)";
     try {
       IPreparedStatementParameter[] parameters = new IPreparedStatementParameter[2];
       parameters[0] = _srcColumn.wrapParameterValue(_srcId);
-      parameters[1] = _targetColumn.wrapParameterValue(obj.getColumns().get(DBTypeInfo.ID_COLUMN));
+      parameters[1] = _targetColumn.wrapParameterValue(obj.getColumnValue(DBTypeInfo.ID_COLUMN));
       profiler.start(query + "( " + parameters[0] + ", " + parameters[1] + ")");
       _database.getDBExecutionKernel().executeInsert(query, parameters);
     } finally {
@@ -58,13 +58,13 @@ public class JoinResult implements List<CachedDBObject> {
   }
 
   @Override
-  public boolean addAll(Collection<? extends CachedDBObject> objs) {
+  public boolean addAll(Collection<? extends IDBObject> objs) {
     List<IPreparedStatementParameter> parameters = new ArrayList<IPreparedStatementParameter>();
     StringBuilder query = new StringBuilder("insert into \"");
     query.append(_joinTable.getName()).append("\" (\"").append(_srcColumn.getName()).append("\", \"").append(_targetColumn.getName()).append("\") values ");
-    for (CachedDBObject obj : objs) {
+    for (IDBObject obj : objs) {
       parameters.add(_srcColumn.wrapParameterValue(_srcId));
-      parameters.add(_targetColumn.wrapParameterValue(obj.getColumns().get(DBTypeInfo.ID_COLUMN)));
+      parameters.add(_targetColumn.wrapParameterValue(obj.getColumnValue(DBTypeInfo.ID_COLUMN)));
       query.append("(?, ?)");
       query.append(", ");
     }
@@ -150,7 +150,7 @@ public class JoinResult implements List<CachedDBObject> {
   }
 
   @Override
-  public Iterator<CachedDBObject> iterator() {
+  public Iterator<IDBObject> iterator() {
     return _result.iterator();
   }
 
@@ -170,7 +170,7 @@ public class JoinResult implements List<CachedDBObject> {
   }
 
   @Override
-  public boolean addAll(int index, Collection<? extends CachedDBObject> c) {
+  public boolean addAll(int index, Collection<? extends IDBObject> c) {
     throw new UnsupportedOperationException();
   }
 
@@ -199,22 +199,22 @@ public class JoinResult implements List<CachedDBObject> {
   }
 
   @Override
-  public CachedDBObject get(int index) {
+  public IDBObject get(int index) {
     return _result.get(index);
   }
 
   @Override
-  public CachedDBObject set(int index, CachedDBObject element) {
+  public IDBObject set(int index, IDBObject element) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public void add(int index, CachedDBObject element) {
+  public void add(int index, IDBObject element) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public CachedDBObject remove(int index) {
+  public IDBObject remove(int index) {
     throw new UnsupportedOperationException();
   }
 
@@ -229,17 +229,17 @@ public class JoinResult implements List<CachedDBObject> {
   }
 
   @Override
-  public ListIterator<CachedDBObject> listIterator() {
+  public ListIterator<IDBObject> listIterator() {
     return _result.listIterator();
   }
 
   @Override
-  public ListIterator<CachedDBObject> listIterator(int index) {
+  public ListIterator<IDBObject> listIterator(int index) {
     return _result.listIterator(index);
   }
 
   @Override
-  public List<CachedDBObject> subList(int fromIndex, int toIndex) {
+  public List<IDBObject> subList(int fromIndex, int toIndex) {
     return _result.subList(fromIndex, toIndex);
   }
 

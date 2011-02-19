@@ -20,6 +20,7 @@ import org.slf4j.profiler.Profiler;
 import tosa.CachedDBObject;
 import tosa.Join;
 import tosa.JoinResult;
+import tosa.api.IDBObject;
 import tosa.api.IDatabase;
 import tosa.db.execution.QueryExecutor;
 
@@ -95,7 +96,7 @@ public class DBJoinPropertyInfo extends PropertyInfoBase{
         profiler.start(query + " (" + id + ")");
         try {
           IDatabase db = _join.getTargetTable().getDatabase();
-          List<CachedDBObject> result = db.getDBExecutionKernel().executeSelect(query, new QueryExecutor.CachedDBQueryResultProcessor(_fkType),
+          List<IDBObject> result = db.getDBExecutionKernel().executeSelect(query, new QueryExecutor.CachedDBQueryResultProcessor(_fkType),
               _join.getJoinTable().getColumn(o + "_id").wrapParameterValue(id));
           value = new JoinResult(result, _join.getJoinTable().getDatabase(), _join.getJoinTable(), _join.getJoinTable().getColumn(o + "_id"), _join.getJoinTable().getColumn(t + "_id"), id);
           ((CachedDBObject) ctx).getCachedValues().put(_name, value);

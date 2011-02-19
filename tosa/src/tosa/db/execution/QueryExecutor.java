@@ -30,7 +30,7 @@ import java.util.Map;
  */
 public class QueryExecutor {
 
-  public CachedDBObject selectById(String feature, IDBType type, Object id) throws SQLException {
+  public IDBObject selectById(String feature, IDBType type, Object id) throws SQLException {
     // TODO - AHK - Input validation (i.e. id should not be null)
     IDBTable table = type.getTable();
     IDBColumn idColumn = table.getColumn(DBTypeInfo.ID_COLUMN);
@@ -41,7 +41,7 @@ public class QueryExecutor {
     String query = "select * from \"" + table.getName() + "\" where \"id\" = ?";
     Profiler profiler = Util.newProfiler(feature);
     profiler.start(query + " (" + id + ")");
-    List<CachedDBObject> results = db.getDBExecutionKernel().executeSelect(query,
+    List<IDBObject> results = db.getDBExecutionKernel().executeSelect(query,
         new CachedDBQueryResultProcessor(type),
         idColumn.wrapParameterValue(id));
 
@@ -54,7 +54,7 @@ public class QueryExecutor {
     }
   }
 
-  public List<CachedDBObject> findFromTemplate(String feature, IDBType type, CachedDBObject template, PropertyReference sortColumn, boolean ascending, int limit, int offset) throws SQLException {
+  public List<IDBObject> findFromTemplate(String feature, IDBType type, CachedDBObject template, PropertyReference sortColumn, boolean ascending, int limit, int offset) throws SQLException {
     IDBTable table = type.getTable();
 
     StringBuilder query = new StringBuilder("select * from \"");
@@ -73,7 +73,7 @@ public class QueryExecutor {
     return findFromSql(feature, type, query.toString(), queryParameters);
   }
 
-  public List<CachedDBObject> findFromSql(String feature, IDBType type, String query, List<IPreparedStatementParameter> queryParameters) throws SQLException {
+  public List<IDBObject> findFromSql(String feature, IDBType type, String query, List<IPreparedStatementParameter> queryParameters) throws SQLException {
     Profiler profiler = Util.newProfiler(feature);
     profiler.start(query + " (" + queryParameters + ")");
     try {
@@ -139,7 +139,7 @@ public class QueryExecutor {
   }
 
   // TODO - AHK - I don't really like having this be public
-  public static class CachedDBQueryResultProcessor implements IQueryResultProcessor<CachedDBObject> {
+  public static class CachedDBQueryResultProcessor implements IQueryResultProcessor<IDBObject> {
     private IDBType _type;
 
     public CachedDBQueryResultProcessor(IDBType type) {
@@ -148,46 +148,13 @@ public class QueryExecutor {
 
     @Override
     public CachedDBObject processResult(ResultSet result) throws SQLException {
-      return buildObject(_type, result);
-    }
-  }
-
-  private static CachedDBObject buildObject(IDBType objectType, ResultSet result) throws SQLException {
-    CachedDBObject obj = new CachedDBObject(objectType, false);
-    // TODO - AHK - This should probably just iterate over columns rather than properties
-    for (IPropertyInfo prop : objectType.getTypeInfo().getProperties()) {
-      if (prop instanceof DBPropertyInfo) {
-        DBPropertyInfo dbProp = (DBPropertyInfo) prop;
-        // TODO - AHK - This should get the IDBColumn off the property instead of having a getColumnName method on it
-        Object resultObject = result.getObject(objectType.getTable().getName() + "." + dbProp.getColumnName());
-        if (resultObject instanceof BufferedReader) {
-          obj.getColumns().put(dbProp.getColumnName(), readAll((BufferedReader) resultObject));
-        } else if (resultObject instanceof Clob) {
-          obj.getColumns().put(dbProp.getColumnName(), readAll(new BufferedReader(((Clob) resultObject).getCharacterStream())));
-        } else if (dbProp.getFeatureType().equals(IJavaType.pBOOLEAN) && resultObject == null) {
-          obj.getColumns().put(dbProp.getColumnName(), Boolean.FALSE);
-        } else {
-          obj.getColumns().put(dbProp.getColumnName(), resultObject);
-        }
+      CachedDBObject obj = new CachedDBObject(_type, false);
+      IDBTable table = _type.getTable();
+      for (IDBColumn column : table.getColumns()) {
+        Object resultObject = column.getColumnType().getPersistenceHandler().readFromResultSet(result, table.getName() + "." + column.getName());
+        obj.setColumnValue(column.getName(), resultObject);
       }
-    }
-    return obj;
-  }
-
-  private static Object readAll(BufferedReader r) {
-    try {
-      StringBuilder b = new StringBuilder();
-      String line = r.readLine();
-      while (line != null) {
-        b.append(line).append("\n");
-        line = r.readLine();
-      }
-      if (b.length() > 0) {
-        b.setLength(b.length() - 1);
-      }
-      return b.toString();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+      return obj;
     }
   }
 }
