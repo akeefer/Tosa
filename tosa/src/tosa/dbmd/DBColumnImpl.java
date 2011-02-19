@@ -78,7 +78,7 @@ public class DBColumnImpl implements IDBColumn {
     return new IPreparedStatementParameter() {
       @Override
       public void setParameter(PreparedStatement statement, int index) throws SQLException {
-        _columnData.getColumnType().getPersistenceHandler().setParameter(statement, index, value);
+        _columnData.getColumnType().setParameter(statement, index, value);
       }
     };
   }

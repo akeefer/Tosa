@@ -2,6 +2,10 @@ package tosa.api;
 
 import gw.lang.reflect.IType;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 /**
  * Created by IntelliJ IDEA.
  * User: alan
@@ -17,8 +21,8 @@ public interface IDBColumnType {
   String getGosuTypeName();
   IType getGosuType();
   int getJdbcType();
-  IDBColumnTypePersistenceHandler getPersistenceHandler();
+  Object readFromResultSet(ResultSet resultSet, String name) throws SQLException;
+  void setParameter(PreparedStatement statement, int index, Object value) throws SQLException;
   // TODO - AHK - Validation
-  // TODO - AHK - PreparedStatement/ResultSet handling
   // TODO - AHK - Constraints (length, scale, precision, fk constraints, unique indexes, etc.)
 }

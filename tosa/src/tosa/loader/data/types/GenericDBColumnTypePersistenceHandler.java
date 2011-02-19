@@ -1,6 +1,6 @@
 package tosa.loader.data.types;
 
-import tosa.api.IDBColumnTypePersistenceHandler;
+import tosa.loader.data.IDBColumnTypePersistenceHandler;
 
 import java.io.BufferedReader;
 import java.io.IOException;

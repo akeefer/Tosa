@@ -3,8 +3,11 @@ package tosa.loader.data;
 import gw.lang.reflect.IType;
 import gw.lang.reflect.TypeSystem;
 import tosa.api.IDBColumnType;
-import tosa.api.IDBColumnTypePersistenceHandler;
 import tosa.loader.data.types.GenericDBColumnTypePersistenceHandler;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -66,8 +69,13 @@ public class DBColumnTypeImpl implements IDBColumnType {
   }
 
   @Override
-  public IDBColumnTypePersistenceHandler getPersistenceHandler() {
-    return _persistenceHandler;
+  public Object readFromResultSet(ResultSet resultSet, String name) throws SQLException {
+    return _persistenceHandler.readFromResultSet(resultSet, name);
+  }
+
+  @Override
+  public void setParameter(PreparedStatement statement, int index, Object value) throws SQLException {
+    _persistenceHandler.setParameter(statement, index, value);
   }
 
   /*switch(sqlType) {

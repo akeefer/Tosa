@@ -151,7 +151,7 @@ public class QueryExecutor {
       CachedDBObject obj = new CachedDBObject(_type, false);
       IDBTable table = _type.getTable();
       for (IDBColumn column : table.getColumns()) {
-        Object resultObject = column.getColumnType().getPersistenceHandler().readFromResultSet(result, table.getName() + "." + column.getName());
+        Object resultObject = column.getColumnType().readFromResultSet(result, table.getName() + "." + column.getName());
         obj.setColumnValue(column.getName(), resultObject);
       }
       return obj;
