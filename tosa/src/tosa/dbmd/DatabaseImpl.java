@@ -1,9 +1,11 @@
 package tosa.dbmd;
 
+import gw.fs.IFile;
 import tosa.DBConnection;
 import tosa.Join;
 import tosa.api.*;
 import tosa.db.execution.DBExecutionKernelImpl;
+import tosa.db.execution.DBUpgraderImpl;
 import tosa.loader.DBTypeLoader;
 import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
@@ -60,6 +62,16 @@ public class DatabaseImpl implements IDatabase {
   @Override
   public IDBExecutionKernel getDBExecutionKernel() {
     return _executionKernel;
+  }
+
+  @Override
+  public IDBUpgrader getDBUpgrader() {
+    // TODO - AHK - Should we create this every time, or keep a handle to it?
+    return new DBUpgraderImpl(this);
+  }
+
+  public IFile getDdlFile() {
+    return _dbData.getDdlFile();
   }
 
   private void processDBData(Map<String, DBTableImpl> tables) {

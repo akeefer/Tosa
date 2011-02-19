@@ -51,6 +51,13 @@ public interface IDatabase {
    */
   IDBExecutionKernel getDBExecutionKernel();
 
+  /**
+   * Returns the associated IDBUpgrader object associated with this database.
+   *
+   * @return the associated IDBUpgrader object associated with this database.
+   */
+  IDBUpgrader getDBUpgrader();
+
   // TODO - AHK - Remove this from IDatabase and move it to IDBColumn or IDBColumnType
   IPreparedStatementParameter wrapParameter(Object value, IDBColumn column);
 

@@ -23,17 +23,17 @@ public class DDLDBDataSource implements IDBDataSource {
   @Override
   public Map<String, DBData> getDBData(IModule module) {
     Map<String, DBData> results = new HashMap<String, DBData>();
-    for (Pair<String, IFile> dbcFile : module.getResourceAccess().findAllFilesByExtension(".ddl")) {
+    for (Pair<String, IFile> ddlFile : module.getResourceAccess().findAllFilesByExtension(".ddl")) {
       // TODO - AHK - Lots o' error handling
       // TODO - AHK - Select the correct parser somehow
-      IFile connectionFile = dbcFile.getSecond().getParent().file(dbcFile.getSecond().getBaseName() + ".dbc");
+      IFile connectionFile = ddlFile.getSecond().getParent().file(ddlFile.getSecond().getBaseName() + ".dbc");
       String connectionString = null;
       if (connectionFile.exists()) {
         connectionString = readFile(connectionFile);
       }
-      List<TableData> tables = new MySQL51SQLParser().parseDDLFile(readFile(dbcFile.getSecond()));
-      String fileName = dbcFile.getFirst();
-      results.put(fileName.substring(0, fileName.length() - ".ddl".length()).replace("/", "."),  new DBData(tables, connectionString));
+      List<TableData> tables = new MySQL51SQLParser().parseDDLFile(readFile(ddlFile.getSecond()));
+      String fileName = ddlFile.getFirst();
+      results.put(fileName.substring(0, fileName.length() - ".ddl".length()).replace("/", "."),  new DBData(tables, connectionString, ddlFile.getSecond()));
     }
     return results;
   }
