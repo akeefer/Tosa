@@ -161,7 +161,7 @@ class DBTypeInfoTest {
 
       var dateProp = typeinfo.getProperty("Date")
       Assert.assertNotNull(dateProp)
-      Assert.assertEquals(java.sql.Date, dateProp.FeatureType)
+      Assert.assertEquals(java.util.Date, dateProp.FeatureType)
 
       var arrayProp = typeinfo.getProperty("Foos")
       Assert.assertNotNull(arrayProp)
@@ -409,6 +409,17 @@ class DBTypeInfoTest {
 
       var retrievedFoo = test.testdb.Foo.fromID(_fooId)
       Assert.assertEquals("54321 Centre Ave.\nMiddleton, IA 52341", retrievedFoo.Address)
+  }
+
+  @Test
+  function testUpdateDateColumn() {
+    var newBar = new test.testdb.Bar()
+    var today = java.util.Date.Today
+    newBar.Date = today
+    newBar.update()
+
+    var retrievedBar = test.testdb.Bar.fromID(newBar.id)
+    Assert.assertEquals(today, retrievedBar.Date)
   }
 
   @Test

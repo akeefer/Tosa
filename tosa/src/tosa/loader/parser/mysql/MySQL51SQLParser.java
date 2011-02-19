@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory;
 import tosa.loader.data.ColumnData;
 import tosa.loader.data.DBColumnTypeImpl;
 import tosa.loader.data.TableData;
+import tosa.loader.data.types.DateColumnTypePersistenceHandler;
 import tosa.loader.parser.ISQLParser;
 import tosa.loader.parser.SQLParserConstants;
 import tosa.loader.parser.SQLTokenizer;
@@ -518,9 +519,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       // TODO - AHK - If there precision is 0, should this be a BigInteger?
       return new DBColumnTypeImpl(DECIMAL, DECIMAL, DBColumnTypeImpl.BIG_DECIMAL_ITYPE, Types.DECIMAL);
     } else if (accept(DATE)) {
-      // TODO - AHK
-//      return new DBColumnTypeImpl(Types.DATE, DATE, DBColumnTypeImpl.DATE_ITYPE);
-      return new DBColumnTypeImpl(DATE, DATE, "java.sql.Date", Types.DATE);
+      return new DBColumnTypeImpl(DATE, DATE, DBColumnTypeImpl.DATE_ITYPE, Types.DATE, new DateColumnTypePersistenceHandler());
     } else if (accept(TIME)) {
       // TODO - AHK
       return new DBColumnTypeImpl(TIME, TIME, DBColumnTypeImpl.DATE_ITYPE, Types.TIME);

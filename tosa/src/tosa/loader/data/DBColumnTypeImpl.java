@@ -28,18 +28,22 @@ public class DBColumnTypeImpl implements IDBColumnType {
   public static final String SHORT_ITYPE = "java.lang.Short";
   public static final String STRING_ITYPE = "java.lang.String";
 
-  private String _name;
-  private String _description;
-  private String _gosuTypeName;
-  private int _jdbcType;
-  private IDBColumnTypePersistenceHandler _persistenceHandler;
+  private final String _name;
+  private final String _description;
+  private final String _gosuTypeName;
+  private final int _jdbcType;
+  private final IDBColumnTypePersistenceHandler _persistenceHandler;
 
   public DBColumnTypeImpl(String name, String description, String gosuTypeName, int jdbcType) {
+    this(name, description, gosuTypeName, jdbcType, new GenericDBColumnTypePersistenceHandler(jdbcType));
+  }
+
+  public DBColumnTypeImpl(String name, String description, String gosuTypeName, int jdbcType, IDBColumnTypePersistenceHandler persistenceHandler) {
     _name = name;
     _description = description;
     _gosuTypeName = gosuTypeName;
     _jdbcType = jdbcType;
-    _persistenceHandler = new GenericDBColumnTypePersistenceHandler(jdbcType);
+    _persistenceHandler = persistenceHandler;
   }
 
   @Override
