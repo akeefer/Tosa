@@ -1,4 +1,4 @@
-package tosa.api;
+package tosa.loader.data;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
