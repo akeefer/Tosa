@@ -6,10 +6,7 @@ import gw.lang.reflect.java.IJavaType;
 import gw.util.GosuStringUtil;
 import org.slf4j.profiler.Profiler;
 import tosa.CachedDBObject;
-import tosa.api.IDBColumn;
-import tosa.api.IDBExecutionKernel;
-import tosa.api.IDBTable;
-import tosa.api.IDatabase;
+import tosa.api.*;
 import tosa.loader.DBPropertyInfo;
 import tosa.loader.DBTypeInfo;
 import tosa.loader.IDBType;
@@ -18,12 +15,9 @@ import tosa.loader.Util;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.sql.Clob;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -65,7 +59,7 @@ public class QueryExecutor {
 
     StringBuilder query = new StringBuilder("select * from \"");
     query.append(table.getName()).append("\" where ");
-    List<IDBExecutionKernel.IPreparedStatementParameter> queryParameters = new ArrayList<IDBExecutionKernel.IPreparedStatementParameter>();
+    List<IPreparedStatementParameter> queryParameters = new ArrayList<IPreparedStatementParameter>();
     addWhereClause(query, template, table, queryParameters);
     if (sortColumn != null) {
       query.append(" order by \"").append(sortColumn.getPropertyInfo().getName()).append("\" ").append(ascending ? "ASC" : "DESC").append(", \"id\" ASC");
@@ -79,13 +73,13 @@ public class QueryExecutor {
     return findFromSql(feature, type, query.toString(), queryParameters);
   }
 
-  public List<CachedDBObject> findFromSql(String feature, IDBType type, String query, List<IDBExecutionKernel.IPreparedStatementParameter> queryParameters) throws SQLException {
+  public List<CachedDBObject> findFromSql(String feature, IDBType type, String query, List<IPreparedStatementParameter> queryParameters) throws SQLException {
     Profiler profiler = Util.newProfiler(feature);
     profiler.start(query + " (" + queryParameters + ")");
     try {
       return type.getTable().getDatabase().getDBExecutionKernel().executeSelect(query,
           new CachedDBQueryResultProcessor(type),
-          queryParameters.toArray(new IDBExecutionKernel.IPreparedStatementParameter[queryParameters.size()]));
+          queryParameters.toArray(new IPreparedStatementParameter[queryParameters.size()]));
     } finally {
       profiler.stop();
     }
@@ -94,18 +88,18 @@ public class QueryExecutor {
   public int countFromTemplate(String feature, IDBType type, CachedDBObject template) throws SQLException {
     IDBTable table = type.getTable();
     StringBuilder query = new StringBuilder("select count(*) as count from \"").append(table.getName()).append("\" where ");
-    List<IDBExecutionKernel.IPreparedStatementParameter> queryParameters = new ArrayList<IDBExecutionKernel.IPreparedStatementParameter>();
+    List<IPreparedStatementParameter> queryParameters = new ArrayList<IPreparedStatementParameter>();
     addWhereClause(query, template, table, queryParameters);
     return countFromSql(feature, type, query.toString(), queryParameters);
   }
 
-  public int countFromSql(String feature, IDBType type, String query, List<IDBExecutionKernel.IPreparedStatementParameter> queryParameters) throws SQLException {
+  public int countFromSql(String feature, IDBType type, String query, List<IPreparedStatementParameter> queryParameters) throws SQLException {
     Profiler profiler = Util.newProfiler(feature);
     profiler.start(query + " (" + queryParameters + ")");
     try {
       List<Integer> results = type.getTable().getDatabase().getDBExecutionKernel().executeSelect(query,
           new CountQueryResultProcessor(),
-          queryParameters.toArray(new IDBExecutionKernel.IPreparedStatementParameter[queryParameters.size()]));
+          queryParameters.toArray(new IPreparedStatementParameter[queryParameters.size()]));
       if (results.size() == 0) {
         return 0;
       } else if (results.size() == 1) {
@@ -118,7 +112,7 @@ public class QueryExecutor {
     }
   }
 
-  private void addWhereClause(StringBuilder query, CachedDBObject template, IDBTable table, List<IDBExecutionKernel.IPreparedStatementParameter> parameters) {
+  private void addWhereClause(StringBuilder query, CachedDBObject template, IDBTable table, List<IPreparedStatementParameter> parameters) {
     List<String> whereClause = new ArrayList<String>();
     if (template != null) {
       for (Map.Entry<String, Object> column : template.getColumns().entrySet()) {
@@ -137,7 +131,7 @@ public class QueryExecutor {
     }
   }
 
-  private static class CountQueryResultProcessor implements IDBExecutionKernel.IQueryResultProcessor<Integer> {
+  private static class CountQueryResultProcessor implements IQueryResultProcessor<Integer> {
     @Override
     public Integer processResult(ResultSet result) throws SQLException {
       return result.getInt("count");
@@ -145,7 +139,7 @@ public class QueryExecutor {
   }
 
   // TODO - AHK - I don't really like having this be public
-  public static class CachedDBQueryResultProcessor implements IDBExecutionKernel.IQueryResultProcessor<CachedDBObject> {
+  public static class CachedDBQueryResultProcessor implements IQueryResultProcessor<CachedDBObject> {
     private IDBType _type;
 
     public CachedDBQueryResultProcessor(IDBType type) {

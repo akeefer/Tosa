@@ -4,8 +4,8 @@ import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.gs.IGosuObject;
 import org.slf4j.profiler.Profiler;
 import tosa.api.IDBColumn;
-import tosa.api.IDBExecutionKernel;
 import tosa.api.IDatabase;
+import tosa.api.IPreparedStatementParameter;
 import tosa.loader.DBTypeInfo;
 import tosa.loader.IDBType;
 import tosa.loader.Util;
@@ -63,7 +63,7 @@ public class CachedDBObject implements IGosuObject {
     Profiler profiler = Util.newProfiler(_type.getName() + ".update()");
     IDatabase database = _type.getTable().getDatabase();
     List<String> attrs = new ArrayList<String>();
-    List<IDBExecutionKernel.IPreparedStatementParameter> values = new ArrayList<IDBExecutionKernel.IPreparedStatementParameter>();
+    List<IPreparedStatementParameter> values = new ArrayList<IPreparedStatementParameter>();
     for (Map.Entry<String, Object> entry : _columns.entrySet()) {
       if (entry.getKey().equals(DBTypeInfo.ID_COLUMN)) {
         continue;
@@ -94,7 +94,7 @@ public class CachedDBObject implements IGosuObject {
         }
         query.append(")");
         profiler.start(query.toString() + " (" + values + ")");
-        Object id = database.getDBExecutionKernel().executeInsert(query.toString(), values.toArray(new IDBExecutionKernel.IPreparedStatementParameter[values.size()]));
+        Object id = database.getDBExecutionKernel().executeInsert(query.toString(), values.toArray(new IPreparedStatementParameter[values.size()]));
         if (id != null) {
           _columns.put(DBTypeInfo.ID_COLUMN, id);
           _new = false;
@@ -111,7 +111,7 @@ public class CachedDBObject implements IGosuObject {
         query.append(" where \"id\" = ?");
         values.add(database.wrapParameter(_columns.get(DBTypeInfo.ID_COLUMN), _type.getTable().getColumn(DBTypeInfo.ID_COLUMN)));
         profiler.start(query.toString() + " (" + values + ")");
-        database.getDBExecutionKernel().executeUpdate(query.toString(), values.toArray(new IDBExecutionKernel.IPreparedStatementParameter[values.size()]));
+        database.getDBExecutionKernel().executeUpdate(query.toString(), values.toArray(new IPreparedStatementParameter[values.size()]));
       }
     } finally {
       profiler.stop();
@@ -122,7 +122,7 @@ public class CachedDBObject implements IGosuObject {
     // TODO - AHK - Determine if we need to quote the table name or column names or not
     String query = "delete from \"" + getTableName() + "\" where \"id\" = ?";
     IDatabase database = _type.getTable().getDatabase();
-    IDBExecutionKernel.IPreparedStatementParameter parameter = database.wrapParameter(_columns.get(DBTypeInfo.ID_COLUMN), _type.getTable().getColumn(DBTypeInfo.ID_COLUMN));
+    IPreparedStatementParameter parameter = database.wrapParameter(_columns.get(DBTypeInfo.ID_COLUMN), _type.getTable().getColumn(DBTypeInfo.ID_COLUMN));
     Profiler profiler = Util.newProfiler(_type.getName() + ".delete()");
     profiler.start(query + " (" + parameter + ")");
     try {

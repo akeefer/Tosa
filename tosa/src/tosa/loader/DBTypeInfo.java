@@ -16,25 +16,16 @@ import gw.lang.reflect.PropertyInfoBuilder;
 import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.features.PropertyReference;
 import gw.lang.reflect.java.IJavaType;
-import gw.util.GosuStringUtil;
 import gw.util.concurrent.LazyVar;
-import org.slf4j.profiler.Profiler;
 import tosa.CachedDBObject;
 import tosa.Join;
 import tosa.api.IDBColumn;
-import tosa.api.IDBExecutionKernel;
-import tosa.api.IDBTable;
+import tosa.api.IPreparedStatementParameter;
 import tosa.db.execution.QueryExecutor;
 import tosa.dbmd.DBColumnImpl;
 import tosa.dbmd.DBTableImpl;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.sql.Clob;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -136,7 +127,7 @@ public class DBTypeInfo extends BaseTypeInfo {
                   getOwnersType().getName() + ".countWithSql()",
                   getOwnersType(),
                   (String) args[0],
-                  Collections.<IDBExecutionKernel.IPreparedStatementParameter>emptyList());
+                  Collections.<IPreparedStatementParameter>emptyList());
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }
@@ -169,7 +160,7 @@ public class DBTypeInfo extends BaseTypeInfo {
                   getOwnersType().getName() + ".findWithSql()",
                   getOwnersType(),
                   (String) args[0],
-                  Collections.<IDBExecutionKernel.IPreparedStatementParameter>emptyList());
+                  Collections.<IPreparedStatementParameter>emptyList());
             } catch (SQLException e) {
               throw new RuntimeException(e);
             }

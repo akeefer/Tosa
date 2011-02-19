@@ -2,17 +2,12 @@ package tosa.dbmd;
 
 import tosa.DBConnection;
 import tosa.Join;
-import tosa.api.IDBColumn;
-import tosa.api.IDBConnection;
-import tosa.api.IDBExecutionKernel;
-import tosa.api.IDBTable;
-import tosa.api.IDatabase;
+import tosa.api.*;
 import tosa.db.execution.DBExecutionKernelImpl;
 import tosa.loader.DBTypeLoader;
 import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
 
-import java.sql.*;
 import java.util.*;
 
 /**
@@ -102,7 +97,7 @@ public class DatabaseImpl implements IDatabase {
   }
 
   @Override
-  public IDBExecutionKernel.IPreparedStatementParameter wrapParameter(Object value, IDBColumn column) {
+  public IPreparedStatementParameter wrapParameter(Object value, IDBColumn column) {
     // TODO - AHK - Do data conversions here
     return new PreparedStatementParameterImpl(value, column.getColumnType().getJdbcType());
   }

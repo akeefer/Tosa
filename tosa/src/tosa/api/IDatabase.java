@@ -1,12 +1,6 @@
 package tosa.api;
 
-import tosa.DBConnection;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * This interface represents a particular database that the application has access to.  From here,
@@ -58,7 +52,7 @@ public interface IDatabase {
   IDBExecutionKernel getDBExecutionKernel();
 
   // TODO - AHK - Remove this from IDatabase and move it to IDBColumn or IDBColumnType
-  IDBExecutionKernel.IPreparedStatementParameter wrapParameter(Object value, IDBColumn column);
+  IPreparedStatementParameter wrapParameter(Object value, IDBColumn column);
 
   // TODO - AHK - Get CREATE TABLE statements
 

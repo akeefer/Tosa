@@ -2,6 +2,8 @@ package tosa.db.execution;
 
 import tosa.api.IDBExecutionKernel;
 import tosa.api.IDatabase;
+import tosa.api.IPreparedStatementParameter;
+import tosa.api.IQueryResultProcessor;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
