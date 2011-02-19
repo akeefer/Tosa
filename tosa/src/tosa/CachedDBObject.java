@@ -3,9 +3,7 @@ package tosa;
 import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.gs.IGosuObject;
 import org.slf4j.profiler.Profiler;
-import tosa.api.IDBColumn;
-import tosa.api.IDatabase;
-import tosa.api.IPreparedStatementParameter;
+import tosa.api.*;
 import tosa.loader.DBTypeInfo;
 import tosa.loader.IDBType;
 import tosa.loader.Util;
@@ -24,7 +22,7 @@ import java.util.Map;
  * Time: 10:32 PM
  * To change this template use File | Settings | File Templates.
  */
-public class CachedDBObject implements IGosuObject {
+public class CachedDBObject implements IDBObject {
   private Map<String, Object> _columns;
   private Map<String, Object> _cachedValues;
   private IDBType _type;
@@ -35,12 +33,29 @@ public class CachedDBObject implements IGosuObject {
     return _type;
   }
 
-  public String getTableName() {
-    return _type.getRelativeName();
+  @Override
+  public IDBTable getDBTable() {
+    return _type.getTable();
   }
 
+  private String getTableName() {
+    return getDBTable().getName();
+  }
+
+  @Override
   public boolean isNew() {
     return _new;
+  }
+
+  @Override
+  public Object getColumnValue(String columnName) {
+    // TODO - AHK - Validate that the column name is actually a legal column
+    return _columns.get(columnName);
+  }
+
+  @Override
+  public void setColumnValue(String columnName, Object value) {
+    _columns.put(columnName, value);
   }
 
   public Map<String, Object> getColumns() {
@@ -59,6 +74,7 @@ public class CachedDBObject implements IGosuObject {
     _cachedValues = new HashMap<String, Object>();
   }
 
+  @Override
   public void update() throws SQLException {
     Profiler profiler = Util.newProfiler(_type.getName() + ".update()");
     IDatabase database = _type.getTable().getDatabase();
@@ -118,6 +134,7 @@ public class CachedDBObject implements IGosuObject {
     }
   }
 
+  @Override
   public void delete() throws SQLException {
     // TODO - AHK - Determine if we need to quote the table name or column names or not
     String query = "delete from \"" + getTableName() + "\" where \"id\" = ?";
