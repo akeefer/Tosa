@@ -5,6 +5,7 @@ import tosa.loader.data.ColumnData;
 import tosa.loader.data.DBColumnTypeImpl;
 import tosa.loader.data.TableData;
 import tosa.loader.data.types.DateColumnTypePersistenceHandler;
+import tosa.loader.data.types.TimestampColumnTypePersistenceHandler;
 import tosa.loader.parser.ISQLParser;
 import tosa.loader.parser.SQLParserConstants;
 import tosa.loader.parser.SQLTokenizer;
@@ -436,6 +437,8 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
   | spatial_type
    */
   private DBColumnTypeImpl parseDataType() {
+    // TODO - AHK - Split this up a bit more
+
     // TODO - Handle Serial
     if (accept(BIT)) {
       Integer length = parseLength();
@@ -519,41 +522,57 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       // TODO - AHK - If there precision is 0, should this be a BigInteger?
       return new DBColumnTypeImpl(DECIMAL, DECIMAL, DBColumnTypeImpl.BIG_DECIMAL_ITYPE, Types.DECIMAL);
     } else if (accept(DATE)) {
+      // TODO - AHK - This is still a bit unclear, since technically a Date shouldn't have a time component
       return new DBColumnTypeImpl(DATE, DATE, DBColumnTypeImpl.DATE_ITYPE, Types.DATE, new DateColumnTypePersistenceHandler());
     } else if (accept(TIME)) {
       // TODO - AHK
-      return new DBColumnTypeImpl(TIME, TIME, DBColumnTypeImpl.DATE_ITYPE, Types.TIME);
+//      return new DBColumnTypeImpl(TIME, TIME, DBColumnTypeImpl.DATE_ITYPE, Types.TIME);
+      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + TIME);
+      return null;
     } else if (accept(TIMESTAMP)) {
       // TODO - AHK
-      return new DBColumnTypeImpl(TIMESTAMP, TIMESTAMP, DBColumnTypeImpl.DATE_ITYPE, Types.TIMESTAMP);
+      return new DBColumnTypeImpl(TIMESTAMP, TIMESTAMP, DBColumnTypeImpl.DATE_ITYPE, Types.TIMESTAMP, new TimestampColumnTypePersistenceHandler());
     } else if (accept(DATETIME)) {
       // TODO - AHK
-      return new DBColumnTypeImpl(DATETIME, DATETIME, DBColumnTypeImpl.DATE_ITYPE, Types.TIMESTAMP);
+      return new DBColumnTypeImpl(DATETIME, DATETIME, DBColumnTypeImpl.DATE_ITYPE, Types.TIMESTAMP, new TimestampColumnTypePersistenceHandler());
     } else if (accept(YEAR)) {
       // TODO - AHK
       return new DBColumnTypeImpl(YEAR, YEAR, DBColumnTypeImpl.INTEGER_ITYPE, Types.INTEGER);
-    } else if (accept(CHAR) || accept(CHARACTER) || accept(NATIONAL, CHAR) || accept(NCHAR)) {
-      // TODO - AHK - If the charSetName is "binary", then it's really a binary column . . . ugh
-      Integer length = parseLength();
-      String charSetName = parseCharSet();
-      String collation = parseCollation();
-      return new DBColumnTypeImpl(CHAR, CHAR, DBColumnTypeImpl.STRING_ITYPE, Types.CHAR);
+    }
+
+    DBColumnTypeImpl returnType = parseCharacterType();
+    if (returnType != null) {
+      return returnType;
+    } else {
+      LoggerFactory.getLogger("Tosa").debug("***Unexpected column type");
+      return null;
+    }
+
+  }
+
+  private DBColumnTypeImpl parseCharacterType() {
+    if (accept(CHAR, BYTE) || accept(BINARY)) {
+      return createBinaryType(parseLength());
+    } else if (accept(CHAR) || accept(CHARACTER)) {
+      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
+      if ("binary".equals(characterTypeAttributes._charSet)) {
+        return createBinaryType(characterTypeAttributes._length);
+      } else {
+        return new DBColumnTypeImpl(CHAR, CHAR, DBColumnTypeImpl.STRING_ITYPE, Types.CHAR);
+      }
+    } else if (accept(NATIONAL, CHAR) || accept(NCHAR)) {
+      // TODO - AHK - I'm not sure if it's legal to have binary specified here or not?
+      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
+      return new DBColumnTypeImpl(NCHAR, NCHAR, DBColumnTypeImpl.STRING_ITYPE, Types.CHAR);
     } else if (accept(VARCHAR)) {
-      // TODO - AHK - If the charSetName is "binary", then it's really a binary column . . . ugh
-      Integer length = parseLength();
-      String charSetName = parseCharSet();
-      String collation = parseCollation();
-      return new DBColumnTypeImpl(VARCHAR, VARCHAR, DBColumnTypeImpl.STRING_ITYPE, Types.VARCHAR);
-    } else if (accept(BINARY) || accept(CHAR, BYTE)) {
-      Integer length = parseLength();
-      // TODO - AHK
-      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + BINARY);
-      return null;
+      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
+      if ("binary".equals(characterTypeAttributes._charSet)) {
+        return createVarbinaryType(characterTypeAttributes._length);
+      } else {
+        return new DBColumnTypeImpl(VARCHAR, VARCHAR, DBColumnTypeImpl.STRING_ITYPE, Types.VARCHAR);
+      }
     } else if (accept(VARBINARY)) {
-      Integer length = parseLength();
-      // TODO - AHK
-      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + VARBINARY);
-      return null;
+      return createVarbinaryType(parseLength());
     } else if (accept(TINYBLOB)) {
       // TODO - AHK
       LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + TINYBLOB);
@@ -613,8 +632,52 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + SET);
       return null;
     } else {
-      LoggerFactory.getLogger("Tosa").debug("***Unexpected column type");
       return null;
+    }
+  }
+
+  private DBColumnTypeImpl createBinaryType(Integer length) {
+    return new DBColumnTypeImpl(BINARY, BINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BINARY);
+  }
+
+  private DBColumnTypeImpl createVarbinaryType(Integer length) {
+    return new DBColumnTypeImpl(VARBINARY, VARBINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.VARBINARY);
+  }
+
+  private static class CharacterTypeAttributes {
+    private Integer _length;
+    private String _charSet;
+    private String _collation;
+  }
+
+  private CharacterTypeAttributes parseCharTypeAttributes() {
+    CharacterTypeAttributes attributes = new CharacterTypeAttributes();
+    attributes._length = parseLength();
+    while(parseCharTypeAttribute(attributes)) {
+      // Loop
+    }
+    return attributes;
+  }
+
+  private boolean parseCharTypeAttribute(CharacterTypeAttributes charTypeAttributes) {
+    // TODO - AHK - Should be an error if the char set or collation is already set
+    if (accept(CHARACTER, SET)) {
+      charTypeAttributes._charSet = consumeToken();
+      return true;
+    } else if (accept(COLLATE)) {
+      charTypeAttributes._collation = consumeToken();
+      return true;
+    } else if (accept(ASCII)) {
+      charTypeAttributes._charSet = "latin1";
+      return true;
+    } else if (accept(UNICODE)) {
+      charTypeAttributes._charSet = "ucs2";
+      return true;
+    } else if (accept(BINARY)) {
+      charTypeAttributes._charSet = "binary";
+      return true;
+    } else {
+      return false;
     }
   }
 

@@ -27,6 +27,7 @@ public class DBColumnTypeImpl implements IDBColumnType {
   public static final String LONG_ITYPE = "java.lang.Long";
   public static final String SHORT_ITYPE = "java.lang.Short";
   public static final String STRING_ITYPE = "java.lang.String";
+  public static final String pBYTE_ARRAY_ITYPE = "byte[]";
 
   private final String _name;
   private final String _description;

@@ -17,6 +17,7 @@ public interface SQLParserConstants {
 
   public static final String ACTION = "ACTION";
   public static final String ASC = "ASC";
+  public static final String ASCII = "ASCII";
   public static final String AUTO_INCREMENT = "AUTO_INCREMENT";
   public static final String AVG_ROW_LENGTH = "AVG_ROW_LENGTH";
   public static final String BIGINT = "BIGINT";
@@ -126,6 +127,7 @@ public interface SQLParserConstants {
   public static final String TINYBLOB = "TINYBLOB";
   public static final String TINYINT = "TINYINT";
   public static final String TINYTEXT = "TINYTEXT";
+  public static final String UNICODE = "UNICODE";
   public static final String UNION = "UNION";
   public static final String UNIQUE = "UNIQUE";
   public static final String UNSIGNED = "UNSIGNED";
