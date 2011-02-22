@@ -544,8 +544,6 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
     if (accept(DATE)) {
       return new DBColumnTypeImpl(DATE, DATE, DBColumnTypeImpl.DATE_ITYPE, Types.DATE, new DateColumnTypePersistenceHandler());
     } else if (accept(TIME)) {
-      // TODO - AHK
-//      return new DBColumnTypeImpl(TIME, TIME, DBColumnTypeImpl.DATE_ITYPE, Types.TIME);
       LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + TIME);
       return null;
     } else if (accept(TIMESTAMP)) {
@@ -553,7 +551,6 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
     } else if (accept(DATETIME)) {
       return new DBColumnTypeImpl(DATETIME, DATETIME, DBColumnTypeImpl.DATE_ITYPE, Types.TIMESTAMP, new TimestampColumnTypePersistenceHandler());
     } else if (accept(YEAR)) {
-      // TODO - AHK
       return new DBColumnTypeImpl(YEAR, YEAR, DBColumnTypeImpl.INTEGER_ITYPE, Types.INTEGER);
     } else {
       return null;
@@ -629,16 +626,12 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       }
     } else if (accept(ENUM)) {
       List<String> values = parseEnumOrSetValueList();
-      String charSetName = parseCharSet();
-      String collation = parseCollation();
-      // TODO - AHK
+      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
       LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + ENUM);
       return null;
     } else if (accept(SET)) {
       List<String> values = parseEnumOrSetValueList();
-      String charSetName = parseCharSet();
-      String collation = parseCollation();
-      // TODO - AHK
+      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
       LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + SET);
       return null;
     } else {
