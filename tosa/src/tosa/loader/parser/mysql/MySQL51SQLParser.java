@@ -437,8 +437,22 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
   | spatial_type
    */
   private DBColumnTypeImpl parseDataType() {
-    // TODO - AHK - Split this up a bit more
+    DBColumnTypeImpl returnType = parseNumericColumnType();
+    if (returnType == null) {
+      returnType = parseDateColumnType();
+    }
+    if (returnType == null) {
+      returnType = parseCharacterColumnType();
+    }
 
+    if (returnType == null) {
+      LoggerFactory.getLogger("Tosa").debug("***Unexpected column type");
+    }
+
+    return returnType;
+  }
+
+  private DBColumnTypeImpl parseNumericColumnType() {
     // TODO - Handle Serial
     if (accept(BIT)) {
       Integer length = parseLength();
@@ -521,8 +535,13 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       // TODO - AHK - The precision and size are probably important here
       // TODO - AHK - If there precision is 0, should this be a BigInteger?
       return new DBColumnTypeImpl(DECIMAL, DECIMAL, DBColumnTypeImpl.BIG_DECIMAL_ITYPE, Types.DECIMAL);
-    } else if (accept(DATE)) {
-      // TODO - AHK - This is still a bit unclear, since technically a Date shouldn't have a time component
+    } else {
+      return null;
+    }
+  }
+
+  private DBColumnTypeImpl parseDateColumnType() {
+    if (accept(DATE)) {
       return new DBColumnTypeImpl(DATE, DATE, DBColumnTypeImpl.DATE_ITYPE, Types.DATE, new DateColumnTypePersistenceHandler());
     } else if (accept(TIME)) {
       // TODO - AHK
@@ -530,93 +549,84 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + TIME);
       return null;
     } else if (accept(TIMESTAMP)) {
-      // TODO - AHK
       return new DBColumnTypeImpl(TIMESTAMP, TIMESTAMP, DBColumnTypeImpl.DATE_ITYPE, Types.TIMESTAMP, new TimestampColumnTypePersistenceHandler());
     } else if (accept(DATETIME)) {
-      // TODO - AHK
       return new DBColumnTypeImpl(DATETIME, DATETIME, DBColumnTypeImpl.DATE_ITYPE, Types.TIMESTAMP, new TimestampColumnTypePersistenceHandler());
     } else if (accept(YEAR)) {
       // TODO - AHK
       return new DBColumnTypeImpl(YEAR, YEAR, DBColumnTypeImpl.INTEGER_ITYPE, Types.INTEGER);
-    }
-
-    DBColumnTypeImpl returnType = parseCharacterType();
-    if (returnType != null) {
-      return returnType;
     } else {
-      LoggerFactory.getLogger("Tosa").debug("***Unexpected column type");
       return null;
     }
-
   }
 
-  private DBColumnTypeImpl parseCharacterType() {
+  private DBColumnTypeImpl parseCharacterColumnType() {
     if (accept(CHAR, BYTE) || accept(BINARY)) {
-      return createBinaryType(parseLength());
+      return new DBColumnTypeImpl(BINARY, BINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BINARY);
     } else if (accept(CHAR) || accept(CHARACTER)) {
       CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
       if ("binary".equals(characterTypeAttributes._charSet)) {
-        return createBinaryType(characterTypeAttributes._length);
+        return new DBColumnTypeImpl(BINARY, BINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BINARY);
       } else {
         return new DBColumnTypeImpl(CHAR, CHAR, DBColumnTypeImpl.STRING_ITYPE, Types.CHAR);
       }
     } else if (accept(NATIONAL, CHAR) || accept(NCHAR)) {
-      // TODO - AHK - I'm not sure if it's legal to have binary specified here or not?
       CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
       return new DBColumnTypeImpl(NCHAR, NCHAR, DBColumnTypeImpl.STRING_ITYPE, Types.CHAR);
     } else if (accept(VARCHAR)) {
       CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
       if ("binary".equals(characterTypeAttributes._charSet)) {
-        return createVarbinaryType(characterTypeAttributes._length);
+        return new DBColumnTypeImpl(VARBINARY, VARBINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.VARBINARY);
       } else {
         return new DBColumnTypeImpl(VARCHAR, VARCHAR, DBColumnTypeImpl.STRING_ITYPE, Types.VARCHAR);
       }
     } else if (accept(VARBINARY)) {
-      return createVarbinaryType(parseLength());
+      return new DBColumnTypeImpl(VARBINARY, VARBINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.VARBINARY);
     } else if (accept(TINYBLOB)) {
-      // TODO - AHK
-      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + TINYBLOB);
-      return null;
+      // Max length is 255
+      return new DBColumnTypeImpl(TINYBLOB, TINYBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
     } else if (accept(BLOB)) {
-      // TODO - AHK
-      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + BLOB);
-      return null;
+      // Max length is 2^16 - 1 if not otherwise specified
+      Integer length = parseLength();
+      return new DBColumnTypeImpl(BLOB, BLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
     } else if (accept(MEDIUMBLOB)) {
-      // TODO - AHK
-      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + MEDIUMBLOB);
-      return null;
+      // Max length is 2^24 - 1
+      return new DBColumnTypeImpl(MEDIUMBLOB, MEDIUMBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
     } else if (accept(LONGBLOB)) {
-      // TODO - AHK
-      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + LONGBLOB);
-      return null;
+      // Max length is 2^32 - 1
+      return new DBColumnTypeImpl(LONGBLOB, LONGBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
     } else if (accept(TINYTEXT)) {
-      accept(BINARY);
-      String charSetName = parseCharSet();
-      String collation = parseCollation();
-      // TODO - AHK
-      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + TINYTEXT);
-      return null;
+      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
+      // Max length is 255
+      if ("binary".equals(characterTypeAttributes._charSet)) {
+        return new DBColumnTypeImpl(TINYBLOB, TINYBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
+      } else {
+        return new DBColumnTypeImpl(TINYTEXT, TINYTEXT, DBColumnTypeImpl.STRING_ITYPE, Types.CLOB);
+      }
     } else if (accept(TEXT)) {
-      accept(BINARY);
-      String charSetName = parseCharSet();
-      String collation = parseCollation();
-      // TODO - AHK
-      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + TEXT);
-      return null;
+      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
+      // Max length is 2^16 - 1 if not otherwise specified
+      if ("binary".equals(characterTypeAttributes._charSet)) {
+        return new DBColumnTypeImpl(BLOB, BLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
+      } else {
+        return new DBColumnTypeImpl(TEXT, TEXT, DBColumnTypeImpl.STRING_ITYPE, Types.CLOB);
+      }
     } else if (accept(MEDIUMTEXT)) {
-      accept(BINARY);
-      String charSetName = parseCharSet();
-      String collation = parseCollation();
-      // TODO - AHK
-      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + MEDIUMTEXT);
-      return null;
+      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
+      // Max length is 2^24 - 1
+      if ("binary".equals(characterTypeAttributes._charSet)) {
+        return new DBColumnTypeImpl(MEDIUMBLOB, MEDIUMBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
+      } else {
+        return new DBColumnTypeImpl(MEDIUMTEXT, MEDIUMTEXT, DBColumnTypeImpl.STRING_ITYPE, Types.CLOB);
+      }
     } else if (accept(LONGTEXT)) {
-      accept(BINARY);
-      String charSetName = parseCharSet();
-      String collation = parseCollation();
-      // TODO - AHK
-      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + LONGTEXT);
-      return null;
+      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
+      // Max length is 2^32 - 1
+      if ("binary".equals(characterTypeAttributes._charSet)) {
+        return new DBColumnTypeImpl(LONGBLOB, LONGBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
+      } else {
+        return new DBColumnTypeImpl(LONGTEXT, LONGTEXT, DBColumnTypeImpl.STRING_ITYPE, Types.CLOB);
+      }
     } else if (accept(ENUM)) {
       List<String> values = parseEnumOrSetValueList();
       String charSetName = parseCharSet();
@@ -634,14 +644,6 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
     } else {
       return null;
     }
-  }
-
-  private DBColumnTypeImpl createBinaryType(Integer length) {
-    return new DBColumnTypeImpl(BINARY, BINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BINARY);
-  }
-
-  private DBColumnTypeImpl createVarbinaryType(Integer length) {
-    return new DBColumnTypeImpl(VARBINARY, VARBINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.VARBINARY);
   }
 
   private static class CharacterTypeAttributes {
@@ -674,7 +676,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       charTypeAttributes._charSet = "ucs2";
       return true;
     } else if (accept(BINARY)) {
-      charTypeAttributes._charSet = "binary";
+      charTypeAttributes._collation = "binary";
       return true;
     } else {
       return false;
