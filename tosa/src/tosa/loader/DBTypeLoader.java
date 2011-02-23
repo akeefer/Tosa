@@ -189,7 +189,7 @@ public class DBTypeLoader implements IExtendedTypeLoader {
       String fileName = pair.getFirst();
       IFile sqlFil = pair.getSecond();
       for (DatabaseImpl db : _typeDataByNamespace.get().values()) {
-        if (sqlFil.isDescendantOf(db.getDBData().getDDLFile().getParent())) {
+        if (sqlFil.isDescendantOf(db.getDBData().getDdlFile().getParent())) {
           String queryName = fileName.substring(0, fileName.length() - ".sql".length()).replace("/", ".");
           results.put(queryName, new SQLFileInfo(queryName, db, sqlFil));
           break;

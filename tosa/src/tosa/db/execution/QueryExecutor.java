@@ -148,13 +148,17 @@ public class QueryExecutor {
 
     @Override
     public CachedDBObject processResult(ResultSet result) throws SQLException {
-      CachedDBObject obj = new CachedDBObject(_type, false);
-      IDBTable table = _type.getTable();
-      for (IDBColumn column : table.getColumns()) {
-        Object resultObject = column.getColumnType().readFromResultSet(result, table.getName() + "." + column.getName());
-        obj.setColumnValue(column.getName(), resultObject);
-      }
-      return obj;
+      return buildObject(_type, result);
     }
+  }
+
+  public static CachedDBObject buildObject(IDBType type, ResultSet resultSet) throws SQLException {
+    CachedDBObject obj = new CachedDBObject(type, false);
+    IDBTable table = type.getTable();
+    for (IDBColumn column : table.getColumns()) {
+      Object resultObject = column.getColumnType().readFromResultSet(resultSet, table.getName() + "." + column.getName());
+      obj.setColumnValue(column.getName(), resultObject);
+    }
+    return obj;
   }
 }
