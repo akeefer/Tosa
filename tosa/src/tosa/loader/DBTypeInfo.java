@@ -1,19 +1,7 @@
 package tosa.loader;
 
 import gw.config.CommonServices;
-import gw.lang.reflect.BaseTypeInfo;
-import gw.lang.reflect.ConstructorInfoBuilder;
-import gw.lang.reflect.IConstructorHandler;
-import gw.lang.reflect.IConstructorInfo;
-import gw.lang.reflect.IMethodCallHandler;
-import gw.lang.reflect.IMethodInfo;
-import gw.lang.reflect.IPropertyAccessor;
-import gw.lang.reflect.IPropertyInfo;
-import gw.lang.reflect.IType;
-import gw.lang.reflect.MethodInfoBuilder;
-import gw.lang.reflect.ParameterInfoBuilder;
-import gw.lang.reflect.PropertyInfoBuilder;
-import gw.lang.reflect.TypeSystem;
+import gw.lang.reflect.*;
 import gw.lang.reflect.features.PropertyReference;
 import gw.lang.reflect.java.IJavaType;
 import gw.util.concurrent.LazyVar;
@@ -40,7 +28,7 @@ import java.util.Map;
  * Time: 10:35 PM
  * To change this template use File | Settings | File Templates.
  */
-public class DBTypeInfo extends BaseTypeInfo {
+public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
 
   public static final String ID_COLUMN = "id";
   private Map<String, IPropertyInfo> _properties;

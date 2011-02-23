@@ -3,15 +3,20 @@ package tosa.loader.parser.mysql;
 import org.slf4j.LoggerFactory;
 import tosa.loader.data.ColumnData;
 import tosa.loader.data.DBColumnTypeImpl;
+import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
 import tosa.loader.data.types.DateColumnTypePersistenceHandler;
 import tosa.loader.data.types.TimestampColumnTypePersistenceHandler;
 import tosa.loader.parser.ISQLParser;
 import tosa.loader.parser.SQLParserConstants;
 import tosa.loader.parser.SQLTokenizer;
+import tosa.loader.parser.Token;
+import tosa.loader.parser.tree.*;
 
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -1062,172 +1067,466 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
     // TODO - AHK
   }
 
+  private Token _currentToken;
+
+  @Override
+  public SelectStatement parseSQLFile(DBData dbData, String fileContents) {
+    _currentToken = Token.tokenize(fileContents);
+    if (match(SELECT)) {
+      Token start = lastMatch();
+      SQLParsedElement quantifier = parseSetQuantifers();
+      SQLParsedElement selectList = parseSelectList();
+      TableExpression tableExpr = parseTableExpression();
+      SelectStatement select = new SelectStatement(start, tableExpr.lastToken(), quantifier, selectList, tableExpr);
+      select.verify(dbData);
+      return select;
+    }
+    return null;
+  }
+
+  private Token lastMatch() {
+    return _currentToken.previous();
+  }
+
+  private boolean match(String str) {
+    if (_currentToken.match(str)) {
+      _currentToken = _currentToken.nextToken();
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private TableExpression parseTableExpression() {
+    Token start = _currentToken;
+    TableFromClause fromClause = parseFromClause();
+    SQLParsedElement whereClause = parseWhereClause();
+    TableExpression table = new TableExpression(start, lastMatch(), fromClause, whereClause);
+    return table;
+  }
+
+  private SQLParsedElement parseWhereClause() {
+    if (match(WHERE)) {
+      return new WhereClause(lastMatch(), parseSearchOrExpression());
+    } else if(_currentToken.isEOF()) {
+      return null;
+    } else {
+      throw new IllegalStateException("This should be a parse error.");
+    }
+  }
+
+  private SQLParsedElement parseSearchOrExpression() {
+    SQLParsedElement lhs = parseSearchAndExpression();
+    if (match(OR)) {
+      SQLParsedElement rhs = parseSearchOrExpression();
+      return new SQLOrExpression(lhs, rhs);
+    } else {
+      return lhs;
+    }
+  }
+
+  private SQLParsedElement parseSearchAndExpression() {
+    SQLParsedElement lhs = parseSearchNotExpression();
+    if (match(AND)) {
+      SQLParsedElement rhs = parseSearchAndExpression();
+      return new SQLAndExpression(lhs, rhs);
+    } else {
+      return lhs;
+    }
+  }
+
+  private SQLParsedElement parseSearchNotExpression() {
+    if (match(NOT)) {
+      Token last = lastMatch();
+      SQLParsedElement val = parseBooleanTestExpression();
+      return new SQLNotExpression(last, val);
+    } else {
+      return parseBooleanTestExpression();
+    }
+  }
+
+  private SQLParsedElement parseBooleanTestExpression() {
+    return parseBooleanPrimaryExpression();
+    //TODO cgross IS NOT TRUE
+  }
+
+  private SQLParsedElement parseBooleanPrimaryExpression() {
+    if (match(OPEN_PAREN)) {
+      SQLParsedElement elt = parseSearchOrExpression();
+      expectToken(elt, CLOSE_PAREN);
+      return elt;
+    }
+
+    SQLParsedElement initialValue = parseRowValue();
+    if (initialValue != null) {
+      if (matchAny(EQ_OP, LT_OP, LTEQ_OP, GT_OP, GTEQ_OP)) {
+        SQLParsedElement comparisonValue = parseRowValueOrVariable();
+        return new ComparisonPredicate(initialValue, initialValue.nextToken(), comparisonValue);
+      }
+    }
+    return unexpectedToken();
+  }
+
+  private UnexpectedTokenExpression unexpectedToken() {
+    Token unexpectedToken = takeToken();
+    UnexpectedTokenExpression utExpr = new UnexpectedTokenExpression(unexpectedToken);
+    utExpr.addParseError(new SQLParseError(unexpectedToken, "Unexpected Token"));
+    return utExpr;
+  }
+
+  private void expectToken(SQLParsedElement elt, String str) {
+    if (!match(str)) {
+      elt.addParseError(new SQLParseError(_currentToken, "Expected " + str));
+    }
+  }
+
+  private SQLParsedElement parseRowValueOrVariable() {
+    if (_currentToken.getValue().startsWith(":")) {
+      return new VariableExpression(takeToken());
+    } else {
+      return parseValueExpression();
+    }
+  }
+
+  private SQLParsedElement parseRowValue() {
+    //TODO NULL, DEFAULT
+    return parseValueExpression();
+  }
+
+  private SQLParsedElement parseValueExpression() {
+
+    SQLParsedElement elt = parseNumericValueExpression();
+    if (elt != null) {
+      return elt;
+    }
+
+    elt = parseStringValueExpression();
+    if (elt != null) {
+      return elt;
+    }
+    
+    elt = parseDateTimeValueExpression();
+    if (elt != null) {
+      return elt;
+    }
+
+    elt = parseIntervalValueExpression();
+    if (elt != null) {
+      return elt;
+    }
+
+    return null;
+  }
+
+  private SQLParsedElement parseIntervalValueExpression() {
+    return null;  //To change body of created methods use File | Settings | File Templates.
+  }
+
+  private SQLParsedElement parseDateTimeValueExpression() {
+    return null;  //To change body of created methods use File | Settings | File Templates.
+  }
+
+  private SQLParsedElement parseStringValueExpression() {
+    if (_currentToken.getValue().startsWith("\"") ||
+      _currentToken.getValue().startsWith("\'")) {
+      return new StringLiteralExpression(takeToken());
+    } else {
+      return null;
+    }
+  }
+
+  private SQLParsedElement parseNumericValueExpression() {
+    SQLParsedElement lhs = parseTerm();
+    if (matchAny(PLUS_OP, MINUS_OP)) {
+      Token op = lastMatch();
+      SQLParsedElement rhs = parseNumericValueExpression();
+      return new SQLAdditiveExpression(lhs, op, rhs);
+    } else {
+      return lhs;
+    }
+  }
+
+  private SQLParsedElement parseTerm() {
+    SQLParsedElement lhs = parseFactor();
+    if (matchAny(TIMES_OP, DIV_OP)) {
+      Token op = lastMatch();
+      SQLParsedElement rhs = parseTerm();
+      return new SQLMultiplicitiveExpression(lhs, op, rhs);
+    } else {
+      return lhs;
+    }
+  }
+
+  private SQLParsedElement parseFactor() {
+    if (matchAny(PLUS_OP, MINUS_OP)) {
+      return new SQLSignedExpression(lastMatch(), parseNumericPrimary());
+    } else {
+      return parseNumericPrimary();
+    }
+  }
+
+  private SQLParsedElement parseNumericPrimary() {
+    SQLParsedElement numericLiteral = parseNumericLiteral();
+    if (numericLiteral != null) {
+      return numericLiteral;
+    } else {
+      return parseColumnReference();
+    }
+  }
+
+  private SQLParsedElement parseColumnReference() {
+    Token base = takeToken();
+    if (match(".")) {
+      return new ColumnReference(base, takeToken());
+    } else {
+      return new ColumnReference(base);
+    }
+  }
+
+  private Token takeToken() {
+    Token base = _currentToken;
+    _currentToken = _currentToken.nextToken();
+    return base;
+  }
+
+  private SQLParsedElement parseNumericLiteral() {
+    try {
+      int i = Integer.parseInt(_currentToken.getValue());
+      return new SQLNumericLiteral(takeToken(), i);
+    } catch (NumberFormatException e) {
+      // ignore
+    }
+    return null;
+  }
+
+  private TableFromClause parseFromClause() {
+    if (match(FROM)) {
+      Token start = lastMatch();
+      ArrayList<SimpleTableReference> refs = new ArrayList<SimpleTableReference>();
+      do {
+        SimpleTableReference ref = parseTableReference();
+        refs.add(ref);
+      }
+      while (match(COMMA));
+      return new TableFromClause(start, refs);
+    } else {
+      TableFromClause from = new TableFromClause(_currentToken, Collections.<SimpleTableReference>emptyList());
+      expectToken(from, FROM);
+      takeToken();
+      return from;
+    }
+  }
+
+  private SimpleTableReference parseTableReference() {
+    return new SimpleTableReference(takeToken());
+    //TODO cgross more exotic table references
+  }
+
+  private SQLParsedElement parseSelectList() {
+    if (match(ASTERISK)) {
+      return new AsteriskSelectList(lastMatch());
+    } else {
+      return parseSelectSubList();
+    }
+  }
+
+  private SQLParsedElement parseSelectSubList() {
+    Token start = _currentToken;
+    ArrayList<SQLParsedElement> cols = new ArrayList<SQLParsedElement>();
+    do {
+      SQLParsedElement value = parseValueExpression();
+      if (value != null) {
+        cols.add(value);
+      } else {
+        break; // TODO asterisk path (???)
+      }
+    } while (match(COMMA));
+    return new ColumnSelectList(start, lastMatch(), cols);
+  }
+
+  private SQLParsedElement parseSetQuantifers() {
+    if (matchAny(DISTINCT, ALL)) {
+      return new QuantifierModifier(lastMatch());
+    } else {
+      return null;
+    }
+  }
+
+  private boolean matchAny(String... tokens) {
+    for (String s : tokens) {
+      if (match(s)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /*CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
-    (create_definition,...)
-    [table_options]
-    [partition_options]
+(create_definition,...)
+[table_options]
+[partition_options]
 Or:
 
 CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
-    [(create_definition,...)]
-    [table_options]
-    [partition_options]
-    select_statement
+[(create_definition,...)]
+[table_options]
+[partition_options]
+select_statement
 Or:
 
 CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
-    { LIKE old_tbl_name | (LIKE old_tbl_name) }
+{ LIKE old_tbl_name | (LIKE old_tbl_name) }
 create_definition:
-    col_name column_definition
-  | [CONSTRAINT [symbol]] PRIMARY KEY [index_type] (index_col_name,...)
-      [index_option] ...
-  | {INDEX|KEY} [index_name] [index_type] (index_col_name,...)
-      [index_option] ...
-  | [CONSTRAINT [symbol]] UNIQUE [INDEX|KEY]
-      [index_name] [index_type] (index_col_name,...)
-      [index_option] ...
-  | {FULLTEXT|SPATIAL} [INDEX|KEY] [index_name] (index_col_name,...)
-      [index_option] ...
-  | [CONSTRAINT [symbol]] FOREIGN KEY
-      [index_name] (index_col_name,...) reference_definition
-  | CHECK (expr)
+col_name column_definition
+| [CONSTRAINT [symbol]] PRIMARY KEY [index_type] (index_col_name,...)
+[index_option] ...
+| {INDEX|KEY} [index_name] [index_type] (index_col_name,...)
+[index_option] ...
+| [CONSTRAINT [symbol]] UNIQUE [INDEX|KEY]
+[index_name] [index_type] (index_col_name,...)
+[index_option] ...
+| {FULLTEXT|SPATIAL} [INDEX|KEY] [index_name] (index_col_name,...)
+[index_option] ...
+| [CONSTRAINT [symbol]] FOREIGN KEY
+[index_name] (index_col_name,...) reference_definition
+| CHECK (expr)
 
 column_definition:
-    data_type [NOT NULL | NULL] [DEFAULT default_value]
-      [AUTO_INCREMENT] [UNIQUE [KEY] | [PRIMARY] KEY]
-      [COMMENT 'string']
-      [COLUMN_FORMAT {FIXED|DYNAMIC|DEFAULT}]
-      [STORAGE {DISK|MEMORY|DEFAULT}]
-      [reference_definition]
+data_type [NOT NULL | NULL] [DEFAULT default_value]
+[AUTO_INCREMENT] [UNIQUE [KEY] | [PRIMARY] KEY]
+[COMMENT 'string']
+[COLUMN_FORMAT {FIXED|DYNAMIC|DEFAULT}]
+[STORAGE {DISK|MEMORY|DEFAULT}]
+[reference_definition]
 
 data_type:
-    BIT[(length)]
-  | TINYINT[(length)] [UNSIGNED] [ZEROFILL]
-  | SMALLINT[(length)] [UNSIGNED] [ZEROFILL]
-  | MEDIUMINT[(length)] [UNSIGNED] [ZEROFILL]
-  | INT[(length)] [UNSIGNED] [ZEROFILL]
-  | INTEGER[(length)] [UNSIGNED] [ZEROFILL]
-  | BIGINT[(length)] [UNSIGNED] [ZEROFILL]
-  | REAL[(length,decimals)] [UNSIGNED] [ZEROFILL]
-  | DOUBLE[(length,decimals)] [UNSIGNED] [ZEROFILL]
-  | FLOAT[(length,decimals)] [UNSIGNED] [ZEROFILL]
-  | DECIMAL[(length[,decimals])] [UNSIGNED] [ZEROFILL]
-  | NUMERIC[(length[,decimals])] [UNSIGNED] [ZEROFILL]
-  | DATE
-  | TIME
-  | TIMESTAMP
-  | DATETIME
-  | YEAR
-  | CHAR[(length)]
-      [CHARACTER SET charset_name] [COLLATE collation_name]
-  | VARCHAR(length)
-      [CHARACTER SET charset_name] [COLLATE collation_name]
-  | BINARY[(length)]
-  | VARBINARY(length)
-  | TINYBLOB
-  | BLOB
-  | MEDIUMBLOB
-  | LONGBLOB
-  | TINYTEXT [BINARY]
-      [CHARACTER SET charset_name] [COLLATE collation_name]
-  | TEXT [BINARY]
-      [CHARACTER SET charset_name] [COLLATE collation_name]
-  | MEDIUMTEXT [BINARY]
-      [CHARACTER SET charset_name] [COLLATE collation_name]
-  | LONGTEXT [BINARY]
-      [CHARACTER SET charset_name] [COLLATE collation_name]
-  | ENUM(value1,value2,value3,...)
-      [CHARACTER SET charset_name] [COLLATE collation_name]
-  | SET(value1,value2,value3,...)
-      [CHARACTER SET charset_name] [COLLATE collation_name]
-  | spatial_type
+BIT[(length)]
+| TINYINT[(length)] [UNSIGNED] [ZEROFILL]
+| SMALLINT[(length)] [UNSIGNED] [ZEROFILL]
+| MEDIUMINT[(length)] [UNSIGNED] [ZEROFILL]
+| INT[(length)] [UNSIGNED] [ZEROFILL]
+| INTEGER[(length)] [UNSIGNED] [ZEROFILL]
+| BIGINT[(length)] [UNSIGNED] [ZEROFILL]
+| REAL[(length,decimals)] [UNSIGNED] [ZEROFILL]
+| DOUBLE[(length,decimals)] [UNSIGNED] [ZEROFILL]
+| FLOAT[(length,decimals)] [UNSIGNED] [ZEROFILL]
+| DECIMAL[(length[,decimals])] [UNSIGNED] [ZEROFILL]
+| NUMERIC[(length[,decimals])] [UNSIGNED] [ZEROFILL]
+| DATE
+| TIME
+| TIMESTAMP
+| DATETIME
+| YEAR
+| CHAR[(length)]
+[CHARACTER SET charset_name] [COLLATE collation_name]
+| VARCHAR(length)
+[CHARACTER SET charset_name] [COLLATE collation_name]
+| BINARY[(length)]
+| VARBINARY(length)
+| TINYBLOB
+| BLOB
+| MEDIUMBLOB
+| LONGBLOB
+| TINYTEXT [BINARY]
+[CHARACTER SET charset_name] [COLLATE collation_name]
+| TEXT [BINARY]
+[CHARACTER SET charset_name] [COLLATE collation_name]
+| MEDIUMTEXT [BINARY]
+[CHARACTER SET charset_name] [COLLATE collation_name]
+| LONGTEXT [BINARY]
+[CHARACTER SET charset_name] [COLLATE collation_name]
+| ENUM(value1,value2,value3,...)
+[CHARACTER SET charset_name] [COLLATE collation_name]
+| SET(value1,value2,value3,...)
+[CHARACTER SET charset_name] [COLLATE collation_name]
+| spatial_type
 
 index_col_name:
-    col_name [(length)] [ASC | DESC]
+col_name [(length)] [ASC | DESC]
 
 index_type:
-    USING {BTREE | HASH}
+USING {BTREE | HASH}
 
 index_option:
-    KEY_BLOCK_SIZE [=] value
-  | index_type
-  | WITH PARSER parser_name
+KEY_BLOCK_SIZE [=] value
+| index_type
+| WITH PARSER parser_name
 
 reference_definition:
-    REFERENCES tbl_name (index_col_name,...)
-      [MATCH FULL | MATCH PARTIAL | MATCH SIMPLE]
-      [ON DELETE reference_option]
-      [ON UPDATE reference_option]
+REFERENCES tbl_name (index_col_name,...)
+[MATCH FULL | MATCH PARTIAL | MATCH SIMPLE]
+[ON DELETE reference_option]
+[ON UPDATE reference_option]
 
 reference_option:
-    RESTRICT | CASCADE | SET NULL | NO ACTION
+RESTRICT | CASCADE | SET NULL | NO ACTION
 
 table_options:
-    table_option [[,] table_option] ...
+table_option [[,] table_option] ...
 
 table_option:
-    ENGINE [=] engine_name
-  | AUTO_INCREMENT [=] value
-  | AVG_ROW_LENGTH [=] value
-  | [DEFAULT] CHARACTER SET [=] charset_name
-  | CHECKSUM [=] {0 | 1}
-  | [DEFAULT] COLLATE [=] collation_name
-  | COMMENT [=] 'string'
-  | CONNECTION [=] 'connect_string'
-  | DATA DIRECTORY [=] 'absolute path to directory'
-  | DELAY_KEY_WRITE [=] {0 | 1}
-  | INDEX DIRECTORY [=] 'absolute path to directory'
-  | INSERT_METHOD [=] { NO | FIRST | LAST }
-  | KEY_BLOCK_SIZE [=] value
-  | MAX_ROWS [=] value
-  | MIN_ROWS [=] value
-  | PACK_KEYS [=] {0 | 1 | DEFAULT}
-  | PASSWORD [=] 'string'
-  | ROW_FORMAT [=] {DEFAULT|DYNAMIC|FIXED|COMPRESSED|REDUNDANT|COMPACT}
-  | TABLESPACE tablespace_name [STORAGE {DISK|MEMORY|DEFAULT}]
-  | UNION [=] (tbl_name[,tbl_name]...)
+ENGINE [=] engine_name
+| AUTO_INCREMENT [=] value
+| AVG_ROW_LENGTH [=] value
+| [DEFAULT] CHARACTER SET [=] charset_name
+| CHECKSUM [=] {0 | 1}
+| [DEFAULT] COLLATE [=] collation_name
+| COMMENT [=] 'string'
+| CONNECTION [=] 'connect_string'
+| DATA DIRECTORY [=] 'absolute path to directory'
+| DELAY_KEY_WRITE [=] {0 | 1}
+| INDEX DIRECTORY [=] 'absolute path to directory'
+| INSERT_METHOD [=] { NO | FIRST | LAST }
+| KEY_BLOCK_SIZE [=] value
+| MAX_ROWS [=] value
+| MIN_ROWS [=] value
+| PACK_KEYS [=] {0 | 1 | DEFAULT}
+| PASSWORD [=] 'string'
+| ROW_FORMAT [=] {DEFAULT|DYNAMIC|FIXED|COMPRESSED|REDUNDANT|COMPACT}
+| TABLESPACE tablespace_name [STORAGE {DISK|MEMORY|DEFAULT}]
+| UNION [=] (tbl_name[,tbl_name]...)
 
 partition_options:
-    PARTITION BY
-        { [LINEAR] HASH(expr)
-        | [LINEAR] KEY(column_list)
-        | RANGE(expr)
-        | LIST(expr) }
-    [PARTITIONS num]
-    [SUBPARTITION BY
-        { [LINEAR] HASH(expr)
-        | [LINEAR] KEY(column_list) }
-      [SUBPARTITIONS num]
-    ]
-    [(partition_definition [, partition_definition] ...)]
+PARTITION BY
+{ [LINEAR] HASH(expr)
+| [LINEAR] KEY(column_list)
+| RANGE(expr)
+| LIST(expr) }
+[PARTITIONS num]
+[SUBPARTITION BY
+{ [LINEAR] HASH(expr)
+| [LINEAR] KEY(column_list) }
+[SUBPARTITIONS num]
+]
+[(partition_definition [, partition_definition] ...)]
 
 partition_definition:
-    PARTITION partition_name
-        [VALUES
-            {LESS THAN {(expr) | MAXVALUE}
-            |
-            IN (value_list)}]
-        [[STORAGE] ENGINE [=] engine_name]
-        [COMMENT [=] 'comment_text' ]
-        [DATA DIRECTORY [=] 'data_dir']
-        [INDEX DIRECTORY [=] 'index_dir']
-        [MAX_ROWS [=] max_number_of_rows]
-        [MIN_ROWS [=] min_number_of_rows]
-        [TABLESPACE [=] tablespace_name]
-        [NODEGROUP [=] node_group_id]
-        [(subpartition_definition [, subpartition_definition] ...)]
+PARTITION partition_name
+[VALUES
+{LESS THAN {(expr) | MAXVALUE}
+|
+IN (value_list)}]
+[[STORAGE] ENGINE [=] engine_name]
+[COMMENT [=] 'comment_text' ]
+[DATA DIRECTORY [=] 'data_dir']
+[INDEX DIRECTORY [=] 'index_dir']
+[MAX_ROWS [=] max_number_of_rows]
+[MIN_ROWS [=] min_number_of_rows]
+[TABLESPACE [=] tablespace_name]
+[NODEGROUP [=] node_group_id]
+[(subpartition_definition [, subpartition_definition] ...)]
 
 subpartition_definition:
-    SUBPARTITION logical_name
-        [[STORAGE] ENGINE [=] engine_name]
-        [COMMENT [=] 'comment_text' ]
-        [DATA DIRECTORY [=] 'data_dir']
-        [INDEX DIRECTORY [=] 'index_dir']
-        [MAX_ROWS [=] max_number_of_rows]
-        [MIN_ROWS [=] min_number_of_rows]
-        [TABLESPACE [=] tablespace_name]
-        [NODEGROUP [=] node_group_id]
+SUBPARTITION logical_name
+[[STORAGE] ENGINE [=] engine_name]
+[COMMENT [=] 'comment_text' ]
+[DATA DIRECTORY [=] 'data_dir']
+[INDEX DIRECTORY [=] 'index_dir']
+[MAX_ROWS [=] max_number_of_rows]
+[MIN_ROWS [=] min_number_of_rows]
+[TABLESPACE [=] tablespace_name]
+[NODEGROUP [=] node_group_id]
 
 select_statement:
-    [IGNORE | REPLACE] [AS] SELECT ...   (Some legal select statement)*/
+[IGNORE | REPLACE] [AS] SELECT ...   (Some legal select statement)*/
 }

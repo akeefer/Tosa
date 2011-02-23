@@ -1,0 +1,19 @@
+package tosa.loader
+uses gw.lang.reflect.TypeSystem
+
+class TosaTestDBInit {
+  
+  static function createDatabase() {    
+    var dbTypeLoader = TypeSystem.getTypeLoader(DBTypeLoader)
+    var database = dbTypeLoader.getTypeDataForNamespace( "test.testdb" )
+<<<<<<< HEAD
+    database.DBUpgrader.createTables()
+=======
+    var connection = database.Connection.connect()
+    connection.createStatement().executeUpdate( "DROP ALL OBJECTS" )
+    connection.createStatement().executeUpdate( ddlFile.toJavaFile().read() )
+    connection.close()
+>>>>>>> 225dffd2865c44bd51d6808cf34973ea13830439
+  }
+
+}

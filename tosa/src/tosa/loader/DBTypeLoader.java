@@ -1,11 +1,14 @@
 package tosa.loader;
 
+import gw.fs.IFile;
 import gw.lang.reflect.IExtendedTypeLoader;
 import gw.lang.reflect.IType;
 import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.java.IJavaClassInfo;
 import gw.lang.reflect.module.IExecutionEnvironment;
 import gw.lang.reflect.module.IModule;
+import gw.util.GosuClassUtil;
+import gw.util.Pair;
 import gw.util.concurrent.LazyVar;
 import tosa.CachedDBObject;
 import tosa.api.IDBTable;
@@ -40,6 +43,10 @@ public class DBTypeLoader implements IExtendedTypeLoader {
 
   private LazyVar<Map<String, DatabaseImpl>> _typeDataByNamespace = new LazyVar<Map<String, DatabaseImpl>>() {
     protected Map<String, DatabaseImpl> init() { return initializeDBTypeData(); }
+  };
+
+  private LazyVar<Map<String, SQLFileInfo>> _sqlFilesByName = new LazyVar<Map<String, SQLFileInfo>>() {
+    protected Map<String, SQLFileInfo> init() { return initializeSQLFiles(); }
   };
 
   private LazyVar<Set<String>> _namespaces = new LazyVar<Set<String>>() {
@@ -86,7 +93,12 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     String relativeName = fullyQualifiedName.substring(lastDot + 1);
     DatabaseImpl databaseImpl = _typeDataByNamespace.get().get(namespace);
     if (databaseImpl == null) {
-      return null;
+      SQLFileInfo data = _sqlFilesByName.get().get(fullyQualifiedName);
+      if (data != null) {
+        return new SQLType(data, this);
+      } else {
+        return null;
+      }
     }
 
     if ("Transaction".equals(relativeName)) {
@@ -171,22 +183,45 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     return dbTypeDataMap;
   }
 
+  private Map<String, SQLFileInfo> initializeSQLFiles() {
+    HashMap<String, SQLFileInfo> results = new HashMap<String, SQLFileInfo>();
+    for (Pair<String, IFile> pair : _module.getResourceAccess().findAllFilesByExtension(".sql")) {
+      String fileName = pair.getFirst();
+      IFile sqlFil = pair.getSecond();
+      for (DatabaseImpl db : _typeDataByNamespace.get().values()) {
+        if (sqlFil.isDescendantOf(db.getDBData().getDDLFile().getParent())) {
+          String queryName = fileName.substring(0, fileName.length() - ".sql".length()).replace("/", ".");
+          results.put(queryName, new SQLFileInfo(queryName, db, sqlFil));
+          break;
+        }
+      }
+    }
+    return results;
+  }
+
   private Set<String> initializeNamespaces() {
     Set<String> allNamespaces = new HashSet<String>();
     for (String namespace : _typeDataByNamespace.get().keySet()) {
-      String[] nsComponentsArr = namespace.split("\\.");
-      for (int i = 0; i < nsComponentsArr.length; i++) {
-        String nsName = "";
-        for (int n = 0; n < i + 1; n++) {
-          if (n > 0) {
-            nsName += ".";
-          }
-          nsName += nsComponentsArr[n];
-        }
-        allNamespaces.add(nsName);
-      }
+      splitStringInto(allNamespaces, namespace);
+    }
+    for (SQLFileInfo sqlFileInfo : _sqlFilesByName.get().values()) {
+      splitStringInto(allNamespaces, GosuClassUtil.getPackage(sqlFileInfo.getTypeName()));
     }
     return allNamespaces;
+  }
+
+  private void splitStringInto(Set<String> allNamespaces, String namespace) {
+    String[] nsComponentsArr = namespace.split("\\.");
+    for (int i = 0; i < nsComponentsArr.length; i++) {
+      String nsName = "";
+      for (int n = 0; n < i + 1; n++) {
+        if (n > 0) {
+          nsName += ".";
+        }
+        nsName += nsComponentsArr[n];
+      }
+      allNamespaces.add(nsName);
+    }
   }
 
   private Set<String> initializeTypeNames() {
@@ -201,7 +236,9 @@ public class DBTypeLoader implements IExtendedTypeLoader {
         }
       }
     }
-
+    for (SQLFileInfo sqlFileInfo : _sqlFilesByName.get().values()) {
+      typeNames.add(sqlFileInfo.getTypeName());
+    }
     return typeNames;
   }
 

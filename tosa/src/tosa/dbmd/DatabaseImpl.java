@@ -54,6 +54,10 @@ public class DatabaseImpl implements IDatabase {
     return _tables.values();
   }
 
+  public DBData getDBData() {
+    return _dbData;
+  }
+
   @Override
   public IDBConnection getConnection() {
     return _connection;
