@@ -1170,7 +1170,12 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
   }
 
   private SQLParsedElement parseStringValueExpression() {
-    return null;  //To change body of created methods use File | Settings | File Templates.
+    if (_currentToken.getValue().startsWith("\"") ||
+      _currentToken.getValue().startsWith("\'")) {
+      return new StringLiteralExpression(takeToken());
+    } else {
+      return null;
+    }
   }
 
   private SQLParsedElement parseNumericValueExpression() {
@@ -1207,8 +1212,9 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
     SQLParsedElement numericLiteral = parseNumericLiteral();
     if (numericLiteral != null) {
       return numericLiteral;
+    } else {
+      return parseColumnReference();
     }
-    return parseColumnReference();
   }
 
   private SQLParsedElement parseColumnReference() {
@@ -1268,11 +1274,17 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
   }
 
   private SQLParsedElement parseSelectSubList() {
-    ColumnSelectList sl = new ColumnSelectList(_currentToken);
+    Token start = _currentToken;
+    ArrayList<SQLParsedElement> cols = new ArrayList<SQLParsedElement>();
     do {
-      if (true) throw new UnsupportedOperationException("Not yet supported");
-    } while (accept(COMMA));
-    return sl;
+      SQLParsedElement value = parseValueExpression();
+      if (value != null) {
+        cols.add(value);
+      } else {
+        break; // TODO asterisk path (???)
+      }
+    } while (match(COMMA));
+    return new ColumnSelectList(start, lastMatch(), cols);
   }
 
   private SQLParsedElement parseSetQuantifers() {

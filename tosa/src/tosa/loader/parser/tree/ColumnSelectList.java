@@ -2,16 +2,23 @@ package tosa.loader.parser.tree;
 
 import tosa.loader.parser.Token;
 
-public class ColumnSelectList extends SQLParsedElement {
-  private Token _name;
+import java.util.List;
 
-  public ColumnSelectList(Token t) {
-    super(t);
-    _name = t;
+public class ColumnSelectList extends SQLParsedElement {
+
+  public ColumnSelectList(Token start, Token last, List<SQLParsedElement> children) {
+    super(start, last, children);
   }
 
   @Override
   protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
-    sb.append(_name.getValue());
+    List<? extends SQLParsedElement> children = getChildren();
+    for (int i = 0, childrenSize = children.size(); i < childrenSize; i++) {
+      SQLParsedElement sqlParsedElement = children.get(i);
+      if (i != 0) {
+        sb.append(", ");
+      }
+      sqlParsedElement.toSQL(prettyPrint, indent, sb);
+    }
   }
 }

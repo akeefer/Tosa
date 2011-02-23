@@ -11,6 +11,7 @@ class TosaTestDBInit {
     print(">>> Creating database from DDL statements in file " + ddlFile.Path.FileSystemPathString)
     var database = dbTypeLoader.getTypeDataForNamespace( "test.testdb" )
     var connection = database.Connection.connect()
+    connection.createStatement().executeUpdate( "DROP ALL OBJECTS" )
     connection.createStatement().executeUpdate( ddlFile.toJavaFile().read() )
     connection.close()
   }

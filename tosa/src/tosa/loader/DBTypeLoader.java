@@ -7,6 +7,7 @@ import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.java.IJavaClassInfo;
 import gw.lang.reflect.module.IExecutionEnvironment;
 import gw.lang.reflect.module.IModule;
+import gw.util.GosuClassUtil;
 import gw.util.Pair;
 import gw.util.concurrent.LazyVar;
 import tosa.CachedDBObject;
@@ -201,19 +202,26 @@ public class DBTypeLoader implements IExtendedTypeLoader {
   private Set<String> initializeNamespaces() {
     Set<String> allNamespaces = new HashSet<String>();
     for (String namespace : _typeDataByNamespace.get().keySet()) {
-      String[] nsComponentsArr = namespace.split("\\.");
-      for (int i = 0; i < nsComponentsArr.length; i++) {
-        String nsName = "";
-        for (int n = 0; n < i + 1; n++) {
-          if (n > 0) {
-            nsName += ".";
-          }
-          nsName += nsComponentsArr[n];
-        }
-        allNamespaces.add(nsName);
-      }
+      splitStringInto(allNamespaces, namespace);
+    }
+    for (SQLFileInfo sqlFileInfo : _sqlFilesByName.get().values()) {
+      splitStringInto(allNamespaces, GosuClassUtil.getPackage(sqlFileInfo.getTypeName()));
     }
     return allNamespaces;
+  }
+
+  private void splitStringInto(Set<String> allNamespaces, String namespace) {
+    String[] nsComponentsArr = namespace.split("\\.");
+    for (int i = 0; i < nsComponentsArr.length; i++) {
+      String nsName = "";
+      for (int n = 0; n < i + 1; n++) {
+        if (n > 0) {
+          nsName += ".";
+        }
+        nsName += nsComponentsArr[n];
+      }
+      allNamespaces.add(nsName);
+    }
   }
 
   private Set<String> initializeTypeNames() {
@@ -228,7 +236,9 @@ public class DBTypeLoader implements IExtendedTypeLoader {
         }
       }
     }
-
+    for (SQLFileInfo sqlFileInfo : _sqlFilesByName.get().values()) {
+      typeNames.add(sqlFileInfo.getTypeName());
+    }
     return typeNames;
   }
 
