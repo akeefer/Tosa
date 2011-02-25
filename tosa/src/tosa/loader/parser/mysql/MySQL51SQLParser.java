@@ -1227,8 +1227,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
   }
 
   private SQLParsedElement parseStringValueExpression() {
-    if (_currentToken.getValue().startsWith("\"") ||
-      _currentToken.getValue().startsWith("\'")) {
+    if (_currentToken.isString()) {
       return new StringLiteralExpression(takeToken());
     } else {
       return null;
@@ -1275,12 +1274,15 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
   }
 
   private SQLParsedElement parseColumnReference() {
-    Token base = takeToken();
-    if (match(".")) {
-      return new ColumnReference(base, takeToken());
-    } else {
-      return new ColumnReference(base);
+    if (_currentToken.isSymbol()) {
+      Token base = takeToken();
+      if (match(".") && _currentToken.isSymbol()) {
+        return new ColumnReference(base, takeToken());
+      } else {
+        return new ColumnReference(base);
+      }
     }
+    return null;
   }
 
   private Token takeToken() {

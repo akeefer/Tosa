@@ -125,4 +125,26 @@ public class Token {
   public int getEnd() {
     return _end;
   }
+
+  public boolean isSymbol() {
+    for (int i = 0; i < _value.length(); i++) {
+      if (!Character.isLetter(_value.charAt(i))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public boolean isNumber() {
+    for (int i = 0; i < _value.length(); i++) {
+      if (!Character.isDigit(_value.charAt(i))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public boolean isString() {
+    return _value.startsWith("\"") || _value.startsWith("\'");
+  }
 }

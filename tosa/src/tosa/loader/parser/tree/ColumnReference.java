@@ -19,9 +19,11 @@ public class ColumnReference extends SQLParsedElement {
 
   @Override
   protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
+    sb.append('"');
     if (_table != null) {
       sb.append(_table.getValue()).append(".");
     }
     sb.append(_column.getValue());
+    sb.append('"');
   }
 }
