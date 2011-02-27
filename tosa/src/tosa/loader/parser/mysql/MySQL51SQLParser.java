@@ -13,9 +13,10 @@ import tosa.loader.parser.SQLTokenizer;
 import tosa.loader.parser.Token;
 import tosa.loader.parser.tree.*;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -1160,7 +1161,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
     SQLParsedElement initialValue = parseRowValue();
     if (initialValue != null) {
       if (matchAny(EQ_OP, LT_OP, LTEQ_OP, GT_OP, GTEQ_OP)) {
-        SQLParsedElement comparisonValue = parseRowValueOrVariable();
+        SQLParsedElement comparisonValue = parseValueExpression();
         return new ComparisonPredicate(initialValue, initialValue.nextToken(), comparisonValue);
       }
     }
@@ -1177,14 +1178,6 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
   private void expectToken(SQLParsedElement elt, String str) {
     if (!match(str)) {
       elt.addParseError(new SQLParseError(_currentToken, "Expected " + str));
-    }
-  }
-
-  private SQLParsedElement parseRowValueOrVariable() {
-    if (_currentToken.getValue().startsWith(":")) {
-      return new VariableExpression(takeToken());
-    } else {
-      return parseValueExpression();
     }
   }
 
@@ -1265,11 +1258,30 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
   }
 
   private SQLParsedElement parseNumericPrimary() {
+
     SQLParsedElement numericLiteral = parseNumericLiteral();
     if (numericLiteral != null) {
       return numericLiteral;
+    }
+
+    SQLParsedElement varRef = parseVariableReference();
+    if (varRef != null) {
+      return varRef;
+    }
+
+    SQLParsedElement columnRef = parseColumnReference();
+    if (columnRef != null) {
+      return columnRef;
+    }
+    
+    return null;
+  }
+
+  private SQLParsedElement parseVariableReference() {
+    if (_currentToken.isSymbol() && _currentToken.getValue().startsWith(":")) {
+      return new VariableExpression(takeToken());
     } else {
-      return parseColumnReference();
+      return null;
     }
   }
 
@@ -1292,11 +1304,15 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
   }
 
   private SQLParsedElement parseNumericLiteral() {
-    try {
-      int i = Integer.parseInt(_currentToken.getValue());
-      return new SQLNumericLiteral(takeToken(), i);
-    } catch (NumberFormatException e) {
-      // ignore
+    if (_currentToken.isNumber()) {
+      Token token = takeToken();
+      if (token.getValue().contains(".")) {
+        return new SQLNumericLiteral(token, new BigDecimal(token.getValue()));
+      }
+      else
+      {
+        return new SQLNumericLiteral(token, new BigInteger(token.getValue()));
+      }
     }
     return null;
   }

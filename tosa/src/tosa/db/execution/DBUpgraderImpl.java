@@ -1,6 +1,7 @@
 package tosa.db.execution;
 
 import gw.fs.IFile;
+import gw.util.GosuExceptionUtil;
 import tosa.api.IDBUpgrader;
 import tosa.dbmd.DatabaseImpl;
 
@@ -22,6 +23,23 @@ public class DBUpgraderImpl implements IDBUpgrader {
 
   public DBUpgraderImpl(DatabaseImpl database) {
     _database = database;
+  }
+
+  @Override
+  public void recreateTables() {
+    dropAllTables();
+    createTables();
+  }
+
+  private void dropAllTables() {
+    try {
+      // TODO cgross - this should be specialized per database.  Yuck.
+      Connection connection = _database.getConnection().connect();
+      connection.createStatement().executeUpdate("DROP ALL OBJECTS");
+      connection.close();
+    } catch (SQLException e) {
+      throw GosuExceptionUtil.forceThrow(e);
+    }
   }
 
   @Override
