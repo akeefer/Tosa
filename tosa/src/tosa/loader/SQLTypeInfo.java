@@ -3,6 +3,8 @@ package tosa.loader;
 import gw.lang.reflect.*;
 import gw.lang.reflect.java.IJavaType;
 import gw.util.GosuExceptionUtil;
+import gw.util.Pair;
+import tosa.api.IDBColumnType;
 import tosa.db.execution.QueryExecutor;
 import tosa.loader.parser.tree.*;
 
@@ -35,6 +37,15 @@ public class SQLTypeInfo extends BaseTypeInfo {
             c = _sqlType.getData().getDatabase().getConnection().connect();
             String sql = _sqlType.getData().getSQL();
             PreparedStatement stmt = c.prepareStatement(sql);
+
+            List<SQLParameterInfo> pis = _sqlType.getData().getParameterInfos();
+            for (int i = 0, pisSize = pis.size(); i < pisSize; i++) {
+              SQLParameterInfo pi = pis.get(i);
+              for (Pair<Integer, IDBColumnType> index : pi.getIndexes()) {
+                stmt.setObject(index.getFirst(), args[i]);
+              }
+            }
+
             ResultSet resultSet = stmt.executeQuery();
             List lst = new LinkedList();
             while (resultSet.next()) {

@@ -55,8 +55,9 @@ public class SelectStatement extends SQLParsedElement {
       SQLParameterInfo pi = pis.get(var.getName());
       if (pi == null) {
         pi = new SQLParameterInfo(var.getName());
+        pis.put(var.getName(), pi);
       }
-      pi.getIndexes().add(Pair.<Integer, IDBColumnType>make(i, null));
+      pi.getIndexes().add(Pair.<Integer, IDBColumnType>make(i+1, null));
     }
     return new ArrayList<SQLParameterInfo>(pis.values());
   }

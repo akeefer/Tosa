@@ -43,7 +43,7 @@ class SQLTypeInfoTest {
     deleteAllData()
     importSampleData()
   }
-/*
+
   @Test
   function testTypesCreated() {
     var types = gw.lang.reflect.TypeSystem.getAllTypeNames()
@@ -57,11 +57,19 @@ class SQLTypeInfoTest {
     Assert.assertEquals(new java.sql.Date(new java.util.Date("4/22/2009").Time), result.first().Date)
     print(statictypeof result)
   }
-*/
+
   @Test
   function testBasicColumnComparisonWorks() {
     var result = test.query.SampleComparisonQuery.select()
     Assert.assertEquals(1, result.Count)
+  }
+
+  @Test
+  function testBasicVariableWorks() {
+    var result = test.query.SampleComparisonQueryWithVar.select( "2001-1-1" )
+    Assert.assertEquals(1, result.Count)
+    result = test.query.SampleComparisonQueryWithVar.select( "2101-1-1" )
+    Assert.assertEquals(0, result.Count)
   }
 
 }
