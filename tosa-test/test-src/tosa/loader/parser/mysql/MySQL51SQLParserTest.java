@@ -198,42 +198,241 @@ public class MySQL51SQLParserTest {
 
     // TODO - Test that a numeric data type with zero precision should be a BigInteger instead
   }
-  /* private DBColumnTypeImpl parseDateColumnType() {
-    if (accept(DATE)) {
-      return new DBColumnTypeImpl(DATE, DATE, DBColumnTypeImpl.DATE_ITYPE, Types.DATE, new DateColumnTypePersistenceHandler());
-    } else if (accept(TIME)) {
-      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + TIME);
+
+  @Test
+  public void dateColumnType() {
+    assertColumnDataType("DATE", column("test", DBColumnTypeImpl.DATE_ITYPE, Types.DATE));
+    assertColumnDataType("dAtE", column("test", DBColumnTypeImpl.DATE_ITYPE, Types.DATE));
+  }
+
+  @Test
+  public void timeColumnType() {
+    // TODO - AHK
+  }
+
+  @Test
+  public void timestampColumnType() {
+    assertColumnDataType("TIMESTAMP", column("test", DBColumnTypeImpl.DATE_ITYPE, Types.TIMESTAMP));
+    assertColumnDataType("tiMeSTamp", column("test", DBColumnTypeImpl.DATE_ITYPE, Types.TIMESTAMP));
+  }
+
+  @Test
+  public void datetimeColumnType() {
+    assertColumnDataType("DATETIME", column("test", DBColumnTypeImpl.DATE_ITYPE, Types.TIMESTAMP));
+    assertColumnDataType("daTeTIme", column("test", DBColumnTypeImpl.DATE_ITYPE, Types.TIMESTAMP));
+  }
+
+  @Test
+  public void yearColumnType() {
+    assertColumnDataType("YEAR", column("test", DBColumnTypeImpl.INTEGER_ITYPE, Types.INTEGER));
+    assertColumnDataType("yEar", column("test", DBColumnTypeImpl.INTEGER_ITYPE, Types.INTEGER));
+  }
+
+  @Test
+  public void binaryDataType() {
+    assertColumnDataType("BINARY", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BINARY));
+    assertColumnDataType("biNAry", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BINARY));
+    assertColumnDataType("BINARY(200)", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BINARY));
+
+    assertColumnDataType("CHAR BYTE", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BINARY));
+    assertColumnDataType("cHAr byTE", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BINARY));
+    assertColumnDataType("cHAr byTE(200)", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BINARY));
+  }
+
+  @Test
+  public void charDataType() {
+    assertColumnDataType("CHAR", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("cHaR", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHAR(200)", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHAR(200) CHARACTER SET latin1", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHAR(200) chARACter sET latin1", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHAR(200) COLLATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHAR(200) collATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHAR(200) ASCII", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHAR(200) asCIi", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHAR(200) UNICODE", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHAR(200) uNIcoDE", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+
+    assertColumnDataType("CHAR COLLATE binary CHARACTER SET latin1", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHAR(200) COLLATE binary CHARACTER SET latin1", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHAR CHARACTER SET latin1 COLLATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHAR(200) CHARACTER SET latin1 COLLATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+
+    assertColumnDataType("CHAR(200) CHARACTER SET binary", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BINARY));
+  }
+
+  @Test
+  public void characterDataType() {
+    assertColumnDataType("CHARACTER", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("cHarACter", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHARACTER(200)", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHARACTER(200) CHARACTER SET latin1", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHARACTER(200) chARACter sET latin1", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHARACTER(200) COLLATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHARACTER(200) collATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHARACTER(200) ASCII", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHARACTER(200) asCIi", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHARACTER(200) UNICODE", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHARACTER(200) uNIcoDE", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+
+    assertColumnDataType("CHARACTER COLLATE binary CHARACTER SET latin1", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHARACTER(200) COLLATE binary CHARACTER SET latin1", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHARACTER CHARACTER SET latin1 COLLATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("CHARACTER(200) CHARACTER SET latin1 COLLATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+
+    assertColumnDataType("CHARACTER(200) CHARACTER SET binary", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BINARY));
+  }
+
+  @Test
+  public void nationalCharDataType() {
+    // TODO - AHK - Test that a characterset, etc. can't be specified
+    assertColumnDataType("NATIONAL CHAR", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("naTIoNaL ChAr", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("NATIONAL CHAR(200)", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("NATIONAL CHAR(200) COLLATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("NATIONAL CHAR(200) collATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+  }
+
+  @Test
+  public void ncharDataType() {
+    // TODO - AHK - Test that a characterset, etc. can't be specified
+    assertColumnDataType("NCHAR", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("nChAR", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("NCHAR(200)", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("NCHAR(200) COLLATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+    assertColumnDataType("NCHAR(200) collATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CHAR));
+  }
+
+  @Test
+  public void varcharDataType() {
+    // TODO - AHK - Test that a length is required
+    // TODO - AHK - Test that the length is a valid value
+    assertColumnDataType("VARCHAR(100)", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.VARCHAR));
+    assertColumnDataType("VARCHAR(100) CHARACTER SET latin1", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.VARCHAR));
+    assertColumnDataType("VARCHAR(100) COLLATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.VARCHAR));
+    assertColumnDataType("VARCHAR(100) CHARACTER SET latin1 COLLATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.VARCHAR));
+    assertColumnDataType("VARCHAR(100) COLLATE binary CHARACTER SET latin1", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.VARCHAR));
+    assertColumnDataType("VARCHAR(100) ASCII", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.VARCHAR));
+    assertColumnDataType("VARCHAR(100) UNICODE", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.VARCHAR));
+    assertColumnDataType("VARCHAR(100) BINARY", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.VARCHAR));
+
+    assertColumnDataType("VARCHAR(100) CHARACTER SET binary", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.VARBINARY));
+  }
+
+  /*private DBColumnTypeImpl parseCharacterColumnType() {
+    if (accept(CHAR, BYTE) || accept(BINARY)) {
+      return new DBColumnTypeImpl(BINARY, BINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BINARY);
+    } else if (accept(CHAR) || accept(CHARACTER)) {
+      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
+      if ("binary".equals(characterTypeAttributes._charSet)) {
+        return new DBColumnTypeImpl(BINARY, BINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BINARY);
+      } else {
+        return new DBColumnTypeImpl(CHAR, CHAR, DBColumnTypeImpl.STRING_ITYPE, Types.CHAR);
+      }
+    } else if (accept(NATIONAL, CHAR) || accept(NCHAR)) {
+      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
+      return new DBColumnTypeImpl(NCHAR, NCHAR, DBColumnTypeImpl.STRING_ITYPE, Types.CHAR);
+    } else if (accept(VARCHAR)) {
+      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
+      if ("binary".equals(characterTypeAttributes._charSet)) {
+        return new DBColumnTypeImpl(VARBINARY, VARBINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.VARBINARY);
+      } else {
+        return new DBColumnTypeImpl(VARCHAR, VARCHAR, DBColumnTypeImpl.STRING_ITYPE, Types.VARCHAR);
+      }
+    } else if (accept(VARBINARY)) {
+      return new DBColumnTypeImpl(VARBINARY, VARBINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.VARBINARY);
+    } else if (accept(TINYBLOB)) {
+      // Max length is 255
+      return new DBColumnTypeImpl(TINYBLOB, TINYBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
+    } else if (accept(BLOB)) {
+      // Max length is 2^16 - 1 if not otherwise specified
+      Integer length = parseLength();
+      return new DBColumnTypeImpl(BLOB, BLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
+    } else if (accept(MEDIUMBLOB)) {
+      // Max length is 2^24 - 1
+      return new DBColumnTypeImpl(MEDIUMBLOB, MEDIUMBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
+    } else if (accept(LONGBLOB)) {
+      // Max length is 2^32 - 1
+      return new DBColumnTypeImpl(LONGBLOB, LONGBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
+    } else if (accept(TINYTEXT)) {
+      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
+      // Max length is 255
+      if ("binary".equals(characterTypeAttributes._charSet)) {
+        return new DBColumnTypeImpl(TINYBLOB, TINYBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
+      } else {
+        return new DBColumnTypeImpl(TINYTEXT, TINYTEXT, DBColumnTypeImpl.STRING_ITYPE, Types.CLOB);
+      }
+    } else if (accept(TEXT)) {
+      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
+      // Max length is 2^16 - 1 if not otherwise specified
+      if ("binary".equals(characterTypeAttributes._charSet)) {
+        return new DBColumnTypeImpl(BLOB, BLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
+      } else {
+        return new DBColumnTypeImpl(TEXT, TEXT, DBColumnTypeImpl.STRING_ITYPE, Types.CLOB);
+      }
+    } else if (accept(MEDIUMTEXT)) {
+      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
+      // Max length is 2^24 - 1
+      if ("binary".equals(characterTypeAttributes._charSet)) {
+        return new DBColumnTypeImpl(MEDIUMBLOB, MEDIUMBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
+      } else {
+        return new DBColumnTypeImpl(MEDIUMTEXT, MEDIUMTEXT, DBColumnTypeImpl.STRING_ITYPE, Types.CLOB);
+      }
+    } else if (accept(LONGTEXT)) {
+      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
+      // Max length is 2^32 - 1
+      if ("binary".equals(characterTypeAttributes._charSet)) {
+        return new DBColumnTypeImpl(LONGBLOB, LONGBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
+      } else {
+        return new DBColumnTypeImpl(LONGTEXT, LONGTEXT, DBColumnTypeImpl.STRING_ITYPE, Types.CLOB);
+      }
+    } else if (accept(ENUM)) {
+      List<String> values = parseEnumOrSetValueList();
+      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
+      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + ENUM);
       return null;
-    } else if (accept(TIMESTAMP)) {
-      return new DBColumnTypeImpl(TIMESTAMP, TIMESTAMP, DBColumnTypeImpl.DATE_ITYPE, Types.TIMESTAMP, new TimestampColumnTypePersistenceHandler());
-    } else if (accept(DATETIME)) {
-      return new DBColumnTypeImpl(DATETIME, DATETIME, DBColumnTypeImpl.DATE_ITYPE, Types.TIMESTAMP, new TimestampColumnTypePersistenceHandler());
-    } else if (accept(YEAR)) {
-      return new DBColumnTypeImpl(YEAR, YEAR, DBColumnTypeImpl.INTEGER_ITYPE, Types.INTEGER);
+    } else if (accept(SET)) {
+      List<String> values = parseEnumOrSetValueList();
+      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
+      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + SET);
+      return null;
     } else {
       return null;
     }
-  }*/
+  }
 
-  /*} else if (accept(DOUBLE) || accept(DOUBLE, PRECISION) || accept(REAL)) {
-      // TODO - AHK - If the REAL_AS_FLOAT mode is set on the DB, this will be incorrect
-      parseLengthAndDecimals();
-      boolean signed = parseNumericModifiers();
-      return new DBColumnTypeImpl(DOUBLE, DOUBLE, DBColumnTypeImpl.DOUBLE_ITYPE, Types.DOUBLE);
-    } else if (accept(FLOAT)) {
-      // TODO - AHK - It's a different deal if there's a length and a precision versus just a single number
-      parseLengthAndDecimals();
-      boolean signed = parseNumericModifiers();
-      return new DBColumnTypeImpl(FLOAT, FLOAT, DBColumnTypeImpl.FLOAT_ITYPE, Types.FLOAT);
-    } else if (accept(DECIMAL) || accept(DEC) || accept(NUMERIC) || accept(FIXED)) {
-      parseLengthAndDecimals();
-      boolean signed = parseNumericModifiers();
-      // TODO - AHK - The precision and size are probably important here
-      // TODO - AHK - If there precision is 0, should this be a BigInteger?
-      return new DBColumnTypeImpl(DECIMAL, DECIMAL, DBColumnTypeImpl.BIG_DECIMAL_ITYPE, Types.DECIMAL);
+    private CharacterTypeAttributes parseCharTypeAttributes() {
+    CharacterTypeAttributes attributes = new CharacterTypeAttributes();
+    attributes._length = parseLength();
+    while(parseCharTypeAttribute(attributes)) {
+      // Loop
+    }
+    return attributes;
+  }
+
+  private boolean parseCharTypeAttribute(CharacterTypeAttributes charTypeAttributes) {
+    // TODO - AHK - Should be an error if the char set or collation is already set
+    if (accept(CHARACTER, SET)) {
+      charTypeAttributes._charSet = consumeToken();
+      return true;
+    } else if (accept(COLLATE)) {
+      charTypeAttributes._collation = consumeToken();
+      return true;
+    } else if (accept(ASCII)) {
+      charTypeAttributes._charSet = "latin1";
+      return true;
+    } else if (accept(UNICODE)) {
+      charTypeAttributes._charSet = "ucs2";
+      return true;
+    } else if (accept(BINARY)) {
+      charTypeAttributes._collation = "binary";
+      return true;
     } else {
-      return null;
-    }*/
+      return false;
+    }
+  }
+  */
+
   /*data_type:
   | DATE
   | TIME

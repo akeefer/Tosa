@@ -564,6 +564,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
 
   private DBColumnTypeImpl parseCharacterColumnType() {
     if (accept(CHAR, BYTE) || accept(BINARY)) {
+      Integer length = parseLength();
       return new DBColumnTypeImpl(BINARY, BINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BINARY);
     } else if (accept(CHAR) || accept(CHARACTER)) {
       CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
