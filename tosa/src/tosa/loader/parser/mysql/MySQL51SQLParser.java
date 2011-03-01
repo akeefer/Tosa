@@ -525,7 +525,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
         LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + BIGINT);
         return null;
       }
-    } else if (accept(DOUBLE) || accept(DOUBLE, PRECISION) || accept(REAL)) {
+    } else if (accept(DOUBLE, PRECISION) || accept(DOUBLE) || accept(REAL)) {
       // TODO - AHK - If the REAL_AS_FLOAT mode is set on the DB, this will be incorrect
       parseLengthAndDecimals();
       boolean signed = parseNumericModifiers();

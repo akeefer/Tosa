@@ -29,7 +29,8 @@ public class TosaSuite extends Suite {
       "tosa.loader.DBTypeInfoTest",
       "tosa.loader.SQLTypeInfoTest",
       "tosa.loader.parser.SelectParsingBootstrapTest",
-      "tosa.loader.parser.TokenizerTest"
+      "tosa.loader.parser.TokenizerTest",
+      "tosa.loader.parser.mysql.MySQL51SQLParserTest"
     );
   }
 
