@@ -81,6 +81,16 @@ public class SQLTypeInfo extends BaseTypeInfo {
           return type;
         }
       }
+    } else if(selectList instanceof ColumnSelectList) {
+      List<? extends SQLParsedElement> children = selectList.getChildren();
+      Map<String, IType> typeMap = new HashMap<String, IType>();
+      for (SQLParsedElement child : children) {
+        if (child instanceof ColumnReference) {
+          ColumnReference cr = (ColumnReference) child;
+          typeMap.put(cr.getName(), cr.getGosuType());
+        }
+      }
+      return new StructType(_sqlType.getTypeLoader(), _sqlType.getName() + "Result", typeMap);
     }
     return IJavaType.OBJECT;
   }
@@ -96,6 +106,14 @@ public class SQLTypeInfo extends BaseTypeInfo {
           count--;
         }
         return hashMap;
+      } else if (returnType instanceof StructType) {
+        Map<String, IType> propMap = ((StructType) returnType).getPropMap();
+        Map vals = new HashMap();
+        for (String name : propMap.keySet()) {
+          Object val = resultSet.getObject(resultSet.findColumn(name));
+          vals.put(name, val);
+        }
+        return ((StructType) returnType).newInstance(vals);
       } else if (returnType instanceof IDBType) {
         return QueryExecutor.buildObject((IDBType) returnType, resultSet);
       } else {

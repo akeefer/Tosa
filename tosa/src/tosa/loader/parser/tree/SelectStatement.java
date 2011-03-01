@@ -9,7 +9,7 @@ import tosa.loader.parser.Token;
 
 import java.util.*;
 
-public class SelectStatement extends SQLParsedElement {
+public class SelectStatement extends SQLParsedElement implements IRootParseElement {
 
   private SQLParsedElement _quantifier;
   private SQLParsedElement _selectList;
@@ -57,12 +57,17 @@ public class SelectStatement extends SQLParsedElement {
         pi = new SQLParameterInfo(var.getName());
         pis.put(var.getName(), pi);
       }
-      pi.getIndexes().add(Pair.<Integer, IDBColumnType>make(i+1, null));
+      pi.getIndexes().add(Pair.<Integer, IDBColumnType>make(i + 1, null));
     }
     return new ArrayList<SQLParameterInfo>(pis.values());
   }
 
   public List<SQLParameterInfo> getParameters() {
     return _parameters;
+  }
+
+  @Override
+  public String getDefaultTableName() {
+    return _tableExpr.getFrom().getTableRefs().get(0).getName().getValue(); //TODO cgross - support multiple tables in table clause
   }
 }

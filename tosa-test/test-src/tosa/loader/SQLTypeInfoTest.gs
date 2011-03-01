@@ -72,4 +72,12 @@ class SQLTypeInfoTest {
     Assert.assertEquals(0, result.Count)
   }
 
+  @Test
+  function testBasicFieldSelectionWorks() {
+    var result = test.query.SampleQueryWithSpecificCols.select()
+    Assert.assertEquals(new java.sql.Date(new java.util.Date("4/22/2009").Time), result.first().Date)
+    Assert.assertEquals("misc", result.first().Misc)
+    Assert.assertEquals(1, result.Count)
+  }
+
 }

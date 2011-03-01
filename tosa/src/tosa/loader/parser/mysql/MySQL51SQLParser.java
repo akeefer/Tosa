@@ -1353,10 +1353,13 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
     ArrayList<SQLParsedElement> cols = new ArrayList<SQLParsedElement>();
     do {
       SQLParsedElement value = parseValueExpression();
+      if (!(value instanceof ColumnReference)) {
+        value.addParseError(new SQLParseError(value.firstToken(), value.lastToken(), "Only column references are supported right now."));
+      }
       if (value != null) {
         cols.add(value);
       } else {
-        break; // TODO asterisk path (???)
+        break;
       }
     } while (match(COMMA));
     return new ColumnSelectList(start, lastMatch(), cols);

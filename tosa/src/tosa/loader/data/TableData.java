@@ -25,4 +25,13 @@ public class TableData {
   public List<ColumnData> getColumns() {
     return _columns;
   }
+
+  public ColumnData getColumn(String name) {
+    for (ColumnData column : _columns) {
+      if (column.getName().equals(name)) {
+        return column;
+      }
+    }
+    return null;
+  }
 }

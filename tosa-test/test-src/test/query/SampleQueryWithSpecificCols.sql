@@ -1,0 +1,1 @@
+SELECT Date, Misc FROM Bar

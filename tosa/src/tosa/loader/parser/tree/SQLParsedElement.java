@@ -108,6 +108,14 @@ public abstract class SQLParsedElement {
     }
   }
 
+  public IRootParseElement getRootElement() {
+    if (getParent() == null) {
+      return (IRootParseElement) this;
+    } else {
+      return getParent().getRootElement();
+    }
+  }
+
   public void verify(DBData dbData) {
     for (SQLParsedElement child : getChildren()) {
       child.verify(dbData);

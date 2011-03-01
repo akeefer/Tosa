@@ -36,4 +36,13 @@ public class DBData {
   public IFile getDdlFile() {
     return _ddlFile;
   }
+
+  public TableData getTable(String value) {
+    for (TableData table : _tables) {
+      if (table.getName().equals(value)) {
+        return table;
+      }
+    }
+    return null;
+  }
 }
