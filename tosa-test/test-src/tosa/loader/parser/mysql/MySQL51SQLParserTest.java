@@ -319,6 +319,38 @@ public class MySQL51SQLParserTest {
     assertColumnDataType("VARCHAR(100) CHARACTER SET binary", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.VARBINARY));
   }
 
+  @Test
+  public void varbinaryDataType() {
+    assertColumnDataType("VARBINARY(100)", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.VARBINARY));
+    assertColumnDataType("vARbinARY(100)", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.VARBINARY));
+  }
+
+  @Test
+  public void tinyBlobDataType() {
+    assertColumnDataType("TINYBLOB", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB));
+    assertColumnDataType("tiNyBLoB", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB));
+  }
+
+  @Test
+  public void blobDataType() {
+    assertColumnDataType("BLOB", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB));
+    assertColumnDataType("bLOb", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB));
+    assertColumnDataType("BLOB(1024)", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB));
+    assertColumnDataType("bLoB(1024)", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB));
+  }
+
+  @Test
+  public void mediumBlobDataType() {
+    assertColumnDataType("MEDIUMBLOB", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB));
+    assertColumnDataType("mEdIUMBloB", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB));
+  }
+
+  @Test
+  public void longBlobDataType() {
+    assertColumnDataType("LONGBLOB", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB));
+    assertColumnDataType("lONGBlob", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB));
+  }
+
   /*private DBColumnTypeImpl parseCharacterColumnType() {
     if (accept(CHAR, BYTE) || accept(BINARY)) {
       return new DBColumnTypeImpl(BINARY, BINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BINARY);

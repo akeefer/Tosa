@@ -584,6 +584,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
         return new DBColumnTypeImpl(VARCHAR, VARCHAR, DBColumnTypeImpl.STRING_ITYPE, Types.VARCHAR);
       }
     } else if (accept(VARBINARY)) {
+      Integer length = parseLength();
       return new DBColumnTypeImpl(VARBINARY, VARBINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.VARBINARY);
     } else if (accept(TINYBLOB)) {
       // Max length is 255
