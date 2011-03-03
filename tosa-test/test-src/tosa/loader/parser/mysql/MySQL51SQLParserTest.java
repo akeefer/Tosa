@@ -2,6 +2,7 @@ package tosa.loader.parser.mysql;
 
 import junit.framework.TestCase;
 import org.junit.Test;
+import tosa.DBConnection;
 import tosa.loader.data.ColumnData;
 import tosa.loader.data.DBColumnTypeImpl;
 import tosa.loader.data.TableData;
@@ -350,6 +351,70 @@ public class MySQL51SQLParserTest {
     assertColumnDataType("LONGBLOB", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB));
     assertColumnDataType("lONGBlob", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB));
   }
+
+  @Test
+  public void tinyTextDataType() {
+    assertColumnDataType("TINYTEXT", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("tinYTeXt", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("TINYTEXT CHARACTER SET latin1", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("TINYTEXT COLLATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("TINYTEXT CHARACTER SET latin1 COLLATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("TINYTEXT COLLATE binary CHARACTER SET latin1", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("TINYTEXT ASCII", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("TINYTEXT UNICODE", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("TINYTEXT BINARY", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+
+    assertColumnDataType("TINYTEXT CHARACTER SET binary", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB));
+  }
+
+  @Test
+  public void textDataType() {
+    assertColumnDataType("TEXT", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("tExT", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("TEXT(100)", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("TEXT CHARACTER SET latin1", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("TEXT COLLATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("TEXT CHARACTER SET latin1 COLLATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("TEXT COLLATE binary CHARACTER SET latin1", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("TEXT ASCII", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("TEXT UNICODE", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("TEXT BINARY", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+
+    assertColumnDataType("TEXT CHARACTER SET binary", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB));
+  }
+
+  @Test
+  public void mediumTextDataType() {
+    assertColumnDataType("MEDIUMTEXT", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("meDiUmTexT", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("MEDIUMTEXT CHARACTER SET latin1", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("MEDIUMTEXT COLLATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("MEDIUMTEXT CHARACTER SET latin1 COLLATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("MEDIUMTEXT COLLATE binary CHARACTER SET latin1", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("MEDIUMTEXT ASCII", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("MEDIUMTEXT UNICODE", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("MEDIUMTEXT BINARY", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+
+    assertColumnDataType("MEDIUMTEXT CHARACTER SET binary", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB));
+  }
+
+  @Test
+  public void longTextDataType() {
+    assertColumnDataType("LONGTEXT", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("lOngTExt", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("LONGTEXT CHARACTER SET latin1", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("LONGTEXT COLLATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("LONGTEXT CHARACTER SET latin1 COLLATE binary", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("LONGTEXT COLLATE binary CHARACTER SET latin1", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("LONGTEXT ASCII", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("LONGTEXT UNICODE", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+    assertColumnDataType("LONGTEXT BINARY", column("test", DBColumnTypeImpl.STRING_ITYPE, Types.CLOB));
+
+    assertColumnDataType("LONGTEXT CHARACTER SET binary", column("test", DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB));
+  }
+
+  // TODO - AHK - ENUM
+  // TODO - AHK - SET
 
   /*private DBColumnTypeImpl parseCharacterColumnType() {
     if (accept(CHAR, BYTE) || accept(BINARY)) {
