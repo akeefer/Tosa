@@ -19,8 +19,7 @@ public class TosaSuite extends Suite {
   }
 
   private static Class init(Class clazz) {
-    Gosu.init();
-    TypeSystem.pushGlobalTypeLoader(new DBTypeLoader());
+    TestEnv.maybeInit();
     return clazz;
   }
 

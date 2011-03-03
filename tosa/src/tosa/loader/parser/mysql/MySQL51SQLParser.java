@@ -1156,16 +1156,30 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       SQLParsedElement elt = parseSearchOrExpression();
       expectToken(elt, CLOSE_PAREN);
       return elt;
+    } else {
+      return parsePredicate();
     }
+  }
 
+  private SQLParsedElement parsePredicate() {
     SQLParsedElement initialValue = parseRowValue();
     if (initialValue != null) {
       if (matchAny(EQ_OP, LT_OP, LTEQ_OP, GT_OP, GTEQ_OP)) {
         SQLParsedElement comparisonValue = parseValueExpression();
         return new ComparisonPredicate(initialValue, initialValue.nextToken(), comparisonValue);
       }
+      boolean notFound = match(NOT);
+      if (match(LIKE)) {
+        SQLParsedElement pattern = parsePattern();
+        LikePredicate likePredicate = new LikePredicate(initialValue, pattern, notFound);
+        return likePredicate;
+      }
     }
     return unexpectedToken();
+  }
+
+  private SQLParsedElement parsePattern() {
+    return parseRowValue();
   }
 
   private UnexpectedTokenExpression unexpectedToken() {

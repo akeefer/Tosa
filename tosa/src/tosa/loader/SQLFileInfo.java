@@ -10,8 +10,7 @@ import tosa.loader.data.DBData;
 import tosa.loader.parser.mysql.MySQL51SQLParser;
 import tosa.loader.parser.tree.*;
 
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.List;
 
 public class SQLFileInfo {
@@ -21,7 +20,7 @@ public class SQLFileInfo {
   private String _name;
   private LazyVar<SelectStatement> _select;
 
-  public SQLFileInfo(String name, DatabaseImpl dbData, IFile sql) {
+  public SQLFileInfo(String name, DatabaseImpl dbData, final IFile sql) {
     _name = name;
     _sql = sql;
     _db = dbData;
@@ -29,9 +28,9 @@ public class SQLFileInfo {
       @Override
       protected SelectStatement init() {
         try {
-          FileReader reader = new FileReader(_sql.toJavaFile());
-          String content = StreamUtil.getContent(reader);
-          reader.close();
+          InputStream is = _sql.openInputStream();
+          String content = new String(StreamUtil.getContent(is));
+          is.close();
           MySQL51SQLParser parser = new MySQL51SQLParser();
           return parser.parseSQLFile(_db.getDBData(), content);
         } catch (IOException e) {

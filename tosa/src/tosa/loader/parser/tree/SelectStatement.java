@@ -48,8 +48,14 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
   }
 
   private List<SQLParameterInfo> determineParameters(DBData dbData) {
-    Map<String, SQLParameterInfo> pis = new HashMap<String, SQLParameterInfo>();
+    Map<String, SQLParameterInfo> pis = new LinkedHashMap<String, SQLParameterInfo>();
     List<VariableExpression> findDescendents = findDescendents(VariableExpression.class);
+    Collections.sort(findDescendents, new Comparator<VariableExpression>() {
+      @Override
+      public int compare(VariableExpression variableExpression, VariableExpression variableExpression1) {
+        return variableExpression.getFirst().getStart() - variableExpression1.getFirst().getStart();
+      }
+    });
     for (int i = 0, findDescendentsSize = findDescendents.size(); i < findDescendentsSize; i++) {
       VariableExpression var = findDescendents.get(i);
       SQLParameterInfo pi = pis.get(var.getName());

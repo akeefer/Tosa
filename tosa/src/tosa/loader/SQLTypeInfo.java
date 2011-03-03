@@ -32,39 +32,43 @@ public class SQLTypeInfo extends BaseTypeInfo {
       .withCallHandler(new IMethodCallHandler() {
         @Override
         public Object handleCall(Object ctx, Object... args) {
-          Connection c = null;
-          try {
-            c = _sqlType.getData().getDatabase().getConnection().connect();
-            String sql = _sqlType.getData().getSQL();
-            PreparedStatement stmt = c.prepareStatement(sql);
-
-            List<SQLParameterInfo> pis = _sqlType.getData().getParameterInfos();
-            for (int i = 0, pisSize = pis.size(); i < pisSize; i++) {
-              SQLParameterInfo pi = pis.get(i);
-              for (Pair<Integer, IDBColumnType> index : pi.getIndexes()) {
-                stmt.setObject(index.getFirst(), args[i]);
-              }
-            }
-
-            ResultSet resultSet = stmt.executeQuery();
-            List lst = new LinkedList();
-            while (resultSet.next()) {
-              lst.add(constructResultElement(resultSet));
-            }
-            return lst;
-          } catch (SQLException e) {
-            throw new RuntimeException(e);
-          } finally {
-            if(c != null){
-              try {
-                c.close();
-              } catch (SQLException e) {
-                throw GosuExceptionUtil.forceThrow(e);
-              }
-            }
-          }
+          return invokeQuery(args);
         }
       }).build(this);
+  }
+
+  public Object invokeQuery(Object... args) {
+    Connection c = null;
+    try {
+      c = _sqlType.getData().getDatabase().getConnection().connect();
+      String sql = _sqlType.getData().getSQL();
+      PreparedStatement stmt = c.prepareStatement(sql);
+
+      List<SQLParameterInfo> pis = _sqlType.getData().getParameterInfos();
+      for (int i = 0, pisSize = pis.size(); i < pisSize; i++) {
+        SQLParameterInfo pi = pis.get(i);
+        for (Pair<Integer, IDBColumnType> index : pi.getIndexes()) {
+          stmt.setObject(index.getFirst(), args[i]);
+        }
+      }
+
+      ResultSet resultSet = stmt.executeQuery();
+      List lst = new LinkedList();
+      while (resultSet.next()) {
+        lst.add(constructResultElement(resultSet));
+      }
+      return lst;
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    } finally {
+      if(c != null){
+        try {
+          c.close();
+        } catch (SQLException e) {
+          throw GosuExceptionUtil.forceThrow(e);
+        }
+      }
+    }
   }
 
   private IType determineResultType() {

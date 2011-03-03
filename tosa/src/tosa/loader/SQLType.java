@@ -55,7 +55,7 @@ public class SQLType extends TypeBase implements IType {
   }
 
   @Override
-  public ITypeInfo getTypeInfo() {
+  public SQLTypeInfo getTypeInfo() {
     return _ti;
   }
 }
