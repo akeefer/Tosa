@@ -2,6 +2,8 @@ package tosa.loader.parser.tree;
 
 import tosa.loader.parser.Token;
 
+import java.util.List;
+
 /**
  * Created by IntelliJ IDEA.
  * User: alan
@@ -10,8 +12,28 @@ import tosa.loader.parser.Token;
  * To change this template use File | Settings | File Templates.
  */
 public class ColumnDataType extends SQLParsedElement {
-  public ColumnDataType(Token token, SQLParsedElement... children) {
-    super(token, children);
+
+  public enum Type {
+    BIT, BOOL, TINYINT, SMALLINT, MEDIUMINT, INT, BIGINT, REAL, DOUBLE, FLOAT, DECIMAL, NUMERIC,
+    DATE, TIMESTAMP, TIME, DATETIME, YEAR,
+    BINARY, CHAR, NCHAR, VARCHAR, VARBINARY, TINYBLOB, MEDIUMBLOB, BLOB, LONGBLOB,
+    TINYTEXT, TEXT, MEDIUMTEXT, LONGTEXT
+  }
+
+  private Type _type;
+  private ColumnLengthExpression _length;
+  private List<? extends SQLParsedElement> _modifiers;
+
+  public ColumnDataType(Token start, Token end, Type type, ColumnLengthExpression length, List<? extends SQLParsedElement> modifiers) {
+    super(start, end, collectChildren(length, modifiers));
+    _type = type;
+    _length = length;
+    _modifiers = modifiers;
+  }
+
+  public ColumnDataType(Token token, Type type) {
+    super(token);
+    _type = type;
   }
 
   @Override

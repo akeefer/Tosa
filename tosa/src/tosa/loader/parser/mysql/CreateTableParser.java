@@ -312,8 +312,297 @@ public class CreateTableParser implements SQLParserConstants {
   }
 
   private ColumnDataType parseDataType() {
-    // TODO - AHK
-    return null;
+    ColumnDataType returnType = parseNumericColumnType();
+    if (returnType == null) {
+      returnType = parseDateColumnType();
+    }
+    if (returnType == null) {
+      returnType = parseCharacterColumnType();
+    }
+    // TODO - AHK - Parse spatial data types
+    if (returnType == null) {
+      // TODO - AHK
+    }
+    return returnType;
+  }
+
+  //    BIT[(length)]
+  //  | TINYINT[(length)] [UNSIGNED] [ZEROFILL]
+  //  | SMALLINT[(length)] [UNSIGNED] [ZEROFILL]
+  //  | MEDIUMINT[(length)] [UNSIGNED] [ZEROFILL]
+  //  | INT[(length)] [UNSIGNED] [ZEROFILL]
+  //  | INTEGER[(length)] [UNSIGNED] [ZEROFILL]
+  //  | BIGINT[(length)] [UNSIGNED] [ZEROFILL]
+  //  | REAL[(length,decimals)] [UNSIGNED] [ZEROFILL]
+  //  | DOUBLE[(length,decimals)] [UNSIGNED] [ZEROFILL]
+  //  | FLOAT[(length,decimals)] [UNSIGNED] [ZEROFILL]
+  //  | DECIMAL[(length[,decimals])] [UNSIGNED] [ZEROFILL]
+  //  | NUMERIC[(length[,decimals])] [UNSIGNED] [ZEROFILL]
+  private ColumnDataType parseNumericColumnType() {
+    // TODO - Handle Serial
+    if (accept(BIT)) {
+      Token start = lastMatch();
+      ColumnLengthExpression length = parseLength();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.BIT, length, null);
+    } else if (accept(TINYINT)) {
+      Token start = lastMatch();
+      ColumnLengthExpression length = parseLength();
+      List<NumericDataTypeModifier> modifiers = parseNumericModifiers();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.TINYINT, length, modifiers);
+    } else if (accept(BOOL) || accept(BOOLEAN)) {
+      // BOOL and BOOLEAN are equivalent to TINYINT(1)
+      Token start = lastMatch();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.BOOL, null, null);
+    } else if (accept(SMALLINT)) {
+      Token start = lastMatch();
+      ColumnLengthExpression length = parseLength();
+      List<NumericDataTypeModifier> modifiers = parseNumericModifiers();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.SMALLINT, length, modifiers);
+    } else if (accept(MEDIUMINT)) {
+      Token start = lastMatch();
+      ColumnLengthExpression length = parseLength();
+      List<NumericDataTypeModifier> modifiers = parseNumericModifiers();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.MEDIUMINT, length, modifiers);
+    } else if (accept(INT) || accept(INTEGER)) {
+      Token start = lastMatch();
+      ColumnLengthExpression length = parseLength();
+      List<NumericDataTypeModifier> modifiers = parseNumericModifiers();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.INT, length, modifiers);
+    } else if (accept(BIGINT)) {
+      Token start = lastMatch();
+      ColumnLengthExpression length = parseLength();
+      List<NumericDataTypeModifier> modifiers = parseNumericModifiers();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.BIGINT, length, modifiers);
+    } else if (accept(REAL)) {
+      Token start = lastMatch();
+      ColumnLengthExpression length = parseLengthAndDecimals();
+      List<NumericDataTypeModifier> modifiers = parseNumericModifiers();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.REAL, length, modifiers);
+    } else if (accept(DOUBLE, PRECISION) || accept(DOUBLE)) {
+      Token start = lastMatch();
+      if (start.match(PRECISION)) {
+        start = start.previous();
+      }
+      ColumnLengthExpression length = parseLengthAndDecimals();
+      List<NumericDataTypeModifier> modifiers = parseNumericModifiers();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.DOUBLE, length, modifiers);
+    } else if (accept(FLOAT)) {
+      Token start = lastMatch();
+      ColumnLengthExpression length = parseLengthAndDecimals();
+      List<NumericDataTypeModifier> modifiers = parseNumericModifiers();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.FLOAT, length, modifiers);
+    } else if (accept(DECIMAL) || accept(DEC)) {
+      Token start = lastMatch();
+      ColumnLengthExpression length = parseLengthAndDecimals();
+      List<NumericDataTypeModifier> modifiers = parseNumericModifiers();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.DECIMAL, length, modifiers);
+    } else if (accept(NUMERIC) || accept(FIXED)) {
+      Token start = lastMatch();
+      ColumnLengthExpression length = parseLengthAndDecimals();
+      List<NumericDataTypeModifier> modifiers = parseNumericModifiers();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.NUMERIC, length, modifiers);
+    } else {
+      return null;
+    }
+  }
+
+  private ColumnLengthExpression parseLength() {
+    if (accept(OPEN_PAREN)) {
+      Token start = lastMatch();
+      Token length = takeToken();
+      expect(CLOSE_PAREN);
+      return new ColumnLengthExpression(start, lastMatch(), length, null);
+    } else {
+      return null;
+    }
+  }
+
+  private List<NumericDataTypeModifier> parseNumericModifiers() {
+    List<NumericDataTypeModifier> modifiers = new ArrayList<NumericDataTypeModifier>();
+    while (true) {
+      NumericDataTypeModifier modifier = parseNumericModifier();
+      if (modifier != null) {
+        modifiers.add(modifier);
+      } else {
+        break;
+      }
+    }
+    return modifiers;
+  }
+
+  private NumericDataTypeModifier parseNumericModifier() {
+    if (accept(SIGNED)) {
+      return new NumericDataTypeModifier(lastMatch(), NumericDataTypeModifier.Type.SIGNED);
+    } else if (accept(UNSIGNED)) {
+      return new NumericDataTypeModifier(lastMatch(), NumericDataTypeModifier.Type.UNSIGNED);
+    } else if (accept(ZEROFILL)) {
+      return new NumericDataTypeModifier(lastMatch(), NumericDataTypeModifier.Type.ZEROFILL);
+    } else {
+      return null;
+    }
+  }
+
+  private ColumnLengthExpression parseLengthAndDecimals() {
+    // TODO - AHK - Sometimes the comma isn't optional, but I don't think that matters here
+    if (accept(OPEN_PAREN)) {
+      Token start = lastMatch();
+      Token length = takeToken();
+      Token decimals = null;
+      if (accept(COMMA)) {
+        decimals = takeToken();
+      }
+      expect(CLOSE_PAREN);
+      return new ColumnLengthExpression(start, lastMatch(), length, decimals);
+    } else {
+      return null;
+    }
+  }
+
+  // TODO - Copy in syntax
+  private ColumnDataType parseDateColumnType() {
+    if (accept(DATE)) {
+      return new ColumnDataType(lastMatch(), ColumnDataType.Type.DATE);
+    } else if (accept(TIME)) {
+      return new ColumnDataType(lastMatch(), ColumnDataType.Type.TIME);
+    } else if (accept(TIMESTAMP)) {
+      return new ColumnDataType(lastMatch(), ColumnDataType.Type.TIMESTAMP);
+    } else if (accept(DATETIME)) {
+      return new ColumnDataType(lastMatch(), ColumnDataType.Type.DATETIME);
+    } else if (accept(YEAR)) {
+      return new ColumnDataType(lastMatch(), ColumnDataType.Type.YEAR);
+    } else {
+      return null;
+    }
+  }
+
+  //  | CHAR[(length)]
+  //      [CHARACTER SET charset_name] [COLLATE collation_name]
+  //  | VARCHAR(length)
+  //      [CHARACTER SET charset_name] [COLLATE collation_name]
+  //  | BINARY[(length)]
+  //  | VARBINARY(length)
+  //  | TINYBLOB
+  //  | BLOB
+  //  | MEDIUMBLOB
+  //  | LONGBLOB
+  //  | TINYTEXT [BINARY]
+  //      [CHARACTER SET charset_name] [COLLATE collation_name]
+  //  | TEXT [BINARY]
+  //      [CHARACTER SET charset_name] [COLLATE collation_name]
+  //  | MEDIUMTEXT [BINARY]
+  //      [CHARACTER SET charset_name] [COLLATE collation_name]
+  //  | LONGTEXT [BINARY]
+  //      [CHARACTER SET charset_name] [COLLATE collation_name]
+  //  | ENUM(value1,value2,value3,...)
+  //      [CHARACTER SET charset_name] [COLLATE collation_name]
+  //  | SET(value1,value2,value3,...)
+  //      [CHARACTER SET charset_name] [COLLATE collation_name]
+    private ColumnDataType parseCharacterColumnType() {
+    if (accept(CHAR, BYTE) || accept(BINARY)) {
+      Token start = lastMatch();
+      if (start.match(BYTE)) {
+        start = start.previous();
+      }
+      ColumnLengthExpression lengthExpression = parseLength();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.BINARY, lengthExpression, null);
+    } else if (accept(CHAR) || accept(CHARACTER)) {
+      Token start = lastMatch();
+      ColumnLengthExpression lengthExpression = parseLength();
+      List<SQLParsedElement> characterTypeAttributes = parseCharTypeAttributes();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.CHAR, lengthExpression, characterTypeAttributes);
+    } else if (accept(NATIONAL, CHAR) || accept(NCHAR)) {
+      Token start = lastMatch();
+      if (start.match(CHAR)) {
+        start = start.previous();
+      }
+      ColumnLengthExpression lengthExpression = parseLength();
+      List<SQLParsedElement> characterTypeAttributes = parseCharTypeAttributes();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.NCHAR, lengthExpression, characterTypeAttributes);
+    } else if (accept(VARCHAR)) {
+      Token start = lastMatch();
+      ColumnLengthExpression lengthExpression = parseLength();
+      List<SQLParsedElement> characterTypeAttributes = parseCharTypeAttributes();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.VARCHAR, lengthExpression, characterTypeAttributes);
+    } else if (accept(VARBINARY)) {
+      Token start = lastMatch();
+      ColumnLengthExpression lengthExpression = parseLength();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.VARBINARY, lengthExpression, null);
+    } else if (accept(TINYBLOB)) {
+      return new ColumnDataType(lastMatch(), ColumnDataType.Type.TINYBLOB);
+    } else if (accept(BLOB)) {
+      Token start = lastMatch();
+      ColumnLengthExpression lengthExpression = parseLength();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.BLOB, lengthExpression, null);
+    } else if (accept(MEDIUMBLOB)) {
+      return new ColumnDataType(lastMatch(), ColumnDataType.Type.MEDIUMBLOB);
+    } else if (accept(LONGBLOB)) {
+      return new ColumnDataType(lastMatch(), ColumnDataType.Type.LONGBLOB);
+    } else if (accept(TINYTEXT)) {
+      Token start = lastMatch();
+      List<SQLParsedElement> characterTypeAttributes = parseCharTypeAttributes();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.TINYTEXT, null, characterTypeAttributes);
+    } else if (accept(TEXT)) {
+      Token start = lastMatch();
+      ColumnLengthExpression lengthExpression = parseLength();
+      List<SQLParsedElement> characterTypeAttributes = parseCharTypeAttributes();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.TEXT, lengthExpression, characterTypeAttributes);
+    } else if (accept(MEDIUMTEXT)) {
+      Token start = lastMatch();
+      List<SQLParsedElement> characterTypeAttributes = parseCharTypeAttributes();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.MEDIUMTEXT, null, characterTypeAttributes);
+    } else if (accept(LONGTEXT)) {
+      Token start = lastMatch();
+      List<SQLParsedElement> characterTypeAttributes = parseCharTypeAttributes();
+      return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.LONGTEXT, null, characterTypeAttributes);
+    } else if (accept(ENUM)) {
+      // TODO - AHK
+//      List<String> values = parseEnumOrSetValueList();
+//      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
+//      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + ENUM);
+      return null;
+    } else if (accept(SET)) {
+      // TODO - AHK
+//      List<String> values = parseEnumOrSetValueList();
+//      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
+//      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + SET);
+      return null;
+    } else {
+      return null;
+    }
+  }
+
+  private List<SQLParsedElement> parseCharTypeAttributes() {
+    List<SQLParsedElement> charTypeAttributes = new ArrayList<SQLParsedElement>();
+    while (true) {
+      SQLParsedElement charTypeAttribute = parseCharTypeAttribute();
+      if (charTypeAttribute != null) {
+        charTypeAttributes.add(charTypeAttribute);
+      } else {
+        break;
+      }
+    }
+    return charTypeAttributes;
+  }
+
+  private SQLParsedElement parseCharTypeAttribute() {
+    // TODO - AHK - Should be an error if the char set or collation is already set
+    if (accept(CHARACTER, SET)) {
+      Token start = lastMatch().previous();
+      Token charSetName = takeToken();
+      return new CharacterSetExpression(start, charSetName, charSetName);
+    } else if (accept(COLLATE)) {
+      Token start = lastMatch();
+      Token collation = takeToken();
+      return new CollateExpression(start, collation, collation);
+    } else if (accept(ASCII)) {
+      return new CharacterTypeAttribute(lastMatch(), CharacterTypeAttribute.Attribute.ASCII);
+    } else if (accept(UNICODE)) {
+      return new CharacterTypeAttribute(lastMatch(), CharacterTypeAttribute.Attribute.UNICODE);
+    } else if (accept(BINARY)) {
+      return new CharacterTypeAttribute(lastMatch(), CharacterTypeAttribute.Attribute.BINARY);
+    } else {
+      return null;
+    }
   }
 
   private SQLParsedElement parseColumnOption() {
@@ -326,25 +615,6 @@ public class CreateTableParser implements SQLParserConstants {
     return null;
   }
 
-  //  /*column_definition:
-//    data_type [NOT NULL | NULL] [DEFAULT default_value]
-//      [AUTO_INCREMENT] [UNIQUE [KEY] | [PRIMARY] KEY]
-//      [COMMENT 'string']
-//      [COLUMN_FORMAT {FIXED|DYNAMIC|DEFAULT}]
-//      [STORAGE {DISK|MEMORY|DEFAULT}]
-//      [reference_definition]*/
-//  private ColumnData parseColumnDefinition() {
-//    // Note:  In the syntax defined in the MySQL docs they don't include the name as part of the column_definition
-//    // production, but I'm moving it in there for the sake of sanity
-//    String name = consumeToken();
-//    name = stripQuotes(name);
-//    DBColumnTypeImpl columnType = parseDataType();
-//    while (parseColumnOption()) {
-//      // Keep looping to consume all the options
-//    }
-//    // TODO - AHK
-//    return new ColumnData(name, columnType);
-//  }
 
   // ==========================================================================
   //                            Helper Methods
