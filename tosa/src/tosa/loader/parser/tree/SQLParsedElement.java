@@ -130,4 +130,20 @@ public abstract class SQLParsedElement {
   public Token getLast() {
     return _last;
   }
+
+  protected static List<SQLParsedElement> collectChildren(Object... args) {
+    List<SQLParsedElement> results = new ArrayList<SQLParsedElement>();
+    for (Object arg : args) {
+      if (arg != null) {
+        if (arg instanceof SQLParsedElement) {
+          results.add((SQLParsedElement) arg);
+        } else if (arg instanceof List) {
+          results.addAll((List) arg);
+        } else {
+          throw new IllegalArgumentException("Argument " + arg + " with type " + arg.getClass() + " is not a SQLParsedElement or a list");
+        }
+      }
+    }
+    return results;
+  }
 }

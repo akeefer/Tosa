@@ -26,7 +26,8 @@ public class DDLDBDataSource implements IDBDataSource {
     for (Pair<String, IFile> ddlFile : module.getResourceAccess().findAllFilesByExtension(".ddl")) {
       // TODO - AHK - Lots o' error handling
       // TODO - AHK - Select the correct parser somehow
-      IFile connectionFile = ddlFile.getSecond().getParent().file(ddlFile.getSecond().getBaseName() + ".dbc");
+      String path = module.getResourceAccess().pathRelativeToRoot(ddlFile.getSecond());
+      IFile connectionFile = module.getResourceAccess().findFirstFile(path.substring(0, path.length() - ".ddl".length()) + ".dbc");
       String connectionString = null;
       if (connectionFile.exists()) {
         connectionString = readFile(connectionFile);
