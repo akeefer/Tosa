@@ -104,6 +104,26 @@ public class SQLTypeTest {
     assertFalse(rs.hasNext());
   }
 
+  @Test
+  public void testSimpleSelectWithIsNotNull() {
+    insertBar("2010-10-10", "Foo");
+
+    SQLType sType = parse("SELECT * FROM Bar WHERE Date IS NOT NULL");
+    Iterator<IDBObject> rs = executeQuery(IDBObject.class, sType).iterator();
+    assertTrue(rs.hasNext());
+    rs.next();
+    assertFalse(rs.hasNext());
+  }
+
+  @Test
+  public void testSimpleSelectWithIsNull() {
+    insertBar("2010-10-10", "Foo");
+
+    SQLType sType = parse("SELECT * FROM Bar WHERE Date IS NULL");
+    Iterator<IDBObject> rs = executeQuery(IDBObject.class, sType).iterator();
+    assertFalse(rs.hasNext());
+  }
+
   //===================================================================
   // HELPER STUFF
   //===================================================================

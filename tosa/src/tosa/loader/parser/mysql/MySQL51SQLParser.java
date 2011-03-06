@@ -1174,6 +1174,15 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
         LikePredicate likePredicate = new LikePredicate(initialValue, pattern, notFound);
         return likePredicate;
       }
+
+      if (_currentToken.match(IS) && _currentToken.nextToken().match(NOT) && _currentToken.nextToken().nextToken().match(NULL)) {
+        _currentToken = _currentToken.nextToken().nextToken().nextToken();
+        return new IsNotNullPredicate(initialValue, _currentToken.previous(), true);
+      }
+      if (_currentToken.match(IS) && _currentToken.nextToken().match(NULL)) {
+        _currentToken = _currentToken.nextToken().nextToken();
+        return new IsNotNullPredicate(initialValue, _currentToken.previous(), false);
+      }
     }
     return unexpectedToken();
   }
