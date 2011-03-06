@@ -23,11 +23,9 @@ public class CreateTableParser implements SQLParserConstants {
     List<CreateTableStatement> statements = new ArrayList<CreateTableStatement>();
     while (!_currentToken.isEOF()) {
       CreateTableStatement statement = parseCreate();
-      if (statement == null) {
-        // TODO - AHK - Is this correct?
-        break;
+      if (statement != null) {
+        statements.add(statement);
       }
-      statements.add(statement);
     }
     return statements;
   }
@@ -36,38 +34,41 @@ public class CreateTableParser implements SQLParserConstants {
     if (match(CREATE)) {
       Token start = lastMatch();
       match(TEMPORARY); // Discard; we don't care
-      expectToken(null, TABLE);
-      match(IF, NOT, EXISTS);
-      Token tableName = takeToken();
-      List<SQLParsedElement> children = new ArrayList<SQLParsedElement>();
-      if (accept(LIKE)) {
-        Token likeTableName = takeToken();
-        // TODO - AHK - And what do we do with it, exactly?
-      } else if (accept(OPEN_PAREN, LIKE)) {
-        Token likeTableName = takeToken();
-        expect(CLOSE_PAREN);
-        // TODO - AHK - And what do we do with it, exactly?
-      } else if (accept(OPEN_PAREN)) {
-        children.addAll(parseCreateDefinitions());
-        expect(CLOSE_PAREN);
-        // TODO - AHK
+      if(match(TABLE)) {
+        match(IF, NOT, EXISTS);
+        Token tableName = takeToken();
+        List<SQLParsedElement> children = new ArrayList<SQLParsedElement>();
+        if (accept(LIKE)) {
+          Token likeTableName = takeToken();
+          // TODO - AHK - And what do we do with it, exactly?
+        } else if (accept(OPEN_PAREN, LIKE)) {
+          Token likeTableName = takeToken();
+          expect(CLOSE_PAREN);
+          // TODO - AHK - And what do we do with it, exactly?
+        } else if (accept(OPEN_PAREN)) {
+          children.addAll(parseCreateDefinitions());
+          expect(CLOSE_PAREN);
+          // TODO - AHK
 //        children.addAll(parseTableOptions());
 //        children.addAll(parsePartitionOptions());
 //        children.addAll(parseSelectStatement());
-      } else {
-        // No columns, but there must be a select statement
-        // TODO - AHK
+        } else {
+          // No columns, but there must be a select statement
+          // TODO - AHK
 //        children.addAll(parseTableOptions());
 //        children.addAll(parsePartitionOptions());
 //        children.addAll(parseSelectStatement());
+        }
+
+        expect(SEMI_COLON);
+
+        return new CreateTableStatement(start, lastMatch(), tableName, children);
       }
-
-      expect(SEMI_COLON);
-
-      return new CreateTableStatement(start, lastMatch(), tableName, children);
-    } else {
-      return null;
     }
+    while (!match(SEMI_COLON)) {
+      takeToken();
+    }
+    return null;
   }
 
   private List<SQLParsedElement> parseCreateDefinitions() {
