@@ -32,6 +32,39 @@ public class MySQL51SQLParserTest {
   }
 
   @Test
+  public void createUserIgnored() {
+    List<TableData> tableData = parse("CREATE USER IF NOT EXISTS SA SALT '12bd38540d6d1b6d' HASH 'badd644249ad1cdbb9efd2717b285af20c7040ea835090cae2c65b1e11785ded' ADMIN;\n" +
+        "CREATE TABLE \"Bar\"(\n" +
+        "    \"id\" INT PRIMARY KEY AUTO_INCREMENT,\n" +
+        "    \"Date\" DATE,\n" +
+        "    \"Misc\" VARCHAR(50)\n" +
+        ");");
+
+    assertSingleTable(table("Bar",
+            column("id", DBColumnTypeImpl.INTEGER_ITYPE, Types.INTEGER),
+            column("Date", DBColumnTypeImpl.DATE_ITYPE, Types.DATE),
+            column("Misc", DBColumnTypeImpl.STRING_ITYPE, Types.VARCHAR)),
+        tableData);
+  }
+
+  @Test
+  public void insertIgnored() {
+    List<TableData> tableData = parse("INSERT INTO \"User\"(\"id\", \"Name\", \"Hash\", \"Salt\") VALUES\n" +
+        "(1, 'admin', 'ilPQ0UXsOZMvdpyKmsqlyGdYc9uXzCREqOb7AL1dv2A=', 'ObnNMzW+Ll0LnQP/Hnjb8MsXB8PTaeKKdDPqJvwmtzCQ4EW0FFLsoCqGkInD+rGCKQ42NXFEBSs6TlDQfHuu5xpAT2mX11YhYJv3W8CK5UtMLvYyOg1OzyuSNLsz479wlwmOaZjiketXbPTyQgRMNJIBKk8qHgqLcC08dBVEtT8=');\n" +
+        "CREATE TABLE \"Bar\"(\n" +
+        "    \"id\" INT PRIMARY KEY AUTO_INCREMENT,\n" +
+        "    \"Date\" DATE,\n" +
+        "    \"Misc\" VARCHAR(50)\n" +
+        ");");
+
+    assertSingleTable(table("Bar",
+            column("id", DBColumnTypeImpl.INTEGER_ITYPE, Types.INTEGER),
+            column("Date", DBColumnTypeImpl.DATE_ITYPE, Types.DATE),
+            column("Misc", DBColumnTypeImpl.STRING_ITYPE, Types.VARCHAR)),
+        tableData);
+  }
+
+  @Test
   public void bitDataType() {
     assertColumnDataType("BIT", column("test", DBColumnTypeImpl.BOOLEAN_ITYPE, Types.BIT));
     assertColumnDataType("bIt", column("test", DBColumnTypeImpl.BOOLEAN_ITYPE, Types.BIT));
