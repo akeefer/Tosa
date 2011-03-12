@@ -2,6 +2,7 @@ package tosa.loader.parser.tree;
 
 import tosa.loader.parser.Token;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,5 +25,20 @@ public class CreateTableStatement extends SQLParsedElement {
   protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
     // TODO - AHK
 
+  }
+
+  public Token getTableName() {
+    return _tableName;
+  }
+
+  public List<ColumnDefinition> getColumnDefinitions() {
+    // TODO - AHK - It would be ideal to use a filtered list
+    List<ColumnDefinition> columns = new ArrayList<ColumnDefinition>();
+    for (SQLParsedElement element : getChildren()) {
+      if (element instanceof ColumnDefinition) {
+        columns.add((ColumnDefinition) element);
+      }
+    }
+    return columns;
   }
 }
