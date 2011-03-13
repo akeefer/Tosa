@@ -631,7 +631,7 @@ public class MySQL51SQLParserTest {
   }
 
   private List<TableData> parse(String sql) {
-    return new MySQL51SQLParser().parseDDLFile(sql);
+    return new NewMySQL51Parser().parseDDLFile(sql);
   }
 
   private static class TableAssertionData {

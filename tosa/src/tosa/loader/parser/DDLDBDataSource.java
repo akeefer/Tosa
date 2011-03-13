@@ -7,6 +7,7 @@ import tosa.loader.data.DBData;
 import tosa.loader.data.IDBDataSource;
 import tosa.loader.data.TableData;
 import tosa.loader.parser.mysql.MySQL51SQLParser;
+import tosa.loader.parser.mysql.NewMySQL51Parser;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +33,7 @@ public class DDLDBDataSource implements IDBDataSource {
       if (connectionFile != null && connectionFile.exists()) {
         connectionString = readFile(connectionFile);
       }
-      List<TableData> tables = new MySQL51SQLParser().parseDDLFile(readFile(ddlFile.getSecond()));
+      List<TableData> tables = new NewMySQL51Parser().parseDDLFile(readFile(ddlFile.getSecond()));
       String fileName = ddlFile.getFirst();
       results.put(fileName.substring(0, fileName.length() - ".ddl".length()).replace("/", "."),  new DBData(tables, connectionString, ddlFile.getSecond()));
     }
