@@ -40,4 +40,16 @@ public class ColumnDataType extends SQLParsedElement {
   protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
     // TODO - AHK
   }
+
+  public Type getType() {
+    return _type;
+  }
+
+  public ColumnLengthExpression getLength() {
+    return _length;
+  }
+
+  public List<? extends SQLParsedElement> getModifiers() {
+    return _modifiers;
+  }
 }

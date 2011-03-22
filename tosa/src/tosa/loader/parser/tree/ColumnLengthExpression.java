@@ -24,4 +24,12 @@ public class ColumnLengthExpression extends SQLParsedElement {
   protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
     // TODO - AHK
   }
+
+  public Token getLength() {
+    return _length;
+  }
+
+  public Token getDecimals() {
+    return _decimals;
+  }
 }

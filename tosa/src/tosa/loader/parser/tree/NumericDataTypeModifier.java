@@ -25,4 +25,8 @@ public class NumericDataTypeModifier extends SQLParsedElement {
   protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
     // TODO - AHK
   }
+
+  public Type getType() {
+    return _type;
+  }
 }

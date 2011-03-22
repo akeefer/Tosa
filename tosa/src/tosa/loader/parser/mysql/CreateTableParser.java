@@ -23,11 +23,9 @@ public class CreateTableParser implements SQLParserConstants {
     List<CreateTableStatement> statements = new ArrayList<CreateTableStatement>();
     while (!_currentToken.isEOF()) {
       CreateTableStatement statement = parseCreate();
-      if (statement == null) {
-        // TODO - AHK - Is this correct?
-        break;
+      if (statement != null) {
+        statements.add(statement);
       }
-      statements.add(statement);
     }
     return statements;
   }
@@ -36,38 +34,41 @@ public class CreateTableParser implements SQLParserConstants {
     if (match(CREATE)) {
       Token start = lastMatch();
       match(TEMPORARY); // Discard; we don't care
-      expectToken(null, TABLE);
-      match(IF, NOT, EXISTS);
-      Token tableName = takeToken();
-      List<SQLParsedElement> children = new ArrayList<SQLParsedElement>();
-      if (accept(LIKE)) {
-        Token likeTableName = takeToken();
-        // TODO - AHK - And what do we do with it, exactly?
-      } else if (accept(OPEN_PAREN, LIKE)) {
-        Token likeTableName = takeToken();
-        expect(CLOSE_PAREN);
-        // TODO - AHK - And what do we do with it, exactly?
-      } else if (accept(OPEN_PAREN)) {
-        children.addAll(parseCreateDefinitions());
-        expect(CLOSE_PAREN);
-        // TODO - AHK
+      if(match(TABLE)) {
+        match(IF, NOT, EXISTS);
+        Token tableName = takeToken();
+        List<SQLParsedElement> children = new ArrayList<SQLParsedElement>();
+        if (accept(LIKE)) {
+          Token likeTableName = takeToken();
+          // TODO - AHK - And what do we do with it, exactly?
+        } else if (accept(OPEN_PAREN, LIKE)) {
+          Token likeTableName = takeToken();
+          expect(CLOSE_PAREN);
+          // TODO - AHK - And what do we do with it, exactly?
+        } else if (accept(OPEN_PAREN)) {
+          children.addAll(parseCreateDefinitions());
+          expect(CLOSE_PAREN);
+          // TODO - AHK
 //        children.addAll(parseTableOptions());
 //        children.addAll(parsePartitionOptions());
 //        children.addAll(parseSelectStatement());
-      } else {
-        // No columns, but there must be a select statement
-        // TODO - AHK
+        } else {
+          // No columns, but there must be a select statement
+          // TODO - AHK
 //        children.addAll(parseTableOptions());
 //        children.addAll(parsePartitionOptions());
 //        children.addAll(parseSelectStatement());
+        }
+
+        expect(SEMI_COLON);
+
+        return new CreateTableStatement(start, lastMatch(), tableName, children);
       }
-
-      expect(SEMI_COLON);
-
-      return new CreateTableStatement(start, lastMatch(), tableName, children);
-    } else {
-      return null;
     }
+    while (!match(SEMI_COLON)) {
+      takeToken();
+    }
+    return null;
   }
 
   private List<SQLParsedElement> parseCreateDefinitions() {
@@ -585,7 +586,6 @@ public class CreateTableParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parseCharTypeAttribute() {
-    // TODO - AHK - Should be an error if the char set or collation is already set
     if (accept(CHARACTER, SET)) {
       Token start = lastMatch().previous();
       Token charSetName = takeToken();
@@ -605,10 +605,81 @@ public class CreateTableParser implements SQLParserConstants {
     }
   }
 
+  /*
+    [NOT NULL | NULL] [DEFAULT default_value]
+      [AUTO_INCREMENT] [UNIQUE [KEY] | [PRIMARY] KEY]
+      [COMMENT 'string']
+      [COLUMN_FORMAT {FIXED|DYNAMIC|DEFAULT}]
+      [STORAGE {DISK|MEMORY|DEFAULT}]
+      [reference_definition]*/
   private SQLParsedElement parseColumnOption() {
+    if (accept(NOT, NULL)) {
+      return new ColumnOptionExpression(lastMatch().previous(), lastMatch(), ColumnOptionExpression.ColumnOptionType.NOT_NULL);
+    } else if (accept(NULL)) {
+      return new ColumnOptionExpression(lastMatch(), lastMatch(), ColumnOptionExpression.ColumnOptionType.NULL);
+    }
+
+    if (accept(DEFAULT)) {
+      Token start = lastMatch();
+      // TODO - AHK - This is likely incorrect (i.e. it could be a quoted string or something else)
+      Token value = takeToken();
+      return new DefaultValueExpression(start, value, value);
+    }
+
+    if (accept(AUTO_INCREMENT)) {
+      return new ColumnOptionExpression(lastMatch(), lastMatch(), ColumnOptionExpression.ColumnOptionType.AUTO_INCREMENT);
+    }
+
+    if (accept(UNIQUE)) {
+      if (accept(KEY)) {
+        return new ColumnOptionExpression(lastMatch().previous(), lastMatch(), ColumnOptionExpression.ColumnOptionType.UNIQUE_KEY);
+      } else {
+        return new ColumnOptionExpression(lastMatch(), lastMatch(), ColumnOptionExpression.ColumnOptionType.UNIQUE);
+      }
+    } else if (accept(PRIMARY)) {
+      expect(KEY);
+      return new ColumnOptionExpression(lastMatch().previous(), lastMatch(), ColumnOptionExpression.ColumnOptionType.PRIMARY_KEY);
+    }
+
+    if (accept(COMMENT)) {
+//      String comment = parseQuotedString();
+//      return true;
+      // TODO - AHK
+      return null;
+    }
+
+    if (accept(COLUMN_FORMAT)) {
+      if (accept(FIXED)) {
+        return new ColumnOptionExpression(lastMatch().previous(), lastMatch(), ColumnOptionExpression.ColumnOptionType.COLUMN_FORMAT_FIXED);
+      } else if (accept(DYNAMIC)) {
+        return new ColumnOptionExpression(lastMatch().previous(), lastMatch(), ColumnOptionExpression.ColumnOptionType.COLUMN_FORMAT_DYNAMIC);
+      } else if (accept(DEFAULT)) {
+        return new ColumnOptionExpression(lastMatch().previous(), lastMatch(), ColumnOptionExpression.ColumnOptionType.COLUMN_FORMAT_DEFAULT);
+      } else {
+        // TODO - Error
+      }
+    }
+
+    if (accept(STORAGE)) {
+      if (accept(DISK)) {
+        return new ColumnOptionExpression(lastMatch().previous(), lastMatch(), ColumnOptionExpression.ColumnOptionType.STORAGE_DISK);
+      } else if (accept(MEMORY)) {
+        return new ColumnOptionExpression(lastMatch().previous(), lastMatch(), ColumnOptionExpression.ColumnOptionType.STORAGE_MEMORY);
+      } else if (accept(DEFAULT)) {
+        return new ColumnOptionExpression(lastMatch().previous(), lastMatch(), ColumnOptionExpression.ColumnOptionType.STORAGE_DEFAULT);
+      } else {
+        // TODO - Error
+      }
+    }
+
     // TODO - AHK
+//    if (parseReferenceDefinition()) {
+//      return true;
+//    }
+
     return null;
   }
+
 
   private CheckExpressionDefinition parseCheckExpression() {
     // TODO - AHK

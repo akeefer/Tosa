@@ -22,4 +22,8 @@ public class CharacterSetExpression extends SQLParsedElement {
   protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
     // TODO - AHK
   }
+
+  public Token getCharSetName() {
+    return _charSetName;
+  }
 }

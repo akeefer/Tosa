@@ -16,6 +16,7 @@ public class TokenizerTest {
     assertMatches(Token.tokenize("a     b      \nc"), "a", "b", "c");
     assertMatches(Token.tokenize("a   \t  b      \nc"), "a", "b", "c");
     assertMatches(Token.tokenize(" \"asdf\" "), "\"asdf\"");
+    assertMatches(Token.tokenize("latin1"), "latin1");
   }
 
   @Test

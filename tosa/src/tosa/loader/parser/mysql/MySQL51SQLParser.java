@@ -66,8 +66,11 @@ public class MySQL51SQLParser implements SQLParserConstants, ISQLParser {
     _tokenizer = new SQLTokenizer(fileContents);
     List<TableData> tables = new ArrayList<TableData>();
     // TODO - AHK - Other Create calls?  Other stuff?  Closing semi-colon?
-    for (TableData table = parseCreate(); table != null; table = parseCreate()) {
-      tables.add(table);
+    while (!eof()) {
+      TableData table = parseCreate();
+      if (table != null) {
+        tables.add(table);
+      }
     }
     return tables;
   }
@@ -86,6 +89,10 @@ public class MySQL51SQLParser implements SQLParserConstants, ISQLParser {
 
   private void expect(String expected) {
     _tokenizer.expectIgnoreCase(expected);
+  }
+
+  private boolean eof() {
+    return _tokenizer.eof();
   }
 
   private String stripQuotes(String str) {
@@ -120,35 +127,46 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
   private TableData parseCreate() {
     if (accept(CREATE)) {
       accept(TEMPORARY); // Discard; we don't care
-      expect(TABLE);
-      accept(IF, NOT, EXISTS);
-      String tableName = stripQuotes(consumeToken());
-      List<ColumnData> columns = null;
-      if (accept(LIKE)) {
-        String likeTableName = consumeToken();
-        // TODO - AHK - And what do we do with it, exactly?
-      } else if (accept(OPEN_PAREN, LIKE)) {
-        String likeTableName = consumeToken();
-        expect(CLOSE_PAREN);
-        // TODO - AHK - And what do we do with it, exactly?
-      } else if (accept(OPEN_PAREN)) {
-        columns = parseCreateDefinitions();
-        expect(CLOSE_PAREN);
-        parseTableOptions();
-        parsePartitionOptions();
-        parseSelectStatement();
+      if(accept(TABLE)) {
+        accept(IF, NOT, EXISTS);
+        String tableName = stripQuotes(consumeToken());
+        List<ColumnData> columns = null;
+        if (accept(LIKE)) {
+          String likeTableName = consumeToken();
+          // TODO - AHK - And what do we do with it, exactly?
+        } else if (accept(OPEN_PAREN, LIKE)) {
+          String likeTableName = consumeToken();
+          expect(CLOSE_PAREN);
+          // TODO - AHK - And what do we do with it, exactly?
+        } else if (accept(OPEN_PAREN)) {
+          columns = parseCreateDefinitions();
+          expect(CLOSE_PAREN);
+          parseTableOptions();
+          parsePartitionOptions();
+          parseSelectStatement();
+        } else {
+          // No columns, but there must be a select statement
+          parseTableOptions();
+          parsePartitionOptions();
+          parseSelectStatement();
+        }
+
+        expect(SEMI_COLON);
+
+        return new TableData(tableName, columns);
       } else {
-        // No columns, but there must be a select statement
-        parseTableOptions();
-        parsePartitionOptions();
-        parseSelectStatement();
+        eatStatement();
+        return null;
       }
-
-      expect(SEMI_COLON);
-
-      return new TableData(tableName, columns);
     } else {
+      eatStatement();
       return null;
+    }
+  }
+
+  private void eatStatement() {
+    while (!eof() && !accept(SEMI_COLON)) {
+      consumeToken();
     }
   }
 

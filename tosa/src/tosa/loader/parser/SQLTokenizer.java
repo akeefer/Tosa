@@ -89,4 +89,8 @@ public class SQLTokenizer {
       _currentToken++;
     }
   }
+
+  public boolean eof() {
+    return _currentToken == _tokens.size();
+  }
 }

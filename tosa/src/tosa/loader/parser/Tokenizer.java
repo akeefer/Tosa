@@ -112,7 +112,7 @@ public class Tokenizer {
   private boolean consumeSymbol() {
     if (Character.isLetter(currentChar()) || ':' == currentChar()) {
       incrementOffset();
-      while (!atEndOfInput() && Character.isLetter(currentChar())) {
+      while (!atEndOfInput() && Character.isJavaIdentifierPart(currentChar())) {
         incrementOffset();
       }
       return true;

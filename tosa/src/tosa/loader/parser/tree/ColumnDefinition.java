@@ -28,4 +28,12 @@ public class ColumnDefinition extends SQLParsedElement {
   protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
     // TODO - AHK
   }
+
+  public Token getName() {
+    return _name;
+  }
+
+  public ColumnDataType getColumnDataType() {
+    return _columnDataType;
+  }
 }
