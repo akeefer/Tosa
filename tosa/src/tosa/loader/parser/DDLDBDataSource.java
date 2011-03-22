@@ -29,7 +29,7 @@ public class DDLDBDataSource implements IDBDataSource {
       String path = module.getResourceAccess().pathRelativeToRoot(ddlFile.getSecond());
       IFile connectionFile = module.getResourceAccess().findFirstFile(path.substring(0, path.length() - ".ddl".length()) + ".dbc");
       String connectionString = null;
-      if (connectionFile.exists()) {
+      if (connectionFile != null && connectionFile.exists()) {
         connectionString = readFile(connectionFile);
       }
       List<TableData> tables = new MySQL51SQLParser().parseDDLFile(readFile(ddlFile.getSecond()));
