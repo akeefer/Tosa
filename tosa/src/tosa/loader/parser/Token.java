@@ -1,15 +1,13 @@
 package tosa.loader.parser;
 
-import java.util.Arrays;
-import java.util.Iterator;
-
 public class Token {
 
-  private static final Token EOF = new Token(null, 0, 0, 0, 0);
+  private static final Token EOF = new Token(TokenType.EOF, null, 0, 0, 0, 0);
   static {
     EOF._next = EOF;
   }
 
+  private TokenType _type;
   private String _value;
   private Token _next;
   private Token _previous;
@@ -19,7 +17,8 @@ public class Token {
   private int _end;
 
 
-  public Token(String value, int line, int col, int start, int end) {
+  public Token(TokenType type, String value, int line, int col, int start, int end) {
+    _type = type;
     _value = value;
     _line = line;
     _col = col;
@@ -124,5 +123,17 @@ public class Token {
 
   public int getEnd() {
     return _end;
+  }
+
+  public boolean isSymbol() {
+    return _type == TokenType.SYMBOL;
+  }
+
+  public boolean isNumber() {
+    return _type == TokenType.NUMBER;
+  }
+
+  public boolean isString() {
+    return _type == TokenType.STRING;
   }
 }

@@ -3,6 +3,8 @@ package tosa.loader;
 import gw.lang.reflect.*;
 import gw.lang.reflect.java.IJavaType;
 import gw.util.GosuExceptionUtil;
+import gw.util.Pair;
+import tosa.api.IDBColumnType;
 import tosa.db.execution.QueryExecutor;
 import tosa.loader.parser.tree.*;
 
@@ -30,30 +32,43 @@ public class SQLTypeInfo extends BaseTypeInfo {
       .withCallHandler(new IMethodCallHandler() {
         @Override
         public Object handleCall(Object ctx, Object... args) {
-          Connection c = null;
-          try {
-            c = _sqlType.getData().getDatabase().getConnection().connect();
-            String sql = _sqlType.getData().getSQL();
-            PreparedStatement stmt = c.prepareStatement(sql);
-            ResultSet resultSet = stmt.executeQuery();
-            List lst = new LinkedList();
-            while (resultSet.next()) {
-              lst.add(constructResultElement(resultSet));
-            }
-            return lst;
-          } catch (SQLException e) {
-            throw new RuntimeException(e);
-          } finally {
-            if(c != null){
-              try {
-                c.close();
-              } catch (SQLException e) {
-                throw GosuExceptionUtil.forceThrow(e);
-              }
-            }
-          }
+          return invokeQuery(args);
         }
       }).build(this);
+  }
+
+  public Object invokeQuery(Object... args) {
+    Connection c = null;
+    try {
+      c = _sqlType.getData().getDatabase().getConnection().connect();
+      String sql = _sqlType.getData().getSQL();
+      PreparedStatement stmt = c.prepareStatement(sql);
+
+      List<SQLParameterInfo> pis = _sqlType.getData().getParameterInfos();
+      for (int i = 0, pisSize = pis.size(); i < pisSize; i++) {
+        SQLParameterInfo pi = pis.get(i);
+        for (Pair<Integer, IDBColumnType> index : pi.getIndexes()) {
+          stmt.setObject(index.getFirst(), args[i]);
+        }
+      }
+
+      ResultSet resultSet = stmt.executeQuery();
+      List lst = new LinkedList();
+      while (resultSet.next()) {
+        lst.add(constructResultElement(resultSet));
+      }
+      return lst;
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    } finally {
+      if(c != null){
+        try {
+          c.close();
+        } catch (SQLException e) {
+          throw GosuExceptionUtil.forceThrow(e);
+        }
+      }
+    }
   }
 
   private IType determineResultType() {
@@ -70,6 +85,16 @@ public class SQLTypeInfo extends BaseTypeInfo {
           return type;
         }
       }
+    } else if(selectList instanceof ColumnSelectList) {
+      List<? extends SQLParsedElement> children = selectList.getChildren();
+      Map<String, IType> typeMap = new HashMap<String, IType>();
+      for (SQLParsedElement child : children) {
+        if (child instanceof ColumnReference) {
+          ColumnReference cr = (ColumnReference) child;
+          typeMap.put(cr.getName(), cr.getGosuType());
+        }
+      }
+      return new StructType(_sqlType.getTypeLoader(), _sqlType.getName() + "Result", typeMap);
     }
     return IJavaType.OBJECT;
   }
@@ -85,6 +110,14 @@ public class SQLTypeInfo extends BaseTypeInfo {
           count--;
         }
         return hashMap;
+      } else if (returnType instanceof StructType) {
+        Map<String, IType> propMap = ((StructType) returnType).getPropMap();
+        Map vals = new HashMap();
+        for (String name : propMap.keySet()) {
+          Object val = resultSet.getObject(resultSet.findColumn(name));
+          vals.put(name, val);
+        }
+        return ((StructType) returnType).newInstance(vals);
       } else if (returnType instanceof IDBType) {
         return QueryExecutor.buildObject((IDBType) returnType, resultSet);
       } else {

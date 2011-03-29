@@ -16,7 +16,8 @@ public class Tokenizer {
   private int _currentCol;
   private int _currentStartOffset;
   private int _currentEndOffset;
-  
+  private TokenType _type;
+
 
   public Tokenizer(String contents) {
     _contents = contents;
@@ -41,15 +42,18 @@ public class Tokenizer {
 
     _currentStartOffset = _offset;
     _currentCol = _col;
-    
-    if (!consumeOperator()) {
-      if (!consumeSymbol()) {
-        if (!consumeString()) {
-          if (!consumeNumber()) {
-            consumeChar();
-          }
-        }
-      }
+
+    if (consumeOperator()) {
+      _type = TokenType.OPERATOR;
+    } else if (consumeSymbol()) {
+      _type = TokenType.SYMBOL;
+    } else if (consumeString()) {
+      _type = TokenType.STRING;
+    } else if (consumeNumber()) {
+      _type = TokenType.NUMBER;
+    } else {
+      _type = TokenType.UNKNOWN;
+      consumeChar();
     }
     _currentEndOffset = _offset;
     _currentStringValue = _contents.substring(_currentStartOffset, _currentEndOffset);
@@ -168,6 +172,6 @@ public class Tokenizer {
   }
 
   public Token nextToken() {
-    return new Token(_currentStringValue, _line, _currentCol, _currentStartOffset, _currentEndOffset);
+    return new Token(_type, _currentStringValue, _line, _currentCol, _currentStartOffset, _currentEndOffset);
   }
 }

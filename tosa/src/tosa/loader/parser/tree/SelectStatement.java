@@ -9,7 +9,7 @@ import tosa.loader.parser.Token;
 
 import java.util.*;
 
-public class SelectStatement extends SQLParsedElement {
+public class SelectStatement extends SQLParsedElement implements IRootParseElement {
 
   private SQLParsedElement _quantifier;
   private SQLParsedElement _selectList;
@@ -48,20 +48,32 @@ public class SelectStatement extends SQLParsedElement {
   }
 
   private List<SQLParameterInfo> determineParameters(DBData dbData) {
-    Map<String, SQLParameterInfo> pis = new HashMap<String, SQLParameterInfo>();
+    Map<String, SQLParameterInfo> pis = new LinkedHashMap<String, SQLParameterInfo>();
     List<VariableExpression> findDescendents = findDescendents(VariableExpression.class);
+    Collections.sort(findDescendents, new Comparator<VariableExpression>() {
+      @Override
+      public int compare(VariableExpression variableExpression, VariableExpression variableExpression1) {
+        return variableExpression.getFirst().getStart() - variableExpression1.getFirst().getStart();
+      }
+    });
     for (int i = 0, findDescendentsSize = findDescendents.size(); i < findDescendentsSize; i++) {
       VariableExpression var = findDescendents.get(i);
       SQLParameterInfo pi = pis.get(var.getName());
       if (pi == null) {
         pi = new SQLParameterInfo(var.getName());
+        pis.put(var.getName(), pi);
       }
-      pi.getIndexes().add(Pair.<Integer, IDBColumnType>make(i, null));
+      pi.getIndexes().add(Pair.<Integer, IDBColumnType>make(i + 1, null));
     }
     return new ArrayList<SQLParameterInfo>(pis.values());
   }
 
   public List<SQLParameterInfo> getParameters() {
     return _parameters;
+  }
+
+  @Override
+  public String getDefaultTableName() {
+    return _tableExpr.getFrom().getTableRefs().get(0).getName().getValue(); //TODO cgross - support multiple tables in table clause
   }
 }

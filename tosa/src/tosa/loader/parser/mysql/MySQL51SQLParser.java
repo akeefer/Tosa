@@ -13,9 +13,10 @@ import tosa.loader.parser.SQLTokenizer;
 import tosa.loader.parser.Token;
 import tosa.loader.parser.tree.*;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -1175,16 +1176,39 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       SQLParsedElement elt = parseSearchOrExpression();
       expectToken(elt, CLOSE_PAREN);
       return elt;
+    } else {
+      return parsePredicate();
     }
+  }
 
+  private SQLParsedElement parsePredicate() {
     SQLParsedElement initialValue = parseRowValue();
     if (initialValue != null) {
       if (matchAny(EQ_OP, LT_OP, LTEQ_OP, GT_OP, GTEQ_OP)) {
-        SQLParsedElement comparisonValue = parseRowValueOrVariable();
+        SQLParsedElement comparisonValue = parseValueExpression();
         return new ComparisonPredicate(initialValue, initialValue.nextToken(), comparisonValue);
+      }
+      boolean notFound = match(NOT);
+      if (match(LIKE)) {
+        SQLParsedElement pattern = parsePattern();
+        LikePredicate likePredicate = new LikePredicate(initialValue, pattern, notFound);
+        return likePredicate;
+      }
+
+      if (_currentToken.match(IS) && _currentToken.nextToken().match(NOT) && _currentToken.nextToken().nextToken().match(NULL)) {
+        _currentToken = _currentToken.nextToken().nextToken().nextToken();
+        return new IsNotNullPredicate(initialValue, _currentToken.previous(), true);
+      }
+      if (_currentToken.match(IS) && _currentToken.nextToken().match(NULL)) {
+        _currentToken = _currentToken.nextToken().nextToken();
+        return new IsNotNullPredicate(initialValue, _currentToken.previous(), false);
       }
     }
     return unexpectedToken();
+  }
+
+  private SQLParsedElement parsePattern() {
+    return parseRowValue();
   }
 
   private UnexpectedTokenExpression unexpectedToken() {
@@ -1197,14 +1221,6 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
   private void expectToken(SQLParsedElement elt, String str) {
     if (!match(str)) {
       elt.addParseError(new SQLParseError(_currentToken, "Expected " + str));
-    }
-  }
-
-  private SQLParsedElement parseRowValueOrVariable() {
-    if (_currentToken.getValue().startsWith(":")) {
-      return new VariableExpression(takeToken());
-    } else {
-      return parseValueExpression();
     }
   }
 
@@ -1247,8 +1263,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
   }
 
   private SQLParsedElement parseStringValueExpression() {
-    if (_currentToken.getValue().startsWith("\"") ||
-      _currentToken.getValue().startsWith("\'")) {
+    if (_currentToken.isString()) {
       return new StringLiteralExpression(takeToken());
     } else {
       return null;
@@ -1286,21 +1301,43 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
   }
 
   private SQLParsedElement parseNumericPrimary() {
+
     SQLParsedElement numericLiteral = parseNumericLiteral();
     if (numericLiteral != null) {
       return numericLiteral;
+    }
+
+    SQLParsedElement varRef = parseVariableReference();
+    if (varRef != null) {
+      return varRef;
+    }
+
+    SQLParsedElement columnRef = parseColumnReference();
+    if (columnRef != null) {
+      return columnRef;
+    }
+    
+    return null;
+  }
+
+  private SQLParsedElement parseVariableReference() {
+    if (_currentToken.isSymbol() && _currentToken.getValue().startsWith(":")) {
+      return new VariableExpression(takeToken());
     } else {
-      return parseColumnReference();
+      return null;
     }
   }
 
   private SQLParsedElement parseColumnReference() {
-    Token base = takeToken();
-    if (match(".")) {
-      return new ColumnReference(base, takeToken());
-    } else {
-      return new ColumnReference(base);
+    if (_currentToken.isSymbol()) {
+      Token base = takeToken();
+      if (match(".") && _currentToken.isSymbol()) {
+        return new ColumnReference(base, takeToken());
+      } else {
+        return new ColumnReference(base);
+      }
     }
+    return null;
   }
 
   private Token takeToken() {
@@ -1310,11 +1347,15 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
   }
 
   private SQLParsedElement parseNumericLiteral() {
-    try {
-      int i = Integer.parseInt(_currentToken.getValue());
-      return new SQLNumericLiteral(takeToken(), i);
-    } catch (NumberFormatException e) {
-      // ignore
+    if (_currentToken.isNumber()) {
+      Token token = takeToken();
+      if (token.getValue().contains(".")) {
+        return new SQLNumericLiteral(token, new BigDecimal(token.getValue()));
+      }
+      else
+      {
+        return new SQLNumericLiteral(token, new BigInteger(token.getValue()));
+      }
     }
     return null;
   }
@@ -1355,10 +1396,13 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
     ArrayList<SQLParsedElement> cols = new ArrayList<SQLParsedElement>();
     do {
       SQLParsedElement value = parseValueExpression();
+      if (!(value instanceof ColumnReference)) {
+        value.addParseError(new SQLParseError(value.firstToken(), value.lastToken(), "Only column references are supported right now."));
+      }
       if (value != null) {
         cols.add(value);
       } else {
-        break; // TODO asterisk path (???)
+        break;
       }
     } while (match(COMMA));
     return new ColumnSelectList(start, lastMatch(), cols);

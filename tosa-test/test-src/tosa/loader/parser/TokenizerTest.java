@@ -49,6 +49,42 @@ public class TokenizerTest {
     assertEquals(5, token.nextToken().getColumn());
   }
 
+  @Test
+  public void isNumberWorks() {
+    Token token = Token.tokenize("1");
+    assertTrue(token.isNumber());
+
+    token = Token.tokenize("a");
+    assertFalse(token.isNumber());
+  }
+
+  @Test
+  public void isStringWorks() {
+    Token token = Token.tokenize("\"\"");
+    assertTrue(token.isString());
+
+    token = Token.tokenize("\'\'");
+    assertTrue(token.isString());
+
+    token = Token.tokenize("\"asdf");
+    assertTrue(token.isString());
+    
+    token = Token.tokenize("asdf");
+    assertFalse(token.isString());
+  }
+
+  @Test
+  public void isSymbolWorks() {
+    Token token = Token.tokenize("asdf");
+    assertTrue(token.isSymbol());
+
+    token = Token.tokenize("\"asdf\"");
+    assertFalse(token.isSymbol());
+
+    token = Token.tokenize("1");
+    assertFalse(token.isSymbol());    
+  }
+
   private void assertMatches(Token token, String... strs) {
     for (String str : strs) {
       assertTrue("Expected " + str + " but found " + token.getValue() + " in " + token.toStringForDebug(),

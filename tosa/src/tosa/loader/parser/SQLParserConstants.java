@@ -148,6 +148,8 @@ public interface SQLParserConstants {
   public static final String VARCHAR = "VARCHAR";
   public static final String WITH = "WITH";
   public static final String ZEROFILL = "ZEROFILL";
+  public static final String IS = "IS";
+
 
   public static final String SELECT = "SELECT";
 

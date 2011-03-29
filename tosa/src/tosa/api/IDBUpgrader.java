@@ -10,5 +10,7 @@ package tosa.api;
 // TODO - AHK - There's probably a more appropriate name for this interface
 public interface IDBUpgrader {
 
+  void recreateTables();
+
   void createTables();
 }

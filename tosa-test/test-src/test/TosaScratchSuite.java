@@ -3,7 +3,6 @@ package test;
 import gw.lang.reflect.IHasJavaClass;
 import gw.lang.reflect.TypeSystem;
 import gw.lang.shell.Gosu;
-import org.junit.runner.JUnitCore;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.model.InitializationError;
@@ -11,25 +10,22 @@ import tosa.loader.DBTypeLoader;
 
 import java.util.ArrayList;
 
-@RunWith(TosaSuite.class)
-public class TosaSuite extends Suite {
+@RunWith(TosaScratchSuite.class)
+public class TosaScratchSuite extends Suite {
 
-  public TosaSuite(Class clazz) throws InitializationError {
+  public TosaScratchSuite(Class clazz) throws InitializationError {
     super(init(clazz), getAllTestClasses());
   }
 
   private static Class init(Class clazz) {
-    TestEnv.maybeInit();
+    Gosu.init();
+    TypeSystem.pushGlobalTypeLoader(new DBTypeLoader());
     return clazz;
   }
 
   public static Class[] getAllTestClasses() {
     return classesFor(
-      "tosa.loader.DBTypeInfoTest",
-      "tosa.loader.SQLTypeInfoTest",
-      "tosa.loader.parser.SelectParsingBootstrapTest",
-      "tosa.loader.parser.TokenizerTest",
-      "tosa.loader.parser.mysql.MySQL51SQLParserTest"
+      "tosa.loader.SQLTypeInfoTest"
     );
   }
 

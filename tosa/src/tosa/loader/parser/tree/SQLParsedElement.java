@@ -3,10 +3,7 @@ package tosa.loader.parser.tree;
 import tosa.loader.data.DBData;
 import tosa.loader.parser.Token;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public abstract class SQLParsedElement {
 
@@ -14,7 +11,7 @@ public abstract class SQLParsedElement {
   private Token _last;
   private List<SQLParsedElement> _children;
   private SQLParsedElement _parent;
-  private Set<SQLParseError> _errors;
+  private Set<SQLParseError> _errors = new HashSet<SQLParseError>();
 
   public SQLParsedElement(Token token, SQLParsedElement... children) {
     this(token, token, children);
@@ -108,6 +105,14 @@ public abstract class SQLParsedElement {
     }
   }
 
+  public IRootParseElement getRootElement() {
+    if (getParent() == null) {
+      return (IRootParseElement) this;
+    } else {
+      return getParent().getRootElement();
+    }
+  }
+
   public void verify(DBData dbData) {
     for (SQLParsedElement child : getChildren()) {
       child.verify(dbData);
@@ -116,6 +121,14 @@ public abstract class SQLParsedElement {
 
   public void addParseError(SQLParseError error){
     _errors.add(error);
+  }
+
+  public Token getFirst() {
+    return _first;
+  }
+
+  public Token getLast() {
+    return _last;
   }
 
   protected static List<SQLParsedElement> collectChildren(Object... args) {

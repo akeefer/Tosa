@@ -6,7 +6,7 @@ class TosaTestDBInit {
   static function createDatabase() {    
     var dbTypeLoader = TypeSystem.getTypeLoader(DBTypeLoader)
     var database = dbTypeLoader.getTypeDataForNamespace( "test.testdb" )
-    database.DBUpgrader.createTables()
+    database.DBUpgrader.recreateTables()
   }
 
 }
