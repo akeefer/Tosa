@@ -87,6 +87,11 @@ public class DBConnection implements IDBConnection {
     conn.setAutoCommit(true);
   }
 
+  @Override
+  public String getConnectionURL() {
+    return _connectURL;
+  }
+
   private static String getDriverName(String url) {
     String dbType = url.split(":")[1];
     if ("h2".equals(dbType)) {
@@ -101,7 +106,7 @@ public class DBConnection implements IDBConnection {
   private DataSource setupDataSource(String connectURI) {
     // Ensure the JDBC driver class is loaded
     try {
-      Class.forName(getDriverName(_connectURL), true, _typeLoader.getModule().getClassLoader());
+      Class.forName(getDriverName(connectURI), true, _typeLoader.getModule().getClassLoader());
     } catch (ClassNotFoundException e) {
       throw GosuExceptionUtil.forceThrow(e);
     }

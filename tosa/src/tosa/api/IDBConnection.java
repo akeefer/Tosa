@@ -50,4 +50,7 @@ public interface IDBConnection {
    * @throws SQLException any SQLException thrown by the underlying connection
    */
   void endTransaction() throws SQLException;
+
+  // TODO - AHK - This should maybe be URI instead of URL
+  String getConnectionURL();
 }

@@ -35,7 +35,11 @@ public class DatabaseImpl implements IDatabase {
     processDBData(tables);
 
     _tables = Collections.unmodifiableMap(tables);
-    _connection = new DBConnection(dbData.getConnectionString(), typeLoader);
+    if (dbData.getConnectionString() != null) {
+      _connection = new DBConnection(dbData.getConnectionString(), typeLoader);
+    } else {
+      _connection = null;
+    }
     _executionKernel = new DBExecutionKernelImpl(this);
   }
 

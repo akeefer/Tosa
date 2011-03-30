@@ -21,12 +21,7 @@ import tosa.loader.parser.DDLDBDataSource;
 
 import java.io.File;
 import java.net.URL;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -247,4 +242,7 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     return _typeDataByNamespace.get().get(namespace);
   }
 
+  public Collection<? extends IDatabase> getAllDatabases() {
+    return _typeDataByNamespace.get().values();
+  }
 }
