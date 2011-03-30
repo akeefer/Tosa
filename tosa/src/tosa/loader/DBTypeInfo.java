@@ -55,7 +55,7 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
   private IConstructorInfo _ctor;
   private QueryExecutor _queryExecutor; // TODO - AHK - I'm not sure if we really want to hold onto this here
 
-  public DBTypeInfo(DBType dbType) {
+  public DBTypeInfo(IDBType dbType) {
     super(dbType);
     _queryExecutor = new QueryExecutor();
 
@@ -406,8 +406,8 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
   }
 
   @Override
-  public DBType getOwnersType() {
-    return (DBType) super.getOwnersType();
+  public IDBType getOwnersType() {
+    return (IDBType) super.getOwnersType();
   }
 
 

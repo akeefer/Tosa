@@ -90,7 +90,7 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     if (databaseImpl == null) {
       SQLFileInfo data = _sqlFilesByName.get().get(fullyQualifiedName);
       if (data != null) {
-        return new SQLType(data, this);
+        return new SQLType(data, this).getTypeReference();
       } else {
         return null;
       }
@@ -103,7 +103,7 @@ public class DBTypeLoader implements IExtendedTypeLoader {
       if (dbTable == null) {
         return null;
       } else {
-        return new DBType(this, dbTable);
+        return new DBType(this, dbTable).getTypeReference();
       }
     }
   }

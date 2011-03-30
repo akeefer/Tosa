@@ -1,9 +1,6 @@
 package tosa.loader;
 
-import gw.lang.reflect.IType;
-import gw.lang.reflect.ITypeInfo;
-import gw.lang.reflect.ITypeLoader;
-import gw.lang.reflect.TypeBase;
+import gw.lang.reflect.*;
 import gw.util.concurrent.LazyVar;
 import tosa.api.IDBTable;
 import tosa.dbmd.DBTableImpl;
@@ -30,9 +27,13 @@ public class DBType extends TypeBase implements IDBType {
     _typeInfo = new LazyVar<DBTypeInfo>() {
       @Override
       protected DBTypeInfo init() {
-        return new DBTypeInfo(DBType.this);
+        return new DBTypeInfo(getTypeReference());
       }
     };
+  }
+
+  public IDBType getTypeReference() {
+    return (IDBType) TypeSystem.getOrCreateTypeReference(DBType.this);
   }
 
   public IDBTable getTable() {

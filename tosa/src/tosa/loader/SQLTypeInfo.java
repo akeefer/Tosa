@@ -17,11 +17,11 @@ import java.util.*;
 public class SQLTypeInfo extends BaseTypeInfo {
 
   private IMethodInfo _theOneTrueMethod;
-  private SQLType _sqlType;
+  private ISQLType _sqlType;
   private static final Object NOT_PRESENT_SENTINAL = new Object();
   private IType _resultType;
 
-  public SQLTypeInfo(SQLType sqlType) {
+  public SQLTypeInfo(ISQLType sqlType) {
     super(sqlType);
     _sqlType = sqlType;
     _resultType = determineResultType();

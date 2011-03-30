@@ -109,7 +109,13 @@ public class DatabaseImpl implements IDatabase {
       } else {
         for (DBColumnImpl column : table.getColumns()) {
           if (column.isFK()) {
-            tables.get(column.getFKTargetName()).addIncomingFK(column);
+            String fkTargetName = column.getFKTargetName();
+            DBTableImpl dbTable = tables.get(fkTargetName);
+            if (dbTable != null) {
+              dbTable.addIncomingFK(column);
+            } else {
+              System.out.println("No table found with name " + fkTargetName);
+            }
           }
         }
       }
