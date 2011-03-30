@@ -114,6 +114,7 @@ public class DatabaseImpl implements IDatabase {
             if (dbTable != null) {
               dbTable.addIncomingFK(column);
             } else {
+              // TODO cgross - how to handle this situation?
               System.out.println("No table found with name " + fkTargetName);
             }
           }
