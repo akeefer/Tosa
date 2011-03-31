@@ -42,7 +42,10 @@ public class ColumnReference extends SQLParsedElement {
   protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
     sb.append('"');
     if (_table != null) {
-      sb.append(_table.getValue()).append(".");
+      sb.append(_table.getValue());
+      sb.append('"');
+      sb.append(".");
+      sb.append('"');
     }
     sb.append(_column.getValue());
     sb.append('"');

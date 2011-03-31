@@ -224,4 +224,5 @@ public interface SQLParserConstants {
   public static final String BETWEEN = "BETWEEN";
   public static final String SYMMETRIC = "SYMMETRIC";
   public static final String ASYMMETRIC = "ASYMMETRIC";
+  public static final String JOIN = "JOIN";
 }

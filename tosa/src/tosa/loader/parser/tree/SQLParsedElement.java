@@ -25,6 +25,7 @@ public abstract class SQLParsedElement {
     _first = first;
     _last = last;
     _children = new ArrayList<SQLParsedElement>();
+    _errors.addAll(first.collectTemporaryErrors(last));
     for (SQLParsedElement child : children) {
       if (child != null) {
         _children.add(child);

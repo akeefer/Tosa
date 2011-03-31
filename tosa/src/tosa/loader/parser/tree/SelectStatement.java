@@ -1,5 +1,6 @@
 package tosa.loader.parser.tree;
 
+import gw.lang.reflect.IType;
 import tosa.loader.SQLParameterInfo;
 import tosa.loader.data.DBData;
 import tosa.loader.parser.Token;
@@ -76,10 +77,41 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
 
   @Override
   public String getDefaultTableName() {
-    return _tableExpr.getFrom().getTableRefs().get(0).getName().getValue(); //TODO cgross - support multiple tables in table clause
+    //TODO cgross - support multiple tables in table clause
+    return getSimpleSelectTarget().getName().getValue();
   }
 
   public List<VariableExpression> getVariables() {
     return _variables;
+  }
+
+  public boolean isSimpleSelect() {
+    return _selectList instanceof AsteriskSelectList && getSimpleSelectTarget() != null;
+  }
+
+  public String getSimpleTableName() {
+    return getSimpleSelectTarget().getName().getValue();
+  }
+
+  public boolean isComplexSelect() {
+    return _selectList instanceof ColumnSelectList;
+  }
+
+  private SimpleTableReference getSimpleSelectTarget() {
+    List<SQLParsedElement> tableRefs = _tableExpr.getFrom().getTableRefs();
+    if (tableRefs.size() == 1 && tableRefs.get(0) instanceof SimpleTableReference) {
+      return (SimpleTableReference) tableRefs.get(0);
+    }
+    return null;
+  }
+
+  public Map<String,IType> getColumnMap() {
+    HashMap<String, IType> cols = new HashMap<String, IType>();
+    for (SQLParsedElement col : _selectList.getChildren()) {
+      if (col instanceof ColumnReference) {
+        cols.put(((ColumnReference) col).getName(), ((ColumnReference) col).getGosuType());
+      }
+    }
+    return cols;
   }
 }

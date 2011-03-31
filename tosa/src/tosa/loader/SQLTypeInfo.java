@@ -96,27 +96,14 @@ public class SQLTypeInfo extends BaseTypeInfo {
   private IType determineResultType() {
     SQLFileInfo data = _sqlType.getData();
     SelectStatement select = data.getSelect();
-    SQLParsedElement selectList = select.getSelectList();
-    if (selectList instanceof AsteriskSelectList) {
-      TableFromClause from = select.getTableExpression().getFrom();
-      List<SimpleTableReference> tableRefs = from.getTableRefs();
-      if (tableRefs.size() == 1) {
-        String baseName = _sqlType.getData().getDatabase().getNamespace() + "." + tableRefs.get(0).getName();
-        IType type = TypeSystem.getByFullNameIfValid(baseName);
-        if (type != null) {
-          return type;
-        }
+    if (select.isSimpleSelect()) {
+      IType type = TypeSystem.getByFullNameIfValid(_sqlType.getData().getDatabase().getNamespace() + "." + select.getSimpleTableName());
+      if (type != null) {
+        return type;
       }
-    } else if(selectList instanceof ColumnSelectList) {
-      List<? extends SQLParsedElement> children = selectList.getChildren();
-      Map<String, IType> typeMap = new HashMap<String, IType>();
-      for (SQLParsedElement child : children) {
-        if (child instanceof ColumnReference) {
-          ColumnReference cr = (ColumnReference) child;
-          typeMap.put(cr.getName(), cr.getGosuType());
-        }
-      }
-      return new StructType(_sqlType.getTypeLoader(), _sqlType.getName() + "Result", typeMap);
+    } else if(select.isComplexSelect()) {
+      //TODO cgross - register this type and make it a type ref
+      return new StructType(_sqlType.getTypeLoader(), _sqlType.getName() + "Result", select.getColumnMap());
     }
     return IJavaType.OBJECT;
   }

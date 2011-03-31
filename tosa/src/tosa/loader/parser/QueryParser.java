@@ -33,50 +33,14 @@ public class QueryParser implements SQLParserConstants {
     return null;
   }
 
-  private Token lastMatch() {
-    return _currentToken.previous();
-  }
-
-  private boolean expect(String str) {
-    //TODO cgross - parse error at the token level
-    return match(str);
-  }
-
-  private boolean match(String str) {
-    if (_currentToken.match(str)) {
-      _currentToken = _currentToken.nextToken();
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  private boolean match(String str1, String str2) {
-    if (_currentToken.match(str1) && _currentToken.nextToken().match(str2)) {
-      _currentToken = _currentToken.nextToken().nextToken();
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  private boolean match(String str1, String str2, String str3) {
-    if (_currentToken.match(str1) &&
-      _currentToken.nextToken().match(str2) &&
-      _currentToken.nextToken().nextToken().match(str3)) {
-      _currentToken = _currentToken.nextToken().nextToken().nextToken();
-      return true;
-    } else {
-      return false;
-    }
-  }
-
   private TableExpression parseTableExpression() {
-    Token start = _currentToken;
     TableFromClause fromClause = parseFromClause();
     SQLParsedElement whereClause = parseWhereClause();
-    TableExpression table = new TableExpression(start, lastMatch(), fromClause, whereClause);
-    return table;
+    if (whereClause == null) {
+      return new TableExpression(fromClause);
+    } else {
+      return new TableExpression(fromClause, whereClause);
+    }
   }
 
   private SQLParsedElement parseWhereClause() {
@@ -85,7 +49,7 @@ public class QueryParser implements SQLParserConstants {
     } else if(_currentToken.isEOF()) {
       return null;
     } else {
-      throw new IllegalStateException("This should be a parse error.");
+      return unexpectedToken();
     }
   }
 
@@ -127,7 +91,7 @@ public class QueryParser implements SQLParserConstants {
   private SQLParsedElement parseBooleanPrimaryExpression() {
     if (match(OPEN_PAREN)) {
       SQLParsedElement elt = parseSearchOrExpression();
-      expectToken(elt, CLOSE_PAREN);
+      expect(CLOSE_PAREN);
       return elt;
     } else {
       return parsePredicate();
@@ -264,12 +228,6 @@ public class QueryParser implements SQLParserConstants {
     return utExpr;
   }
 
-  private void expectToken(SQLParsedElement elt, String str) {
-    if (!match(str)) {
-      elt.addParseError(new SQLParseError(_currentToken, "Expected " + str));
-    }
-  }
-
   private SQLParsedElement parseRowValue() {
     //TODO NULL, DEFAULT
     return parseValueExpression();
@@ -297,7 +255,7 @@ public class QueryParser implements SQLParserConstants {
       return elt;
     }
 
-    return null;
+    return unexpectedToken();
   }
 
   private SQLParsedElement parseIntervalValueExpression() {
@@ -407,26 +365,52 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private TableFromClause parseFromClause() {
-    if (match(FROM)) {
+    if (expect(FROM)) {
       Token start = lastMatch();
-      ArrayList<SimpleTableReference> refs = new ArrayList<SimpleTableReference>();
+      ArrayList<SQLParsedElement> refs = new ArrayList<SQLParsedElement>();
       do {
-        SimpleTableReference ref = parseTableReference();
+        SQLParsedElement ref = parseTableReference();
         refs.add(ref);
       }
       while (match(COMMA));
       return new TableFromClause(start, refs);
     } else {
-      TableFromClause from = new TableFromClause(_currentToken, Collections.<SimpleTableReference>emptyList());
-      expectToken(from, FROM);
-      takeToken();
-      return from;
+      return new TableFromClause(lastMatch(), Collections.EMPTY_LIST);
     }
   }
 
-  private SimpleTableReference parseTableReference() {
+  private SQLParsedElement parseTableReference() {
+    SQLParsedElement primaryTable = parseTablePrimary();
+    return parseJoinedTable(primaryTable);
+  }
+
+  private SQLParsedElement parseJoinedTable(SQLParsedElement joinTarget) {
+    // TODO cgross - other types of joins
+    if(match(JOIN)) {
+      Token start = lastMatch();
+      //TODO cgross - grammar says this is a table entry.  Ambiguity?
+      SQLParsedElement table = parseTablePrimary();
+      SQLParsedElement joinSpec = parseJoinSpecification();
+      return parseJoinedTable(new QualifiedJoin(start, joinTarget, table, joinSpec));
+    } else {
+      return joinTarget;
+    }
+  }
+
+  private SQLParsedElement parseJoinSpecification() {
+    if (match(ON)) {
+      Token start = lastMatch();
+      SQLParsedElement condition = parseSearchOrExpression();
+      return new JoinCondition(start, condition);
+    } else {
+      // TODO cgross - support named columns join ???
+      return unexpectedToken();
+    }
+  }
+
+  private SQLParsedElement parseTablePrimary() {
+    //TODO cgross - shouldn't allow keywords, should support AS and derived column lists
     return new SimpleTableReference(takeToken());
-    //TODO cgross more exotic table references
   }
 
   private SQLParsedElement parseSelectList() {
@@ -470,4 +454,48 @@ public class QueryParser implements SQLParserConstants {
     }
     return false;
   }
+
+  private boolean match(String str) {
+    if (_currentToken.match(str)) {
+      _currentToken = _currentToken.nextToken();
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private boolean match(String str1, String str2) {
+    if (_currentToken.match(str1) && _currentToken.nextToken().match(str2)) {
+      _currentToken = _currentToken.nextToken().nextToken();
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private boolean match(String str1, String str2, String str3) {
+    if (_currentToken.match(str1) &&
+      _currentToken.nextToken().match(str2) &&
+      _currentToken.nextToken().nextToken().match(str3)) {
+      _currentToken = _currentToken.nextToken().nextToken().nextToken();
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private Token lastMatch() {
+    return _currentToken.previous();
+  }
+
+  private boolean expect(String str) {
+    if (match(str)) {
+      return true;
+    } else {
+      _currentToken.addTemporaryError(new SQLParseError(_currentToken, _currentToken, "Expected " + str));
+      _currentToken = _currentToken.nextToken();
+      return false;
+    }
+  }
+
 }

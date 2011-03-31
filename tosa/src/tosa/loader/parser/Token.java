@@ -1,5 +1,11 @@
 package tosa.loader.parser;
 
+import tosa.loader.parser.tree.SQLParseError;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class Token {
 
   private static final Token EOF = new Token(TokenType.EOF, null, 0, 0, 0, 0);
@@ -15,7 +21,7 @@ public class Token {
   private int _col;
   private int _start;
   private int _end;
-
+  private List<SQLParseError> _temporaryErrors;
 
   public Token(TokenType type, String value, int line, int col, int start, int end) {
     _type = type;
@@ -24,6 +30,7 @@ public class Token {
     _col = col;
     _start = start;
     _end = end;
+    _temporaryErrors = Collections.EMPTY_LIST;
   }
 
   public void setNext(Token t) {
@@ -135,5 +142,28 @@ public class Token {
 
   public boolean isString() {
     return _type == TokenType.STRING;
+  }
+
+  public void addTemporaryError(SQLParseError error) {
+    if (_temporaryErrors == Collections.EMPTY_LIST) {
+      _temporaryErrors = new ArrayList<SQLParseError>();
+    }
+    _temporaryErrors.add(error);
+  }
+
+  public List<SQLParseError> collectTemporaryErrors(Token end) {
+   List<SQLParseError> parseErrors = Collections.EMPTY_LIST;
+   Token t = this;
+    do {
+      if (t._temporaryErrors != Collections.EMPTY_LIST) {
+        if (parseErrors == Collections.EMPTY_LIST) {
+          parseErrors = new ArrayList<SQLParseError>();
+        }
+        parseErrors.addAll(t._temporaryErrors);
+        t._temporaryErrors = Collections.EMPTY_LIST;
+      }
+      t = t.nextToken();
+    } while (t.previous() != end && t != EOF);
+    return parseErrors;
   }
 }

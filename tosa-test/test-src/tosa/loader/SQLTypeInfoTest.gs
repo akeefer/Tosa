@@ -8,7 +8,7 @@ uses org.junit.Assert
 uses org.junit.Before
 uses org.junit.BeforeClass
 uses org.junit.Test
-uses test.testdb.Bar
+uses test.testdb.*
 uses test.query.*
 uses gw.lang.reflect.TypeSystem
 
@@ -36,6 +36,8 @@ class SQLTypeInfoTest {
   private function importSampleData() {
     var bar = new Bar(){:Date = new java.sql.Date(new java.util.Date("4/22/2009").Time), :Misc = "misc"}
     bar.update()
+    var foo = new Foo(){:Bar = bar, :FirstName="First", :LastName="Bar"}
+    foo.update()
   }
 
   @Before
@@ -45,77 +47,8 @@ class SQLTypeInfoTest {
   }
 
   @Test
-  function testTypesCreated() {
-    var types = gw.lang.reflect.TypeSystem.getAllTypeNames()
-    Assert.assertTrue(types.contains("test.query.SampleQuery"))
-  }
-
-  @Test
-  function testBasicSelectWorks() {
-    var result = test.query.SampleQuery.select()
-    Assert.assertEquals(1, result.Count)
-    Assert.assertEquals(new java.sql.Date(new java.util.Date("4/22/2009").Time), result.first().Date)
-    print(statictypeof result)
-  }
-
-  @Test
-  function testBasicColumnComparisonWorks() {
-    var result = test.query.SampleComparisonQuery.select()
-    Assert.assertEquals(1, result.Count)
-  }
-
-  @Test
-  function testBasicBetweenComparisonWorks() {
-    var result = test.query.SampleBetweenQuery.select("2001-1-1", "2101-1-1")
-    Assert.assertEquals(1, result.Count)
-
-    result = test.query.SampleBetweenQuery.select("2101-1-1", "2101-1-1")
-    Assert.assertEquals(0, result.Count)
-  }
-
-  @Test
-  function testBasicInComparisonWorks() {
-    var result = test.query.SampleInQuery.select("blah", "misc")
-    Assert.assertEquals(1, result.Count)
-
-    result = test.query.SampleInQuery.select("misc", "blah")
-    Assert.assertEquals(1, result.Count)
-
-    result = test.query.SampleInQuery.select("blah", "blah")
-    Assert.assertEquals(0, result.Count)
-  }
-
-  @Test
-  function testInComparisonWithListArgWorks() {
-    var result = test.query.SampleInQueryWithList.select({"blah", "misc"})
-    Assert.assertEquals(1, result.Count)
-
-    result = test.query.SampleInQueryWithList.select({"misc", "blah"})
-    Assert.assertEquals(1, result.Count)
-
-    result = test.query.SampleInQueryWithList.select({"blah", "blah"})
-    Assert.assertEquals(0, result.Count)
-  }
-
-  @Test
-  function testInComparisonWithNullListArgWorks() {
-    var result = test.query.SampleInQueryWithList.select(null)
-    Assert.assertEquals(0, result.Count)
-  }
-
-  @Test
-  function testBasicVariableWorks() {
-    var result = test.query.SampleComparisonQueryWithVar.select( "2001-1-1" )
-    Assert.assertEquals(1, result.Count)
-    result = test.query.SampleComparisonQueryWithVar.select( "2101-1-1" )
-    Assert.assertEquals(0, result.Count)
-  }
-
-  @Test
-  function testBasicFieldSelectionWorks() {
-    var result = test.query.SampleQueryWithSpecificCols.select()
-    Assert.assertEquals(new java.sql.Date(new java.util.Date("4/22/2009").Time), result.first().Date)
-    Assert.assertEquals("misc", result.first().Misc)
+  function testBasicJoinWorks() {
+    var result = test.query.SampleJoinQuery.select("First")
     Assert.assertEquals(1, result.Count)
   }
 

@@ -9,8 +9,13 @@ public class TableExpression extends SQLParsedElement {
   private TableFromClause _from;
   private SQLParsedElement _where;
 
-  public TableExpression(Token first, Token last, TableFromClause fromClause, SQLParsedElement whereClause) {
-    super(first, last, fromClause, whereClause);
+  public TableExpression(TableFromClause fromClause) {
+    super(fromClause.firstToken(), fromClause );
+    _from = fromClause;
+  }
+
+  public TableExpression(TableFromClause fromClause, SQLParsedElement whereClause) {
+    super(fromClause.firstToken(), fromClause, whereClause);
     _from = fromClause;
     _where = whereClause;
   }
