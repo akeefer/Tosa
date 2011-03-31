@@ -3,6 +3,7 @@ package tosa.loader.parser.tree;
 import tosa.loader.parser.Token;
 
 import java.util.List;
+import java.util.Map;
 
 public class InListExpression extends SQLParsedElement {
   private List<SQLParsedElement> _values;
@@ -13,14 +14,14 @@ public class InListExpression extends SQLParsedElement {
   }
 
   @Override
-  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
+  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
     sb.append("( ");
     for (int i = 0; i < _values.size(); i++) {
       SQLParsedElement sqlParsedElement = _values.get(i);
       if (i != 0) {
         sb.append(", ");
       }
-      sqlParsedElement.toSQL(prettyPrint, indent, sb);
+      sqlParsedElement.toSQL(prettyPrint, indent, sb, values);
     }
     sb.append(" )");
   }

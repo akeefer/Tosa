@@ -2,6 +2,8 @@ package tosa.loader.parser.tree;
 
 import tosa.loader.parser.Token;
 
+import java.util.Map;
+
 public class UnexpectedTokenExpression extends SQLParsedElement {
   private Token _token;
 
@@ -11,7 +13,7 @@ public class UnexpectedTokenExpression extends SQLParsedElement {
   }
 
   @Override
-  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
+  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
     sb.append(" ");
     sb.append(_token.getValue());
     sb.append(" ");

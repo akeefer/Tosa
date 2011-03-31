@@ -218,11 +218,11 @@ public class QueryParser implements SQLParserConstants {
       return new InListExpression(first,  _currentToken.previous(), values);
     }
 
-//    // TODO cgross - Accept refs here (as lists)
-//    SQLParsedElement varRef = parseVariableReference();
-//    if (varRef != null) {
-//      return varRef;
-//    }
+    SQLParsedElement varRef = parseVariableReference();
+    if (varRef != null) {
+      ((VariableExpression) varRef).setList(true);
+      return varRef;
+    }
 
     return unexpectedToken();
   }

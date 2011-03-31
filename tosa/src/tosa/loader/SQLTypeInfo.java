@@ -40,15 +40,27 @@ public class SQLTypeInfo extends BaseTypeInfo {
   public Object invokeQuery(Object... args) {
     Connection c = null;
     try {
+      HashMap<String, Object> values = makeArgMap(args);
+
       c = _sqlType.getData().getDatabase().getConnection().connect();
-      String sql = _sqlType.getData().getSQL();
+      String sql = _sqlType.getData().getSQL(values);
       PreparedStatement stmt = c.prepareStatement(sql);
 
-      List<SQLParameterInfo> pis = _sqlType.getData().getParameterInfos();
-      for (int i = 0, pisSize = pis.size(); i < pisSize; i++) {
-        SQLParameterInfo pi = pis.get(i);
-        for (Pair<Integer, IDBColumnType> index : pi.getIndexes()) {
-          stmt.setObject(index.getFirst(), args[i]);
+      List<VariableExpression> vars = _sqlType.getData().getVariables();
+      int position = 1;
+      for (VariableExpression var : vars) {
+        Object value = values.get(var.getName());
+        if (var.isList()) {
+          if (value instanceof List) {
+            List valueList = (List) value;
+            for (Object listValue : valueList) {
+              stmt.setObject(position, listValue);
+              position++;
+            }
+          }
+        } else {
+          stmt.setObject(position, value);
+          position++;
         }
       }
 
@@ -59,7 +71,7 @@ public class SQLTypeInfo extends BaseTypeInfo {
       }
       return lst;
     } catch (SQLException e) {
-      throw new RuntimeException(e);
+      throw GosuExceptionUtil.forceThrow(e);
     } finally {
       if(c != null){
         try {
@@ -69,6 +81,16 @@ public class SQLTypeInfo extends BaseTypeInfo {
         }
       }
     }
+  }
+
+  private HashMap<String, Object> makeArgMap(Object[] args) {
+    List<SQLParameterInfo> pis = _sqlType.getData().getParameterInfos();
+    HashMap<String, Object> values = new HashMap<String, Object>();
+    for (int i = 0; i < pis.size(); i++) {
+      SQLParameterInfo pi = pis.get(i);
+      values.put(pi.getName(), args[i]);
+    }
+    return values;
   }
 
   private IType determineResultType() {
@@ -142,7 +164,11 @@ public class SQLTypeInfo extends BaseTypeInfo {
   }
 
   private IType determineTypeOfParam(SQLParameterInfo pi) {
-    return IJavaType.STRING;
+    if (pi.isList()) {
+      return IJavaType.LIST.getGenericType().getParameterizedType(IJavaType.STRING);
+    } else {
+      return IJavaType.STRING;
+    }
   }
 
   @Override

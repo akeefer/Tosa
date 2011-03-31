@@ -1,5 +1,7 @@
 package tosa.loader.parser.tree;
 
+import java.util.Map;
+
 public class BetweenPredicate extends SQLParsedElement{
 
   private SQLParsedElement _lhs;
@@ -20,8 +22,8 @@ public class BetweenPredicate extends SQLParsedElement{
   }
 
   @Override
-  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
-    _lhs.toSQL(prettyPrint, indent, sb);
+  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
+    _lhs.toSQL(prettyPrint, indent, sb, values);
     if(_not) {
       sb.append(" NOT");
     }
@@ -31,9 +33,9 @@ public class BetweenPredicate extends SQLParsedElement{
     } else if (_asymmetric) {
       sb.append("ASYMMETRIC ");
     }
-    _bottom.toSQL(prettyPrint, indent, sb);
+    _bottom.toSQL(prettyPrint, indent, sb, values);
     sb.append(" AND ");
-    _top.toSQL(prettyPrint,indent, sb);
+    _top.toSQL(prettyPrint,indent, sb, values);
   }
 
 }

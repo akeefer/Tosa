@@ -60,8 +60,16 @@ public abstract class SQLParsedElement {
   }
 
   public final String toSQL(boolean prettyPrint) {
+    return toSQL(prettyPrint, null);
+  }
+
+  public final String toSQL(Map<String, Object> values) {
+    return toSQL(true, values);
+  }
+
+  public final String toSQL(boolean prettyPrint, Map<String, Object> values) {
     StringBuilder sb = new StringBuilder();
-    toSQL(prettyPrint, 2, sb);
+    toSQL(prettyPrint, 2, sb, values);
     return sb.toString();
   }
 
@@ -82,7 +90,7 @@ public abstract class SQLParsedElement {
     return toSQL();
   }
 
-  protected abstract void toSQL(boolean prettyPrint, int indent, StringBuilder sb);
+  protected abstract void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values);
 
   protected void pp(boolean prettyPrint, int indent, String s, StringBuilder sb) {
     if (prettyPrint) {
@@ -129,6 +137,14 @@ public abstract class SQLParsedElement {
 
   public Token getLast() {
     return _last;
+  }
+
+  public int getStart() {
+    return _first.getStart();
+  }
+
+  public int getEnd() {
+    return _last .getEnd();
   }
 
   protected static List<SQLParsedElement> collectChildren(Object... args) {

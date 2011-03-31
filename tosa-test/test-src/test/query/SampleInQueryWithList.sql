@@ -1,0 +1,1 @@
+SELECT * FROM Bar where Misc IN :lst

@@ -3,6 +3,7 @@ package tosa.loader.parser.tree;
 import tosa.loader.parser.Token;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 public class SQLNumericLiteral extends SQLParsedElement {
   private Number _value;
@@ -18,7 +19,7 @@ public class SQLNumericLiteral extends SQLParsedElement {
   }
 
   @Override
-  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
+  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
     sb.append(_value);
   }
 }

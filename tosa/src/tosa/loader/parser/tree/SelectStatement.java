@@ -1,9 +1,6 @@
 package tosa.loader.parser.tree;
 
-import gw.util.Pair;
-import tosa.api.IDBColumnType;
 import tosa.loader.SQLParameterInfo;
-import tosa.loader.data.DBColumnTypeImpl;
 import tosa.loader.data.DBData;
 import tosa.loader.parser.Token;
 
@@ -15,6 +12,7 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
   private SQLParsedElement _selectList;
   private TableExpression _tableExpr;
   private List<SQLParameterInfo> _parameters;
+  private List<VariableExpression> _variables;
 
   public SelectStatement(Token start, Token end, SQLParsedElement quantifier, SQLParsedElement selectList, TableExpression tableExpr) {
     super(start, end, quantifier, selectList, tableExpr);
@@ -24,14 +22,14 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
   }
 
   @Override
-  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
+  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
     pp(prettyPrint, indent, "SELECT ", sb);
     if (_quantifier != null) {
-      _quantifier.toSQL(prettyPrint, indent, sb);
+      _quantifier.toSQL(prettyPrint, indent, sb, values);
     }
-    _selectList.toSQL(prettyPrint, indent, sb);
+    _selectList.toSQL(prettyPrint, indent, sb, values);
     sb.append("\n");
-    _tableExpr.toSQL(prettyPrint, indent, sb);
+    _tableExpr.toSQL(prettyPrint, indent, sb, values);
   }
 
   public TableExpression getTableExpression() {
@@ -44,28 +42,32 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
 
   public void verify(DBData dbData) {
     super.verify(dbData);
+    _variables = determineVariables(dbData);
     _parameters = determineParameters(dbData);
   }
 
   private List<SQLParameterInfo> determineParameters(DBData dbData) {
     Map<String, SQLParameterInfo> pis = new LinkedHashMap<String, SQLParameterInfo>();
-    List<VariableExpression> findDescendents = findDescendents(VariableExpression.class);
-    Collections.sort(findDescendents, new Comparator<VariableExpression>() {
-      @Override
-      public int compare(VariableExpression variableExpression, VariableExpression variableExpression1) {
-        return variableExpression.getFirst().getStart() - variableExpression1.getFirst().getStart();
-      }
-    });
-    for (int i = 0, findDescendentsSize = findDescendents.size(); i < findDescendentsSize; i++) {
-      VariableExpression var = findDescendents.get(i);
+    for (VariableExpression var : _variables) {
       SQLParameterInfo pi = pis.get(var.getName());
       if (pi == null) {
-        pi = new SQLParameterInfo(var.getName());
+        pi = new SQLParameterInfo(var.getName(), null);
         pis.put(var.getName(), pi);
       }
-      pi.getIndexes().add(Pair.<Integer, IDBColumnType>make(i + 1, null));
+      pi.addVariableExpression(var);
     }
     return new ArrayList<SQLParameterInfo>(pis.values());
+  }
+
+  private List<VariableExpression> determineVariables(DBData dbData) {
+    List<VariableExpression> vars = findDescendents(VariableExpression.class);
+    Collections.sort(vars, new Comparator<VariableExpression>() {
+      @Override
+      public int compare(VariableExpression v1, VariableExpression v2) {
+        return v1.getStart() - v2.getStart();
+      }
+    });
+    return vars;
   }
 
   public List<SQLParameterInfo> getParameters() {
@@ -75,5 +77,9 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
   @Override
   public String getDefaultTableName() {
     return _tableExpr.getFrom().getTableRefs().get(0).getName().getValue(); //TODO cgross - support multiple tables in table clause
+  }
+
+  public List<VariableExpression> getVariables() {
+    return _variables;
   }
 }

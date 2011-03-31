@@ -2,6 +2,8 @@ package tosa.loader.parser.tree;
 
 import tosa.loader.parser.Token;
 
+import java.util.Map;
+
 public class QuantifierModifier extends SQLParsedElement{
   private Token _quantifier;
 
@@ -11,7 +13,7 @@ public class QuantifierModifier extends SQLParsedElement{
   }
 
   @Override
-  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
+  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
     sb.append(_quantifier.toString());
   }
 }

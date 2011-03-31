@@ -3,6 +3,7 @@ package tosa.loader.parser.tree;
 import tosa.loader.parser.Token;
 
 import java.util.List;
+import java.util.Map;
 
 public class TableFromClause extends SQLParsedElement {
   private List<SimpleTableReference> _refs;
@@ -13,13 +14,13 @@ public class TableFromClause extends SQLParsedElement {
   }
 
   @Override
-  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
+  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
     pp(prettyPrint, indent, "FROM ", sb);
     for (int i = 0, _refsSize = _refs.size(); i < _refsSize; i++) {
       if (i != 0) {
         sb.append(", ");
       }
-      _refs.get(i).toSQL(prettyPrint, indent, sb);
+      _refs.get(i).toSQL(prettyPrint, indent, sb, values);
     }
     sb.append("\n");
   }

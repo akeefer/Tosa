@@ -1,6 +1,6 @@
 package tosa.loader.parser.tree;
 
-import tosa.loader.parser.Token;
+import java.util.Map;
 
 public class LikePredicate extends SQLParsedElement{
   private SQLParsedElement _lhs;
@@ -15,12 +15,12 @@ public class LikePredicate extends SQLParsedElement{
   }
 
   @Override
-  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
-    _lhs.toSQL(prettyPrint, indent, sb);
+  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
+    _lhs.toSQL(prettyPrint, indent, sb, values);
     if (_not) {
       sb.append(" NOT");
     }
     sb.append(" LIKE ");
-    _pattern.toSQL(prettyPrint, indent, sb);
+    _pattern.toSQL(prettyPrint, indent, sb, values);
   }
 }

@@ -6,6 +6,8 @@ import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
 import tosa.loader.parser.Token;
 
+import java.util.Map;
+
 public class ColumnReference extends SQLParsedElement {
   private Token _column;
   private Token _table;
@@ -37,7 +39,7 @@ public class ColumnReference extends SQLParsedElement {
   }
 
   @Override
-  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
+  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
     sb.append('"');
     if (_table != null) {
       sb.append(_table.getValue()).append(".");

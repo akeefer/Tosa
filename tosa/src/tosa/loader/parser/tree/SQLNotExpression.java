@@ -2,6 +2,8 @@ package tosa.loader.parser.tree;
 
 import tosa.loader.parser.Token;
 
+import java.util.Map;
+
 public class SQLNotExpression extends SQLParsedElement {
   private SQLParsedElement _rhs;
 
@@ -11,8 +13,8 @@ public class SQLNotExpression extends SQLParsedElement {
   }
 
   @Override
-  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
+  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
     sb.append("NOT ");
-    _rhs.toSQL(prettyPrint, indent, sb);
+    _rhs.toSQL(prettyPrint, indent, sb, values);
   }
 }
