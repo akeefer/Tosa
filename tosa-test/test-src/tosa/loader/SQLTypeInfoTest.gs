@@ -65,6 +65,27 @@ class SQLTypeInfoTest {
   }
 
   @Test
+  function testBasicBetweenComparisonWorks() {
+    var result = test.query.SampleBetweenQuery.select("2001-1-1", "2101-1-1")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleBetweenQuery.select("2101-1-1", "2101-1-1")
+    Assert.assertEquals(0, result.Count)
+  }
+
+  @Test
+  function testBasicInComparisonWorks() {
+    var result = test.query.SampleInQuery.select("blah", "misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleInQuery.select("misc", "blah")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleInQuery.select("blah", "blah")
+    Assert.assertEquals(0, result.Count)
+  }
+
+  @Test
   function testBasicVariableWorks() {
     var result = test.query.SampleComparisonQueryWithVar.select( "2001-1-1" )
     Assert.assertEquals(1, result.Count)

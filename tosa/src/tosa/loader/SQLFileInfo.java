@@ -4,10 +4,9 @@ import gw.fs.IFile;
 import gw.util.GosuExceptionUtil;
 import gw.util.StreamUtil;
 import gw.util.concurrent.LazyVar;
-import tosa.api.IDatabase;
 import tosa.dbmd.DatabaseImpl;
-import tosa.loader.data.DBData;
-import tosa.loader.parser.mysql.MySQL51SQLParser;
+import tosa.loader.parser.QueryParser;
+import tosa.loader.parser.Token;
 import tosa.loader.parser.tree.*;
 
 import java.io.*;
@@ -31,8 +30,8 @@ public class SQLFileInfo {
           InputStream is = _sql.openInputStream();
           String content = new String(StreamUtil.getContent(is));
           is.close();
-          MySQL51SQLParser parser = new MySQL51SQLParser();
-          return parser.parseSQLFile(_db.getDBData(), content);
+          QueryParser parser = new QueryParser(Token.tokenize(content), _db.getDBData());
+          return parser.parseSelect();
         } catch (IOException e) {
           throw GosuExceptionUtil.forceThrow(e);
         }

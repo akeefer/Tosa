@@ -11,8 +11,8 @@ import static org.junit.Assert.*;
 
 public class SelectParsingBootstrapTest {
   @Test public void bootstrapSelectTest() {
-    MySQL51SQLParser parser = new MySQL51SQLParser();
-    SelectStatement select = parser.parseSQLFile(null, "SELECT * FROM foo WHERE foo.bar = 10");
+    QueryParser parser = new QueryParser(Token.tokenize("SELECT * FROM foo WHERE foo.bar = 10"), null);
+    SelectStatement select = parser.parseSelect();
     assertNotNull(select);
     assertNotNull(select.firstToken().toString());
     String sql = select.toSQL();
@@ -21,10 +21,10 @@ public class SelectParsingBootstrapTest {
   }
 
   @Test public void bootstrapVariableTest() {
-    MySQL51SQLParser parser = new MySQL51SQLParser();
-    SelectStatement select = parser.parseSQLFile(null, "SELECT * \n" +
+    QueryParser parser = new QueryParser(Token.tokenize("SELECT * \n" +
                                                  "FROM foo \n" +
-                                                 "WHERE foo.bar = :val");
+                                                 "WHERE foo.bar = :val"), null);
+    SelectStatement select = parser.parseSelect();
     assertNotNull(select);
     assertNotNull(select.firstToken().toString());
     String sql = select.toSQL();

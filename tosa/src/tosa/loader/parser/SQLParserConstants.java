@@ -221,4 +221,7 @@ public interface SQLParserConstants {
   public static final String OR = "OR";
   public static final String AND = "AND";
   public static final String AS = "AS";
+  public static final String BETWEEN = "BETWEEN";
+  public static final String SYMMETRIC = "SYMMETRIC";
+  public static final String ASYMMETRIC = "ASYMMETRIC";
 }

@@ -23,10 +23,6 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 public class NewMySQL51Parser implements ISQLParser, SQLParserConstants {
-  @Override
-  public SelectStatement parseSQLFile(DBData dbData, String fileContents) {
-    throw new UnsupportedOperationException();
-  }
 
   @Override
   public List<TableData> parseDDLFile(String fileContents) {
