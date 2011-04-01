@@ -7,6 +7,14 @@ import java.util.*;
 
 public abstract class SQLParsedElement {
 
+  public static final Comparator<SQLParsedElement> OFFSET_COMPARATOR = new Comparator<SQLParsedElement>() {
+      @Override
+      public int compare(SQLParsedElement v1, SQLParsedElement v2) {
+        return v1.getStart() - v2.getStart();
+      }
+    };
+
+
   private Token _first;
   private Token _last;
   private List<SQLParsedElement> _children;
@@ -55,7 +63,7 @@ public abstract class SQLParsedElement {
   public List<? extends SQLParsedElement> getChildren() {
     return _children;
   }
-  
+
   public final String toSQL() {
     return toSQL(true);
   }

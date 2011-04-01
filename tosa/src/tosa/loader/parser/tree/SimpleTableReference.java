@@ -1,15 +1,23 @@
 package tosa.loader.parser.tree;
 
+import tosa.loader.data.DBData;
+import tosa.loader.data.TableData;
 import tosa.loader.parser.Token;
 
 import java.util.Map;
 
 public class SimpleTableReference extends SQLParsedElement {
   private Token _name;
+  private TableData _table;
 
   public SimpleTableReference(Token t) {
     super(t);
     _name = t;
+  }
+
+  @Override
+  public void verify(DBData dbData) {
+    _table = dbData.getTable(_name.getValue());
   }
 
   @Override
@@ -19,5 +27,9 @@ public class SimpleTableReference extends SQLParsedElement {
 
   public Token getName() {
     return _name;
+  }
+
+  public TableData getTableData() {
+    return _table;
   }
 }

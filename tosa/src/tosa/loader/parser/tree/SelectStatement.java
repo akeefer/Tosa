@@ -2,7 +2,9 @@ package tosa.loader.parser.tree;
 
 import gw.lang.reflect.IType;
 import tosa.loader.SQLParameterInfo;
+import tosa.loader.data.ColumnData;
 import tosa.loader.data.DBData;
+import tosa.loader.data.TableData;
 import tosa.loader.parser.Token;
 
 import java.util.*;
@@ -62,12 +64,7 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
 
   private List<VariableExpression> determineVariables(DBData dbData) {
     List<VariableExpression> vars = findDescendents(VariableExpression.class);
-    Collections.sort(vars, new Comparator<VariableExpression>() {
-      @Override
-      public int compare(VariableExpression v1, VariableExpression v2) {
-        return v1.getStart() - v2.getStart();
-      }
-    });
+    Collections.sort(vars, SQLParsedElement.OFFSET_COMPARATOR);
     return vars;
   }
 
@@ -76,42 +73,64 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
   }
 
   @Override
-  public String getDefaultTableName() {
-    //TODO cgross - support multiple tables in table clause
-    return getSimpleSelectTarget().getName().getValue();
+  public String getPrimaryTableName() {
+    return getPrimaryTable().getName().getValue();
   }
 
   public List<VariableExpression> getVariables() {
     return _variables;
   }
 
-  public boolean isSimpleSelect() {
-    return _selectList instanceof AsteriskSelectList && getSimpleSelectTarget() != null;
+  public boolean hasSingleTableTarget() {
+    return _selectList instanceof AsteriskSelectList && getPrimaryTable() != null;
   }
 
-  public String getSimpleTableName() {
-    return getSimpleSelectTarget().getName().getValue();
+  public boolean hasMultipleTableTargets() {
+    return _selectList instanceof AsteriskSelectList &&
+      (_tableExpr.getFrom().getTableRefs().size() > 1 ||
+        !(_tableExpr.getFrom().getTableRefs().get(0) instanceof SimpleTableReference));
   }
 
-  public boolean isComplexSelect() {
+  public boolean hasSpecificColumns() {
     return _selectList instanceof ColumnSelectList;
   }
 
-  private SimpleTableReference getSimpleSelectTarget() {
-    List<SQLParsedElement> tableRefs = _tableExpr.getFrom().getTableRefs();
-    if (tableRefs.size() == 1 && tableRefs.get(0) instanceof SimpleTableReference) {
-      return (SimpleTableReference) tableRefs.get(0);
+  private SimpleTableReference getPrimaryTable() {
+    List<SimpleTableReference> simpleRefs = getOrderedSimpleTableRefs();
+    if (simpleRefs.size() > 0) {
+      return simpleRefs.get(0);
+    } else {
+      return null;
     }
-    return null;
+  }
+
+  private List<SimpleTableReference> getOrderedSimpleTableRefs() {
+    List<SimpleTableReference> simpleRefs = _tableExpr.getFrom().findDescendents(SimpleTableReference.class);
+    Collections.sort(simpleRefs, SQLParsedElement.OFFSET_COMPARATOR);
+    return simpleRefs;
   }
 
   public Map<String,IType> getColumnMap() {
     HashMap<String, IType> cols = new HashMap<String, IType>();
-    for (SQLParsedElement col : _selectList.getChildren()) {
-      if (col instanceof ColumnReference) {
-        cols.put(((ColumnReference) col).getName(), ((ColumnReference) col).getGosuType());
+    if (hasSpecificColumns()) {
+      for (SQLParsedElement col : _selectList.getChildren()) {
+        if (col instanceof ColumnReference) {
+          cols.put(((ColumnReference) col).getName(), ((ColumnReference) col).getGosuType());
+        }
+      }
+    } else if(hasMultipleTableTargets()) {
+      List<SimpleTableReference> trs = getOrderedSimpleTableRefs();
+      for (SimpleTableReference ref : trs) {
+        TableData tableData = ref.getTableData();
+        List<ColumnData> columns = tableData.getColumns();
+        for (ColumnData column : columns) {
+          if (!cols.containsKey(column.getName())) {
+            cols.put(column.getName(), column.getColumnType().getGosuType());
+          }
+        }
       }
     }
     return cols;
   }
+
 }

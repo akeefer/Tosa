@@ -21,7 +21,7 @@ public class ColumnReference extends SQLParsedElement {
       if (_table != null) {
         _tableData = dbData.getTable(_table.getValue());
       } else {
-        _tableData = dbData.getTable(getRootElement().getDefaultTableName());
+        _tableData = dbData.getTable(getRootElement().getPrimaryTableName());
       }
       _columnData = _tableData.getColumn(_column.getValue());
     }

@@ -3,8 +3,6 @@ package tosa.loader;
 import gw.lang.reflect.*;
 import gw.lang.reflect.java.IJavaType;
 import gw.util.GosuExceptionUtil;
-import gw.util.Pair;
-import tosa.api.IDBColumnType;
 import tosa.db.execution.QueryExecutor;
 import tosa.loader.parser.tree.*;
 
@@ -16,28 +14,51 @@ import java.util.*;
 
 public class SQLTypeInfo extends BaseTypeInfo {
 
-  private IMethodInfo _theOneTrueMethod;
+  private List<IMethodInfo> _methods;
   private ISQLType _sqlType;
   private static final Object NOT_PRESENT_SENTINAL = new Object();
-  private IType _resultType;
 
   public SQLTypeInfo(ISQLType sqlType) {
     super(sqlType);
     _sqlType = sqlType;
-    _resultType = determineResultType();
-    _theOneTrueMethod = new MethodInfoBuilder().withName("select").withStatic()
+    _methods = new ArrayList<IMethodInfo>();
+    ParameterInfoBuilder[] queryParameters = determineParameters();
+
+    final IType selectReturnType = getResultsType();
+
+    _methods.add(new MethodInfoBuilder().withName("select")
       .withStatic()
-      .withParameters(determineParameters())
-      .withReturnType(determineReturnType())
+      .withParameters(queryParameters)
+      .withReturnType(IJavaType.ITERABLE.getParameterizedType(selectReturnType))
       .withCallHandler(new IMethodCallHandler() {
         @Override
         public Object handleCall(Object ctx, Object... args) {
-          return invokeQuery(args);
+          return invokeQuery(selectReturnType, args);
         }
-      }).build(this);
+      }).build(this));
+
+    if (addSelectAsStructMethod()) {
+
+      final IType structReturnType = getStructResultType();
+
+      _methods.add(new MethodInfoBuilder().withName("selectAsStruct")
+        .withStatic()
+        .withParameters(queryParameters)
+        .withReturnType(IJavaType.ITERABLE.getParameterizedType(structReturnType))
+        .withCallHandler(new IMethodCallHandler() {
+          @Override
+          public Object handleCall(Object ctx, Object... args) {
+            return invokeQuery(structReturnType, args);
+          }
+        }).build(this));
+    }
   }
 
-  public Object invokeQuery(Object... args) {
+  private boolean addSelectAsStructMethod() {
+    return _sqlType.getData().getSelect().hasMultipleTableTargets();
+  }
+
+  public Object invokeQuery(IType returnType, Object... args) {
     Connection c = null;
     try {
       HashMap<String, Object> values = makeArgMap(args);
@@ -67,7 +88,7 @@ public class SQLTypeInfo extends BaseTypeInfo {
       ResultSet resultSet = stmt.executeQuery();
       List lst = new LinkedList();
       while (resultSet.next()) {
-        lst.add(constructResultElement(resultSet));
+        lst.add(constructResultElement(resultSet, returnType));
       }
       return lst;
     } catch (SQLException e) {
@@ -93,27 +114,33 @@ public class SQLTypeInfo extends BaseTypeInfo {
     return values;
   }
 
-  private IType determineResultType() {
-    SQLFileInfo data = _sqlType.getData();
-    SelectStatement select = data.getSelect();
-    if (select.isSimpleSelect()) {
-      IType type = TypeSystem.getByFullNameIfValid(_sqlType.getData().getDatabase().getNamespace() + "." + select.getSimpleTableName());
+  private IType getResultsType() {
+    SelectStatement select = _sqlType.getData().getSelect();
+    if (select.hasSingleTableTarget()) {
+      IType type = TypeSystem.getByFullNameIfValid(_sqlType.getData().getDatabase().getNamespace() + "." + select.getPrimaryTableName());
       if (type != null) {
         return type;
       }
-    } else if(select.isComplexSelect()) {
-      //TODO cgross - register this type and make it a type ref
-      return new StructType(_sqlType.getTypeLoader(), _sqlType.getName() + "Result", select.getColumnMap());
+    } else if(select.hasSpecificColumns()) {
+      return getStructResultType();
     }
-    return IJavaType.OBJECT;
+    return getMapType();
   }
 
-  private Object constructResultElement(ResultSet resultSet) {
+  private IType getStructResultType() {
+    //TODO cgross - register this type and make it a type ref
+    return new StructType(_sqlType.getTypeLoader(), _sqlType.getName() + "Result", _sqlType.getData().getSelect().getColumnMap());
+  }
+
+  private IType getMapType() {
+    return IJavaType.MAP.getGenericType().getParameterizedType(IJavaType.STRING, IJavaType.OBJECT);
+  }
+
+  private Object constructResultElement(ResultSet resultSet, IType returnType) {
     try {
-      IType returnType = getResultType();
-      if (IJavaType.OBJECT.equals(returnType)) {
+      if (getMapType().equals(returnType)) {
         int count = resultSet.getMetaData().getColumnCount();
-        Map hashMap = new HashMap();
+        Map<String, Object> hashMap = new HashMap<String, Object>();
         while (count > 0) {
           hashMap.put(resultSet.getMetaData().getColumnName(count), resultSet.getObject(count));
           count--;
@@ -137,10 +164,6 @@ public class SQLTypeInfo extends BaseTypeInfo {
     }
   }
 
-  private IType determineReturnType() {
-    return IJavaType.ITERABLE.getParameterizedType(getResultType());
-  }
-
   private ParameterInfoBuilder[] determineParameters() {
     ArrayList<ParameterInfoBuilder> builders = new ArrayList<ParameterInfoBuilder>();
     List<SQLParameterInfo> pis = _sqlType.getData().getParameterInfos();
@@ -160,7 +183,7 @@ public class SQLTypeInfo extends BaseTypeInfo {
 
   @Override
   public List<? extends IMethodInfo> getMethods() {
-    return Collections.singletonList(_theOneTrueMethod);
+    return _methods;
   }
 
   @Override
@@ -172,9 +195,4 @@ public class SQLTypeInfo extends BaseTypeInfo {
   public IMethodInfo getCallableMethod(CharSequence method, IType... params) {
     return getMethod(method, params);
   }
-
-  public IType getResultType() {
-    return _resultType;
-  }
-
 }
