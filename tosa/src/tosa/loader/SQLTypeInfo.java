@@ -4,6 +4,7 @@ import gw.lang.reflect.*;
 import gw.lang.reflect.java.IJavaType;
 import gw.util.GosuExceptionUtil;
 import tosa.db.execution.QueryExecutor;
+import tosa.loader.parser.SQLParseException;
 import tosa.loader.parser.tree.*;
 
 import java.sql.Connection;
@@ -17,12 +18,14 @@ public class SQLTypeInfo extends BaseTypeInfo {
   private List<IMethodInfo> _methods;
   private ISQLType _sqlType;
   private static final Object NOT_PRESENT_SENTINAL = new Object();
+  private SQLParseException _sqlpe;
 
   public SQLTypeInfo(ISQLType sqlType) {
     super(sqlType);
     _sqlType = sqlType;
     _methods = new ArrayList<IMethodInfo>();
     ParameterInfoBuilder[] queryParameters = determineParameters();
+    _sqlpe = _sqlType.getData().getSelect().getSQLParseException(_sqlType.getData().getFileName());
 
     final IType selectReturnType = getResultsType();
 
@@ -59,6 +62,7 @@ public class SQLTypeInfo extends BaseTypeInfo {
   }
 
   public Object invokeQuery(IType returnType, Object... args) {
+    verifySql();
     Connection c = null;
     try {
       HashMap<String, Object> values = makeArgMap(args);
@@ -101,6 +105,12 @@ public class SQLTypeInfo extends BaseTypeInfo {
           throw GosuExceptionUtil.forceThrow(e);
         }
       }
+    }
+  }
+
+  private void verifySql() {
+    if (_sqlpe != null) {
+      throw _sqlpe;
     }
   }
 

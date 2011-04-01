@@ -1,6 +1,7 @@
 package tosa.loader.parser.tree;
 
 import tosa.loader.data.DBData;
+import tosa.loader.parser.SQLParseException;
 import tosa.loader.parser.Token;
 
 import java.util.*;
@@ -171,4 +172,27 @@ public abstract class SQLParsedElement {
     }
     return results;
   }
+
+  public Set<SQLParseError> getErrors() {
+    HashSet<SQLParseError> errors = new HashSet<SQLParseError>();
+    collectErrors(errors);
+    return errors;
+  }
+
+  private void collectErrors(HashSet<SQLParseError> errors) {
+    errors.addAll(_errors);
+    for (SQLParsedElement child : _children) {
+      child.collectErrors(errors);
+    }
+  }
+
+  public SQLParseException getSQLParseException(String fileName) {
+    Set<SQLParseError> errors = getErrors();
+    if (errors.size() > 0) {
+      return new SQLParseException(fileName, errors);
+    } else {
+      return null;
+    }
+  }
+
 }

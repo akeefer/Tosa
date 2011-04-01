@@ -14,14 +14,16 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
   private SQLParsedElement _quantifier;
   private SQLParsedElement _selectList;
   private TableExpression _tableExpr;
+  private SQLParsedElement _orderBy;
   private List<SQLParameterInfo> _parameters;
   private List<VariableExpression> _variables;
 
-  public SelectStatement(Token start, Token end, SQLParsedElement quantifier, SQLParsedElement selectList, TableExpression tableExpr) {
+  public SelectStatement(Token start, Token end, SQLParsedElement quantifier, SQLParsedElement selectList, TableExpression tableExpr, SQLParsedElement orderBy) {
     super(start, end, quantifier, selectList, tableExpr);
     _quantifier = quantifier;
     _selectList = selectList;
     _tableExpr = tableExpr;
+    _orderBy = orderBy;
   }
 
   @Override
@@ -33,14 +35,10 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
     _selectList.toSQL(prettyPrint, indent, sb, values);
     sb.append("\n");
     _tableExpr.toSQL(prettyPrint, indent, sb, values);
-  }
-
-  public TableExpression getTableExpression() {
-    return _tableExpr;
-  }
-
-  public SQLParsedElement getSelectList() {
-    return _selectList;
+    if (_orderBy != null) {
+      sb.append("\n");
+      _orderBy.toSQL(prettyPrint, indent, sb, values);
+    }
   }
 
   public void verify(DBData dbData) {

@@ -2,6 +2,7 @@ package tosa.loader
 
 uses java.io.*
 uses java.lang.*
+uses java.util.*
 uses gw.lang.reflect.IPropertyInfo
 uses gw.lang.reflect.features.PropertyReference
 uses org.junit.Assert
@@ -24,6 +25,7 @@ class SQLTypeInfoTest {
   private function deleteAllData() {
     clearTable("Bar")
     clearTable("Foo")
+    clearTable("ForOrderByTests")
   }
 
   private function clearTable(tableName : String) {
@@ -36,12 +38,24 @@ class SQLTypeInfoTest {
   }
 
   private function importSampleData() {
-    var bar = new Bar(){:Date = new java.sql.Date(new java.util.Date("4/22/2009").Time), :Misc = "misc"}
+    var bar = new Bar(){:Date = sqlDate("4/22/2009"), :Misc = "misc"}
     bar.update()
     var foo = new Foo(){:Bar = bar, :FirstName="First", :LastName="Bar"}
     foo.update()
     var foo2 = new Foo(){:FirstName="First2", :LastName="Bar2"}
     foo2.update()
+
+    var orderBys = {
+      new ForOrderByTests() { :Number=1, :Date=sqlDate("4/22/2009"), :Str="g", :Str2="a" },
+      new ForOrderByTests() { :Number=2, :Date=sqlDate("4/22/2008"), :Str="z", :Str2="a" },
+      new ForOrderByTests() { :Number=3, :Date=sqlDate("4/22/2007"), :Str="a", :Str2="a" }
+    }
+
+    orderBys.each( \ ob -> ob.update() )
+  }
+
+  private function sqlDate( s : String ) : java.sql.Date {
+    return new java.sql.Date(new java.util.Date(s).Time)
   }
 
   @Before
@@ -120,7 +134,7 @@ class SQLTypeInfoTest {
   @Test
   function testBasicFieldSelectionWorks() {
     var result = test.query.SampleQueryWithSpecificCols.select()
-    Assert.assertEquals(new java.sql.Date(new java.util.Date("4/22/2009").Time), result.first().Date)
+    Assert.assertEquals(sqlDate("4/22/2009"), result.first().Date)
     Assert.assertEquals("misc", result.first().Misc)
     Assert.assertEquals(1, result.Count)
   }
@@ -129,7 +143,7 @@ class SQLTypeInfoTest {
   function testBasicJoinWorks() {
     var result = test.query.SampleJoinQuery.select("First")
     Assert.assertEquals(1, result.Count)
-    Assert.assertEquals(new java.sql.Date(new java.util.Date("4/22/2009").Time), result.first().Date)
+    Assert.assertEquals(sqlDate("4/22/2009"), result.first().Date)
     Assert.assertEquals("misc", result.first().Misc)
   }
 
@@ -137,7 +151,7 @@ class SQLTypeInfoTest {
   function testBasicInnerJoinWorks() {
     var result = test.query.SampleInnerJoinQuery.select("First")
     Assert.assertEquals(1, result.Count)
-    Assert.assertEquals(new java.sql.Date(new java.util.Date("4/22/2009").Time), result.first().Date)
+    Assert.assertEquals(sqlDate("4/22/2009"), result.first().Date)
     Assert.assertEquals("misc", result.first().Misc)
   }
 
@@ -145,7 +159,7 @@ class SQLTypeInfoTest {
   function testBasicLeftOuterJoinWorks() {
     var result = test.query.SampleLeftOuterJoinQuery.select("First")
     Assert.assertEquals(1, result.Count)
-    Assert.assertEquals(new java.sql.Date(new java.util.Date("4/22/2009").Time), result.first().Date)
+    Assert.assertEquals(sqlDate("4/22/2009"), result.first().Date)
     Assert.assertEquals("misc", result.first().Misc)
   }
 
@@ -167,7 +181,7 @@ class SQLTypeInfoTest {
   function testBasicJoinAsStructWorks() {
     var result = test.query.SampleJoinQuery.selectAsStruct("First")
     Assert.assertEquals(1, result.Count)
-    Assert.assertEquals(new java.sql.Date(new java.util.Date("4/22/2009").Time), result.first().Date)
+    Assert.assertEquals(sqlDate("4/22/2009"), result.first().Date)
     Assert.assertEquals("misc", result.first().Misc)
     Assert.assertEquals("First", result.first().FirstName)
     Assert.assertEquals("Bar", result.first().LastName)
@@ -177,7 +191,7 @@ class SQLTypeInfoTest {
   function testBasicInnerJoinAsStructWorks() {
     var result = test.query.SampleInnerJoinQuery.selectAsStruct("First")
     Assert.assertEquals(1, result.Count)
-    Assert.assertEquals(new java.sql.Date(new java.util.Date("4/22/2009").Time), result.first().Date)
+    Assert.assertEquals(sqlDate("4/22/2009"), result.first().Date)
     Assert.assertEquals("misc", result.first().Misc)
     Assert.assertEquals("First", result.first().FirstName)
     Assert.assertEquals("Bar", result.first().LastName)
@@ -187,7 +201,7 @@ class SQLTypeInfoTest {
   function testBasicLeftOuterJoinAsStructWorks() {
     var result = test.query.SampleLeftOuterJoinQuery.selectAsStruct("First")
     Assert.assertEquals(1, result.Count)
-    Assert.assertEquals(new java.sql.Date(new java.util.Date("4/22/2009").Time), result.first().Date)
+    Assert.assertEquals(sqlDate("4/22/2009"), result.first().Date)
     Assert.assertEquals("misc", result.first().Misc)
     Assert.assertEquals("First", result.first().FirstName)
     Assert.assertEquals("Bar", result.first().LastName)
@@ -207,4 +221,34 @@ class SQLTypeInfoTest {
     Assert.assertEquals(2, result.Count)
   }
 
+  @Test
+  function testBasicOrderByWorks() {
+    var result = test.query.SampleSimpleOrderByQuery.select()
+    Assert.assertEquals(3, result.Count)
+    Assert.assertEquals(new ArrayList(){1, 2, 3}, result.map( \ elt -> elt.Number ) )
+  }
+
+  @Test
+  function testBasicOrderDescByWorks() {
+    var result = test.query.SampleSimpleOrderByDescQuery.select()
+    Assert.assertEquals(3, result.Count)
+    Assert.assertEquals(new ArrayList(){3, 2, 1}, result.map( \ elt -> elt.Number ) )
+  }
+
+  @Test
+  function testBasicOrderByWithWhereWorks() {
+    var result = test.query.SampleSimpleOrderByWithWhereQuery.select("bad")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleSimpleOrderByWithWhereQuery.select("a")
+    Assert.assertEquals(3, result.Count)
+    Assert.assertEquals(new ArrayList(){1, 2, 3}, result.map( \ elt -> elt.Number ) )
+  }
+
+  @Test
+  function testBasicOrderByWithMultipleColsWorks() {
+    var result = test.query.SampleSimpleOrderByMultipleColsQuery.select()
+    Assert.assertEquals(3, result.Count)
+    Assert.assertEquals(new ArrayList(){"z", "g", "a"}, result.map( \ elt -> elt.Str ) )
+  }
 }

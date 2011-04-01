@@ -63,4 +63,8 @@ public class SQLFileInfo {
   public List<VariableExpression> getVariables() {
     return _select.get().getVariables();
   }
+
+  public String getFileName() {
+    return _sql.getName();
+  }
 }

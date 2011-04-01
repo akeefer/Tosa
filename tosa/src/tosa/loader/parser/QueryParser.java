@@ -24,13 +24,41 @@ public class QueryParser implements SQLParserConstants {
       SQLParsedElement quantifier = parseSetQuantifers();
       SQLParsedElement selectList = parseSelectList();
       TableExpression tableExpr = parseTableExpression();
-      SelectStatement select = new SelectStatement(start, tableExpr.lastToken(), quantifier, selectList, tableExpr);
+      SQLParsedElement orderByExpr = parseOrderByClause();
+      SelectStatement select = new SelectStatement(start, tableExpr.lastToken(), quantifier, selectList,
+        tableExpr, orderByExpr);
       if (_data != null) {
         select.verify(_data);
       }
       return select;
     }
     return null;
+  }
+
+  private SQLParsedElement parseOrderByClause() {
+    if (match(ORDER, BY)) {
+      Token first = lastMatch().previous();
+      List<SQLParsedElement> specList = parseSortSpecificationList();
+      return new OrderByClause(first, lastMatch(), specList);
+    } else {
+      return null;
+    }
+  }
+
+  private List<SQLParsedElement> parseSortSpecificationList() {
+    ArrayList<SQLParsedElement> lst = new ArrayList<SQLParsedElement>();
+    do {
+      SQLParsedElement valueExpr = parseValueExpression();
+      boolean ascending = false;
+      boolean descending = false;
+      if (match(ASC)) {
+        ascending = true;
+      } else if (match(DESC)) {
+        descending = true;
+      }
+      lst.add(new SortSpecification(valueExpr, lastMatch(), ascending, descending));
+    } while (match(COMMA));
+    return lst;
   }
 
   private TableExpression parseTableExpression() {
@@ -46,7 +74,7 @@ public class QueryParser implements SQLParserConstants {
   private SQLParsedElement parseWhereClause() {
     if (match(WHERE)) {
       return new WhereClause(lastMatch(), parseSearchOrExpression());
-    } else if(_currentToken.isEOF()) {
+    } else if (_currentToken.isEOF() || peek(ORDER, BY)) {
       return null;
     } else {
       return unexpectedToken();
@@ -224,7 +252,7 @@ public class QueryParser implements SQLParserConstants {
   private UnexpectedTokenExpression unexpectedToken() {
     Token unexpectedToken = takeToken();
     UnexpectedTokenExpression utExpr = new UnexpectedTokenExpression(unexpectedToken);
-    utExpr.addParseError(new SQLParseError(unexpectedToken, "Unexpected Token"));
+    utExpr.addParseError(new SQLParseError(unexpectedToken, "Unexpected Token: " + unexpectedToken.getValue()));
     return utExpr;
   }
 
@@ -485,6 +513,22 @@ public class QueryParser implements SQLParserConstants {
   private boolean match(String str1, String str2) {
     if (_currentToken.match(str1) && _currentToken.nextToken().match(str2)) {
       _currentToken = _currentToken.nextToken().nextToken();
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private boolean peek(String str) {
+    if (_currentToken.match(str)) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private boolean peek(String str1, String str2) {
+    if (_currentToken.match(str1) && _currentToken.nextToken().match(str2)) {
       return true;
     } else {
       return false;

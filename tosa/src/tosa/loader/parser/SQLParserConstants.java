@@ -229,4 +229,5 @@ public interface SQLParserConstants {
   public static final String LEFT = "LEFT";
   public static final String RIGHT = "RIGHT";
   public static final String OUTER = "OUTER";
+  public static final String ORDER = "ORDER";
 }

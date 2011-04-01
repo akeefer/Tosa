@@ -9,6 +9,14 @@ CREATE TABLE "SortPage"(
     "Number" INT
 );
 
+CREATE TABLE "ForOrderByTests" (
+    "id" INT PRIMARY KEY AUTO_INCREMENT,
+    "Number" INT,
+    "Date" DATE,
+    "Str" VARCHAR(50),
+    "Str2" VARCHAR(50)
+);
+
 CREATE TABLE "Foo"(
     "id" INT PRIMARY KEY AUTO_INCREMENT,
     "FirstName" VARCHAR(50),
