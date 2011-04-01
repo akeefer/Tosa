@@ -386,14 +386,32 @@ public class QueryParser implements SQLParserConstants {
 
   private SQLParsedElement parseJoinedTable(SQLParsedElement joinTarget) {
     // TODO cgross - other types of joins
-    if(match(JOIN)) {
-      Token start = lastMatch();
+    if(match(JOIN) ||
+       match(INNER, JOIN) ||
+       match(LEFT, OUTER, JOIN) ||
+       match(RIGHT, OUTER, JOIN) ||
+       match(FULL, OUTER, JOIN)) {
+      Token lastMatch = lastMatch();
       //TODO cgross - grammar says this is a table entry.  Ambiguity?
       SQLParsedElement table = parseTablePrimary();
       SQLParsedElement joinSpec = parseJoinSpecification();
-      return parseJoinedTable(new QualifiedJoin(start, joinTarget, table, joinSpec));
+      return parseJoinedTable(new QualifiedJoin(joinTarget, table, joinSpec, getJoinType(lastMatch)));
     } else {
       return joinTarget;
+    }
+  }
+
+  private QualifiedJoin.JoinType getJoinType(Token lastMatch) {
+    if (lastMatch.endOf(INNER, JOIN)) {
+      return QualifiedJoin.JoinType.INNER;
+    } else if (lastMatch.endOf(LEFT, OUTER, JOIN)) {
+      return QualifiedJoin.JoinType.LEFT_OUTER;
+    } else if (lastMatch.endOf(RIGHT, OUTER, JOIN)) {
+      return QualifiedJoin.JoinType.RIGHT_OUTER;
+    } else if (lastMatch.endOf(FULL, OUTER, JOIN)) {
+      return QualifiedJoin.JoinType.FULL_OUTER;
+    } else {
+      return QualifiedJoin.JoinType.REGULAR;      
     }
   }
 

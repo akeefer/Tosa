@@ -225,4 +225,8 @@ public interface SQLParserConstants {
   public static final String SYMMETRIC = "SYMMETRIC";
   public static final String ASYMMETRIC = "ASYMMETRIC";
   public static final String JOIN = "JOIN";
+  public static final String INNER = "INNER";
+  public static final String LEFT = "LEFT";
+  public static final String RIGHT = "RIGHT";
+  public static final String OUTER = "OUTER";
 }

@@ -166,4 +166,15 @@ public class Token {
     } while (t.previous() != end && t != EOF);
     return parseErrors;
   }
+
+  public boolean endOf(String... tokenString) {
+    Token current = this;
+    for (int i = tokenString.length - 1; i >= 0; i--) {
+      if (!current.match(tokenString[i])) {
+        return false;
+      }
+      current = current.previous();
+    }
+    return true;
+  }
 }

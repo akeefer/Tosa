@@ -8,6 +8,7 @@ uses org.junit.Assert
 uses org.junit.Before
 uses org.junit.BeforeClass
 uses org.junit.Test
+uses org.junit.Ignore
 uses test.testdb.*
 uses test.query.*
 uses gw.lang.reflect.TypeSystem
@@ -22,6 +23,7 @@ class SQLTypeInfoTest {
 
   private function deleteAllData() {
     clearTable("Bar")
+    clearTable("Foo")
   }
 
   private function clearTable(tableName : String) {
@@ -38,6 +40,8 @@ class SQLTypeInfoTest {
     bar.update()
     var foo = new Foo(){:Bar = bar, :FirstName="First", :LastName="Bar"}
     foo.update()
+    var foo2 = new Foo(){:FirstName="First2", :LastName="Bar2"}
+    foo2.update()
   }
 
   @Before
@@ -125,6 +129,30 @@ class SQLTypeInfoTest {
   function testBasicJoinWorks() {
     var result = test.query.SampleJoinQuery.select("First")
     Assert.assertEquals(1, result.Count)
+  }
+
+  @Test
+  function testBasicInnerJoinWorks() {
+    var result = test.query.SampleInnerJoinQuery.select("First")
+    Assert.assertEquals(1, result.Count)
+  }
+
+  @Test
+  function testBasicLeftOuterJoinWorks() {
+    var result = test.query.SampleLeftOuterJoinQuery.select("First")
+    Assert.assertEquals(1, result.Count)
+  }
+
+  @Test
+  function testBasicRightOuterJoinWorks() {
+    var result = test.query.SampleRightOuterJoinQuery.select("First")
+    Assert.assertEquals(2, result.Count)
+  }
+
+  @Test @Ignore("H2 does not implement FULL OUTER JOIN" )
+  function testBasicFullOuterJoinWorks() {
+    var result = test.query.SampleFullOuterJoinQuery.select()
+    Assert.assertEquals(2, result.Count)
   }
 
 }
