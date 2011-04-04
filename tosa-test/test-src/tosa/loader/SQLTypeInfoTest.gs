@@ -272,4 +272,19 @@ class SQLTypeInfoTest {
     Assert.assertTrue( result.hasMatch( \ r -> r.Str2 == "a" and r.Cnt == 2L ))
     Assert.assertTrue( result.hasMatch( \ r -> r.Str2 == "b" and r.Cnt == 1L ))
   }
+
+  @Test
+  function testBasicFunctionCallInSelectListWorks() {
+    var result = test.query.SampleFunctionCallInSelectListQuery.select()
+    Assert.assertEquals(3, result.Count)
+    Assert.assertEquals(new ArrayList(){"Wednesday", "Tuesday", "Sunday"},
+                        result.map( \ r -> r.Day ))
+  }
+
+  @Test
+  function testBasicFunctionCallInWhereClauseWorks() {
+    var result = test.query.SampleFunctionCallInWhereQuery.select("Tuesday")
+    Assert.assertEquals(1, result.Count)
+    Assert.assertEquals(2, result.first().Number)
+  }
 }

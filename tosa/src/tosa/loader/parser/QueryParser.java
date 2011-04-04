@@ -152,7 +152,7 @@ public class QueryParser implements SQLParserConstants {
   private SQLParsedElement parsePredicate() {
     SQLParsedElement initialValue = parseRowValue();
     if (initialValue != null) {
-      SQLParsedElement comparison = parseComparsionPredicate(initialValue);
+      SQLParsedElement comparison = parseComparisonPredicate(initialValue);
       if (comparison != null) {
         return comparison;
       }
@@ -182,10 +182,10 @@ public class QueryParser implements SQLParserConstants {
 
   private SQLParsedElement parseNullPredicate(SQLParsedElement initialValue) {
     if (match(IS, NOT, NULL)) {
-      return new IsNotNullPredicate(initialValue, _currentToken.previous(), true);
+      return new IsNotNullPredicate(initialValue, lastMatch(), true);
     } else if (match(IS, NULL)) {
       _currentToken = _currentToken.nextToken().nextToken();
-      return new IsNotNullPredicate(initialValue, _currentToken.previous(), false);
+      return new IsNotNullPredicate(initialValue, lastMatch(), false);
     } else {
       return null;
     }
@@ -201,10 +201,11 @@ public class QueryParser implements SQLParserConstants {
     }
   }
 
-  private SQLParsedElement parseComparsionPredicate(SQLParsedElement initialValue) {
+  private SQLParsedElement parseComparisonPredicate(SQLParsedElement initialValue) {
     if (matchAny(EQ_OP, LT_OP, LTEQ_OP, GT_OP, GTEQ_OP)) {
+      Token op = lastMatch();
       SQLParsedElement comparisonValue = parseValueExpression();
-      return new ComparisonPredicate(initialValue, initialValue.nextToken(), comparisonValue);
+      return new ComparisonPredicate(initialValue, op, comparisonValue);
     } else {
       return null;
     }
@@ -330,8 +331,28 @@ public class QueryParser implements SQLParserConstants {
       SQLParsedElement value = parseValueExpression();
       expect(CLOSE_PAREN);
       return new SetFunctionExpression(first, value, lastMatch());
+    } else if(_currentToken.isSymbol() && _currentToken.nextToken().match(OPEN_PAREN)) {
+      return parseFunctionCall();
     } else {
       return null;
+    }
+  }
+
+  private SQLParsedElement parseFunctionCall() {
+    if (_currentToken.isSymbol() && _currentToken.nextToken().match(OPEN_PAREN)) {
+      Token functionName = takeToken();
+      Token paren = takeToken();
+      List<SQLParsedElement> args = new ArrayList<SQLParsedElement>();
+      while (!match(CLOSE_PAREN)) {
+        SQLParsedElement arg = parseValueExpression();
+        args.add(arg);
+        if (!peek(CLOSE_PAREN)) {
+          expect(COMMA);
+        }
+      }
+      return new GenericFunctionCall(functionName, args, lastMatch());
+    } else {
+      return unexpectedToken();
     }
   }
 
