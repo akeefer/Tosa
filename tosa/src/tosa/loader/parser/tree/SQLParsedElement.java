@@ -3,6 +3,7 @@ package tosa.loader.parser.tree;
 import tosa.loader.data.DBData;
 import tosa.loader.parser.SQLParseException;
 import tosa.loader.parser.Token;
+import tosa.loader.parser.TokenType;
 
 import java.util.*;
 
@@ -15,34 +16,80 @@ public abstract class SQLParsedElement {
       }
     };
 
-
   private Token _first;
   private Token _last;
   private List<SQLParsedElement> _children;
   private SQLParsedElement _parent;
   private Set<SQLParseError> _errors = new HashSet<SQLParseError>();
+  public static final Token INFER = new Token(TokenType.UNKNOWN, "Infer This Token", 0, 0, 0, 0);
 
-  public SQLParsedElement(Token token, SQLParsedElement... children) {
-    this(token, token, children);
+  public SQLParsedElement(SQLParsedElement... children) {
+    this(Arrays.asList(children));
   }
 
-  public SQLParsedElement(Token first, Token last, SQLParsedElement... children) {
-    this(first, last, Arrays.asList(children));
+  public SQLParsedElement(Token start, SQLParsedElement... children) {
+    this(start, Arrays.asList(children));
   }
 
-  public SQLParsedElement(Token first, Token last, List<? extends SQLParsedElement> children) {
-    _first = first;
-    _last = last;
+  public SQLParsedElement(SQLParsedElement child, Token end) {
+    this(INFER, Collections.singletonList(child), end);
+  }
+
+  public SQLParsedElement(Token start, SQLParsedElement child) {
+    this(start, Collections.singletonList(child), INFER);
+  }
+
+  public SQLParsedElement(Token start, SQLParsedElement child, Token end) {
+    this(start, Collections.singletonList(child), end);
+  }
+
+  public SQLParsedElement(List<SQLParsedElement> children) {
+    this(INFER, children,  INFER);
+  }
+
+  public SQLParsedElement(Token start, List<SQLParsedElement> children) {
+    this(start, children, INFER);
+  }
+
+  public SQLParsedElement(List<SQLParsedElement> children, Token last) {
+    this(INFER, children, last);
+  }
+
+  public SQLParsedElement(SQLParsedElement lhs, SQLParsedElement rhs) {
+    this(lhs.getFirst(), Arrays.asList(lhs, rhs), rhs.getLast());
+  }
+
+  public SQLParsedElement(Token start) {
+    this(start, Collections.<SQLParsedElement>emptyList(), start);
+  }
+
+  public SQLParsedElement(Token start, Token last) {
+    this(start, Collections.<SQLParsedElement>emptyList(), last);
+  }
+
+  public SQLParsedElement(Token first, List<? extends SQLParsedElement> children, Token last) {
+
     _children = new ArrayList<SQLParsedElement>();
-    _errors.addAll(first.collectTemporaryErrors(last));
     for (SQLParsedElement child : children) {
       if (child != null) {
         _children.add(child);
+        child._parent = this;
       }
     }
-    for (SQLParsedElement child : _children) {
-      child._parent = this;
+
+    if (first == INFER) {
+      _first = findFirstToken(_children, last);
+    } else {
+      _first = first;
     }
+
+    if (last == INFER) {
+      _last = findLastToken(_children, first);
+    } else {
+      _last = last;
+    }
+
+    _errors.addAll(_first.collectTemporaryErrors(_last));
   }
 
   public Token firstToken() {
@@ -195,4 +242,23 @@ public abstract class SQLParsedElement {
     }
   }
 
+  private Token findFirstToken(List<? extends SQLParsedElement> children, Token defaultToken) {
+    for (int i = 0; i < children.size(); i++) {
+      SQLParsedElement child = children.get(i);
+      if (child != null) {
+        return child.firstToken();
+      }
+    }
+    return defaultToken == INFER ? null : defaultToken;
+  }
+
+  private Token findLastToken(List<? extends SQLParsedElement> children, Token defaultToken) {
+    for (int i = children.size() - 1; i >= 0; i--) {
+      SQLParsedElement child = children.get(i);
+      if (child != null) {
+        return child.lastToken();
+      }
+    }
+    return defaultToken == INFER ? null : defaultToken;
+  }
 }

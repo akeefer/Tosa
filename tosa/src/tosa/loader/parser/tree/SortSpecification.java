@@ -2,6 +2,7 @@ package tosa.loader.parser.tree;
 
 import tosa.loader.parser.Token;
 
+import java.util.Arrays;
 import java.util.Map;
 
 public class SortSpecification extends SQLParsedElement {
@@ -10,8 +11,8 @@ public class SortSpecification extends SQLParsedElement {
   private boolean _ascending;
   private boolean _descending;
 
-  public SortSpecification(SQLParsedElement valueExpr, Token token, boolean ascending, boolean descending) {
-    super(valueExpr.firstToken(), token, valueExpr);
+  public SortSpecification(SQLParsedElement valueExpr, Token end, boolean ascending, boolean descending) {
+    super(Arrays.asList(valueExpr), end);
     _value = valueExpr;
     _ascending = ascending;
     _descending = descending;

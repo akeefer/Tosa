@@ -1,11 +1,13 @@
 package tosa.loader.parser.tree;
 
 import gw.lang.reflect.IType;
+import gw.lang.reflect.java.IJavaType;
 import tosa.loader.data.ColumnData;
 import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
 import tosa.loader.parser.Token;
 
+import java.util.Collections;
 import java.util.Map;
 
 public class ColumnReference extends SQLParsedElement {
@@ -23,7 +25,12 @@ public class ColumnReference extends SQLParsedElement {
       } else {
         _tableData = dbData.getTable(getRootElement().getPrimaryTableName());
       }
-      _columnData = _tableData.getColumn(_column.getValue());
+      if (_tableData != null) {
+        _columnData = _tableData.getColumn(_column.getValue());
+      }
+      if(_columnData == null) {
+        addParseError(new SQLParseError(_column, "Unable to resolve column " + _column.getValue()));
+      }
     }
   }
 
@@ -56,6 +63,10 @@ public class ColumnReference extends SQLParsedElement {
   }
 
   public IType getGosuType() {
-    return _columnData.getColumnType().getGosuType();
+    if (_columnData == null) {
+      return IJavaType.OBJECT;
+    } else {
+      return _columnData.getColumnType().getGosuType();
+    }
   }
 }

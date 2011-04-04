@@ -10,7 +10,7 @@ public class SQLAdditiveExpression extends SQLParsedElement{
   private SQLParsedElement _rhs;
 
   public SQLAdditiveExpression(SQLParsedElement lhs, Token op, SQLParsedElement rhs) {
-    super(lhs.firstToken(), rhs.lastToken(), lhs, rhs);
+    super(lhs, rhs);
     _lhs = lhs;
     _op = op;
     _rhs = rhs;

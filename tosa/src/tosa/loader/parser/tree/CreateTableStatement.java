@@ -18,7 +18,7 @@ public class CreateTableStatement extends SQLParsedElement {
   private Token _tableName;
 
   public CreateTableStatement(Token first, Token last, Token tableName, List<SQLParsedElement> children) {
-    super(first, last, children);
+    super(first, children, last);
     _tableName = tableName;
   }
 

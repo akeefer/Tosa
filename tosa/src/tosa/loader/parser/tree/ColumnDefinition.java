@@ -19,7 +19,7 @@ public class ColumnDefinition extends SQLParsedElement {
   private List<SQLParsedElement> _columnOptions;
 
   public ColumnDefinition(Token start, Token end, Token name, ColumnDataType columnDataType, List<SQLParsedElement> columnOptions) {
-    super(start, end, collectChildren(columnDataType, columnOptions));
+    super(start, collectChildren(columnDataType, columnOptions), end);
     _name = name;
     _columnDataType = columnDataType;
     _columnOptions = columnOptions;

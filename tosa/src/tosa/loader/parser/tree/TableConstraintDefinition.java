@@ -39,7 +39,7 @@ public class TableConstraintDefinition extends SQLParsedElement {
   private List<SQLParsedElement> _indexOptions;
 
   public TableConstraintDefinition(Token start, Token end, ConstraintType constraintType, Token symbolName, IndexName indexName, IndexType indexType, List<IndexColumnName> columnNames, List<SQLParsedElement> indexOptions) {
-    super(start, end, collectChildren(indexName, indexType, columnNames,  indexOptions));
+    super(collectChildren(indexName, indexType, columnNames,  indexOptions));
     _constraintType = constraintType;
     _symbolName = symbolName;
     _indexName = indexName;

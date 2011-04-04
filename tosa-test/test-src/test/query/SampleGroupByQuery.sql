@@ -1,0 +1,2 @@
+SELECT Str2 FROM ForGroupByTests
+GROUP BY Str2

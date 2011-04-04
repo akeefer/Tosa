@@ -7,8 +7,8 @@ import java.util.Map;
 
 public class ColumnSelectList extends SQLParsedElement {
 
-  public ColumnSelectList(Token start, Token last, List<SQLParsedElement> children) {
-    super(start, last, children);
+  public ColumnSelectList(List<SQLParsedElement> children) {
+    super(children);
   }
 
   @Override

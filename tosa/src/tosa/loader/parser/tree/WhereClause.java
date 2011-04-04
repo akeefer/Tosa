@@ -8,7 +8,7 @@ public class WhereClause extends SQLParsedElement {
   private SQLParsedElement _conditions;
 
   public WhereClause(Token start, SQLParsedElement conditions) {
-    super(start, conditions.lastToken(), conditions);
+    super(start, conditions);
     _conditions = conditions;
   }
 

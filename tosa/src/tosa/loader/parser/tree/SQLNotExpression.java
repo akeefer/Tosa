@@ -8,7 +8,7 @@ public class SQLNotExpression extends SQLParsedElement {
   private SQLParsedElement _rhs;
 
   public SQLNotExpression(Token start, SQLParsedElement rhs) {
-    super(start, rhs.lastToken(), rhs);
+    super(start, rhs);
     _rhs = rhs;
   }
 

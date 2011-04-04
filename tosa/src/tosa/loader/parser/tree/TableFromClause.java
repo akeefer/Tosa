@@ -9,7 +9,7 @@ public class TableFromClause extends SQLParsedElement {
   private List<SQLParsedElement> _tableRefs;
 
   public TableFromClause(Token t, List<SQLParsedElement> refs) {
-    super(t, refs.get(refs.size()-1).lastToken(), refs);
+    super(t, refs);
     _tableRefs = refs;
   }
 

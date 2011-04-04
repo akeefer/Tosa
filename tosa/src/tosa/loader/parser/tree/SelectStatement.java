@@ -18,8 +18,8 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
   private List<SQLParameterInfo> _parameters;
   private List<VariableExpression> _variables;
 
-  public SelectStatement(Token start, Token end, SQLParsedElement quantifier, SQLParsedElement selectList, TableExpression tableExpr, SQLParsedElement orderBy) {
-    super(start, end, quantifier, selectList, tableExpr);
+  public SelectStatement(Token start, SQLParsedElement quantifier, SQLParsedElement selectList, TableExpression tableExpr, SQLParsedElement orderBy) {
+    super(start, quantifier, selectList, tableExpr);
     _quantifier = quantifier;
     _selectList = selectList;
     _tableExpr = tableExpr;
@@ -72,7 +72,7 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
 
   @Override
   public String getPrimaryTableName() {
-    return getPrimaryTable().getName().getValue();
+    return getPrimaryTable() == null ? null : getPrimaryTable().getName().getValue();
   }
 
   public List<VariableExpression> getVariables() {
@@ -114,6 +114,8 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
       for (SQLParsedElement col : _selectList.getChildren()) {
         if (col instanceof ColumnReference) {
           cols.put(((ColumnReference) col).getName(), ((ColumnReference) col).getGosuType());
+        } else if (col instanceof DerivedColumn) {
+          cols.put(((DerivedColumn) col).getName(), ((DerivedColumn) col).getGosuType());
         }
       }
     } else if(hasMultipleTableTargets()) {

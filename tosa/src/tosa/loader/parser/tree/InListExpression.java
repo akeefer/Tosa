@@ -8,8 +8,8 @@ import java.util.Map;
 public class InListExpression extends SQLParsedElement {
   private List<SQLParsedElement> _values;
 
-  public InListExpression(Token first, Token last, List<SQLParsedElement> values) {
-    super(first, last, values);
+  public InListExpression(Token first, List<SQLParsedElement> values) {
+    super(first, values);
     _values = values;
   }
 

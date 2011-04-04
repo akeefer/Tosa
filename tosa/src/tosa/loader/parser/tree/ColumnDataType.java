@@ -26,7 +26,7 @@ public class ColumnDataType extends SQLParsedElement {
   private List<? extends SQLParsedElement> _modifiers;
 
   public ColumnDataType(Token start, Token end, Type type, ColumnLengthExpression length, List<? extends SQLParsedElement> modifiers) {
-    super(start, end, collectChildren(length, modifiers));
+    super(start, collectChildren(length, modifiers), end);
     _type = type;
     _length = length;
     _modifiers = modifiers;

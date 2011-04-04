@@ -28,6 +28,7 @@ public class SQLParseException extends RuntimeException {
       sb.append(error.getStart().getColumn());
       sb.append(": ");
       sb.append(error.getMessage());
+      sb.append("\n");
     }
     sb.append("\n\n");
     return sb.toString();

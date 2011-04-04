@@ -26,6 +26,7 @@ class SQLTypeInfoTest {
     clearTable("Bar")
     clearTable("Foo")
     clearTable("ForOrderByTests")
+    clearTable("ForGroupByTests")
   }
 
   private function clearTable(tableName : String) {
@@ -50,8 +51,14 @@ class SQLTypeInfoTest {
       new ForOrderByTests() { :Number=2, :Date=sqlDate("4/22/2008"), :Str="z", :Str2="a" },
       new ForOrderByTests() { :Number=3, :Date=sqlDate("4/22/2007"), :Str="a", :Str2="a" }
     }
-
     orderBys.each( \ ob -> ob.update() )
+
+    var groupBys = {
+      new ForGroupByTests() { :Number=1, :Date=sqlDate("4/22/2009"), :Str="a", :Str2="a" },
+      new ForGroupByTests() { :Number=2, :Date=sqlDate("4/22/2008"), :Str="b", :Str2="a" },
+      new ForGroupByTests() { :Number=3, :Date=sqlDate("4/22/2007"), :Str="c", :Str2="b" }
+    }
+    groupBys.each( \ ob -> ob.update() )
   }
 
   private function sqlDate( s : String ) : java.sql.Date {
@@ -250,5 +257,19 @@ class SQLTypeInfoTest {
     var result = test.query.SampleSimpleOrderByMultipleColsQuery.select()
     Assert.assertEquals(3, result.Count)
     Assert.assertEquals(new ArrayList(){"z", "g", "a"}, result.map( \ elt -> elt.Str ) )
+  }
+
+  @Test
+  function testBasicGroupByWorks() {
+    var result = test.query.SampleGroupByQuery.select()
+    Assert.assertEquals(2, result.Count)
+  }
+
+  @Test
+  function testBasicGroupByWithCountWorks() {
+    var result = test.query.SampleGroupByCountQuery.select()
+    Assert.assertEquals(2, result.Count)
+    Assert.assertTrue( result.hasMatch( \ r -> r.Str2 == "a" and r.Cnt == 2L ))
+    Assert.assertTrue( result.hasMatch( \ r -> r.Str2 == "b" and r.Cnt == 1L ))
   }
 }

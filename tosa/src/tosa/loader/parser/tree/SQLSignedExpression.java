@@ -9,7 +9,7 @@ public class SQLSignedExpression extends SQLParsedElement{
   private SQLParsedElement _rhs;
 
   public SQLSignedExpression(Token op, SQLParsedElement rhs) {
-    super(op, rhs.lastToken(), rhs);
+    super(op, rhs);
     _op = op;
     _rhs = rhs;
   }

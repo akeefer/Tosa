@@ -8,8 +8,8 @@ import java.util.Map;
 public class OrderByClause extends SQLParsedElement {
   private List<SQLParsedElement> _sortSpec;
 
-  public OrderByClause(Token first, Token last, List<SQLParsedElement> sortSpecification) {
-    super(first, last, sortSpecification);
+  public OrderByClause(Token first, List<SQLParsedElement> sortSpecification) {
+    super(first, sortSpecification);
     _sortSpec = sortSpecification;
   }
 

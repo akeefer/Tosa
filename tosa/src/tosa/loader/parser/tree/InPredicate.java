@@ -9,7 +9,7 @@ public class InPredicate extends SQLParsedElement{
   private boolean _not;
 
   public InPredicate(SQLParsedElement lhs, SQLParsedElement in, boolean not) {
-    super(lhs.firstToken(), in.lastToken(), lhs, in);
+    super(lhs, in);
     _lhs = lhs;
     _not = not;
     _in = in;

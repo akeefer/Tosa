@@ -7,7 +7,7 @@ public class SQLOrExpression extends SQLParsedElement {
   private SQLParsedElement _rhs;
 
   public SQLOrExpression(SQLParsedElement lhs, SQLParsedElement rhs) {
-    super(lhs.firstToken(), rhs.lastToken(), lhs, rhs);
+    super(lhs, rhs);
     _lhs = lhs;
     _rhs = rhs;
   }

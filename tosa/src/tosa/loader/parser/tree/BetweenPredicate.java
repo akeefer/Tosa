@@ -12,7 +12,7 @@ public class BetweenPredicate extends SQLParsedElement{
   private boolean _asymmetric;
 
   public BetweenPredicate(SQLParsedElement lhs, SQLParsedElement bottom, SQLParsedElement top, boolean not, boolean symmetric, boolean asymmeteric) {
-    super(lhs.firstToken(), top.lastToken(), lhs, bottom, top);
+    super(lhs, bottom, top);
     _lhs = lhs;
     _bottom = bottom;
     _top = top;

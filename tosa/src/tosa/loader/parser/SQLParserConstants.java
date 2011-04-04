@@ -230,4 +230,11 @@ public interface SQLParserConstants {
   public static final String RIGHT = "RIGHT";
   public static final String OUTER = "OUTER";
   public static final String ORDER = "ORDER";
+  public static final String GROUP = "GROUP";
+
+  public static final String COUNT = "COUNT";
+  public static final String AVG = "AVG";
+  public static final String MAX = "MAX";
+  public static final String MIN = "MIN";
+  public static final String SUM = "SUM";
 }

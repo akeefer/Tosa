@@ -9,7 +9,7 @@ public class IsNotNullPredicate extends SQLParsedElement{
   private boolean _not;
 
   public IsNotNullPredicate(SQLParsedElement lhs, Token end, boolean not) {
-    super(lhs.firstToken(), end, lhs);
+    super(lhs, end);
     _lhs = lhs;
     _not = not;
   }

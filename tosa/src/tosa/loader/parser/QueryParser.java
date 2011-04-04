@@ -25,8 +25,7 @@ public class QueryParser implements SQLParserConstants {
       SQLParsedElement selectList = parseSelectList();
       TableExpression tableExpr = parseTableExpression();
       SQLParsedElement orderByExpr = parseOrderByClause();
-      SelectStatement select = new SelectStatement(start, tableExpr.lastToken(), quantifier, selectList,
-        tableExpr, orderByExpr);
+      SelectStatement select = new SelectStatement(start, quantifier, selectList, tableExpr, orderByExpr);
       if (_data != null) {
         select.verify(_data);
       }
@@ -38,8 +37,7 @@ public class QueryParser implements SQLParserConstants {
   private SQLParsedElement parseOrderByClause() {
     if (match(ORDER, BY)) {
       Token first = lastMatch().previous();
-      List<SQLParsedElement> specList = parseSortSpecificationList();
-      return new OrderByClause(first, lastMatch(), specList);
+      return new OrderByClause(first, parseSortSpecificationList());
     } else {
       return null;
     }
@@ -64,17 +62,42 @@ public class QueryParser implements SQLParserConstants {
   private TableExpression parseTableExpression() {
     TableFromClause fromClause = parseFromClause();
     SQLParsedElement whereClause = parseWhereClause();
-    if (whereClause == null) {
-      return new TableExpression(fromClause);
+    SQLParsedElement groupByClause = parseGroupByClause();
+    return new TableExpression(fromClause, whereClause, groupByClause);
+  }
+
+  private SQLParsedElement parseGroupByClause() {
+    if (match(GROUP, BY)) {
+      Token start = lastMatch().previous();
+      return new GroupByClause(start, parseGroupingElementList());
     } else {
-      return new TableExpression(fromClause, whereClause);
+      return null;
+    }
+  }
+
+  private List<SQLParsedElement> parseGroupingElementList() {
+    ArrayList<SQLParsedElement> groupBys = new ArrayList<SQLParsedElement>();
+    do {
+      SQLParsedElement ge = parseGroupingElement();
+      groupBys.add(ge);
+    } while (match(COMMA));
+    return groupBys;
+  }
+
+  private SQLParsedElement parseGroupingElement() {
+    //TODO cgross - support exotic group by targets
+    SQLParsedElement colRef = parseColumnReference();
+    if (colRef != null) {
+      return colRef;
+    } else {
+      return unexpectedToken();
     }
   }
 
   private SQLParsedElement parseWhereClause() {
     if (match(WHERE)) {
       return new WhereClause(lastMatch(), parseSearchOrExpression());
-    } else if (_currentToken.isEOF() || peek(ORDER, BY)) {
+    } else if (_currentToken.isEOF() || peek(ORDER, BY) || peek(GROUP, BY)) {
       return null;
     } else {
       return unexpectedToken();
@@ -207,7 +230,7 @@ public class QueryParser implements SQLParserConstants {
           values.add(parseRowValue());
         } while (match(COMMA));
       }
-      return new InListExpression(first,  _currentToken.previous(), values);
+      return new InListExpression(first, values);
     }
 
     SQLParsedElement varRef = parseVariableReference();
@@ -283,7 +306,33 @@ public class QueryParser implements SQLParserConstants {
       return elt;
     }
 
+    //TODO cgross - this might not belong here.  Distinction between value primary and value is?
+    elt = parseSetFunctionExpression();
+    if (elt != null) {
+      return elt;
+    }
+
     return unexpectedToken();
+  }
+
+  private SQLParsedElement parseSetFunctionExpression() {
+    if (match(COUNT, OPEN_PAREN, ASTERISK )) {
+      Token start = lastMatch().previous().previous();
+      expect(CLOSE_PAREN);
+      return new CountAllExpression(start, lastMatch());
+    } else if (match(COUNT) ||
+      match(AVG) ||
+      match(SUM) ||
+      match(MAX) ||
+      match(MIN)) {
+      Token first = lastMatch();
+      expect(OPEN_PAREN);
+      SQLParsedElement value = parseValueExpression();
+      expect(CLOSE_PAREN);
+      return new SetFunctionExpression(first, value, lastMatch());
+    } else {
+      return null;
+    }
   }
 
   private SQLParsedElement parseIntervalValueExpression() {
@@ -361,7 +410,7 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parseColumnReference() {
-    if (_currentToken.isSymbol()) {
+    if (_currentToken.isSymbol() && !_currentToken.nextToken().match(OPEN_PAREN)) {
       Token base = takeToken();
       if (match(".") && _currentToken.isSymbol()) {
         return new ColumnReference(base, takeToken());
@@ -468,20 +517,23 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parseSelectSubList() {
-    Token start = _currentToken;
     ArrayList<SQLParsedElement> cols = new ArrayList<SQLParsedElement>();
     do {
       SQLParsedElement value = parseValueExpression();
       if (!(value instanceof ColumnReference)) {
-        value.addParseError(new SQLParseError(value.firstToken(), value.lastToken(), "Only column references are supported right now."));
+        if (match(AS)) {
+          Token colName = takeToken();
+          if (!colName.isSymbol()) {
+            colName.addTemporaryError(new SQLParseError(colName, "Expected a column name!"));
+          }
+          value = new DerivedColumn(value, colName);
+        } else {
+          value.addParseError(new SQLParseError(value.firstToken(), value.lastToken(), "Only column references are supported right now."));
+        }
       }
-      if (value != null) {
-        cols.add(value);
-      } else {
-        break;
-      }
+      cols.add(value);
     } while (match(COMMA));
-    return new ColumnSelectList(start, lastMatch(), cols);
+    return new ColumnSelectList(cols);
   }
 
   private SQLParsedElement parseSetQuantifers() {
