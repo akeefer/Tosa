@@ -11,7 +11,7 @@ public class TableExpression extends SQLParsedElement {
   private SQLParsedElement _groupBy;
 
   public TableExpression(TableFromClause fromClause, SQLParsedElement whereClause, SQLParsedElement groupByClause) {
-    super(fromClause.firstToken(), fromClause, whereClause);
+    super(fromClause, whereClause, groupByClause);
     _from = fromClause;
     _where = whereClause;
     _groupBy = groupByClause;
