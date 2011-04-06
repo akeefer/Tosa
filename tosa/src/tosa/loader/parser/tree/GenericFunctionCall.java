@@ -1,5 +1,7 @@
 package tosa.loader.parser.tree;
 
+import tosa.loader.data.DBColumnTypeImpl;
+import tosa.loader.data.DBData;
 import tosa.loader.parser.Token;
 
 import java.util.List;
@@ -14,6 +16,13 @@ public class GenericFunctionCall extends SQLParsedElement {
     super(functionName, args, end);
     _functionName = functionName;
     _args = args;
+  }
+
+  @Override
+  public void resolveTypes(DBData dbData) {
+    super.resolveTypes(dbData);
+    //TODO cgross - should we determine types of common functions?
+    setType(DBColumnTypeImpl.OBJECT);
   }
 
   @Override

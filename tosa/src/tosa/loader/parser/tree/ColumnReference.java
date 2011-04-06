@@ -7,10 +7,10 @@ import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
 import tosa.loader.parser.Token;
 
-import java.util.Collections;
 import java.util.Map;
 
 public class ColumnReference extends SQLParsedElement {
+
   private Token _column;
   private Token _table;
   private TableData _tableData;
@@ -19,6 +19,14 @@ public class ColumnReference extends SQLParsedElement {
   @Override
   public void verify(DBData dbData) {
     super.verify(dbData);
+    if(_columnData == null) {
+      addParseError(new SQLParseError(_column, "Unable to resolve column " + _column.getValue()));
+    }
+  }
+
+  @Override
+  public void resolveTypes(DBData dbData) {
+    super.resolveTypes(dbData);
     if (dbData != null) {
       if (_table != null) {
         _tableData = dbData.getTable(_table.getValue());
@@ -28,9 +36,9 @@ public class ColumnReference extends SQLParsedElement {
       if (_tableData != null) {
         _columnData = _tableData.getColumn(_column.getValue());
       }
-      if(_columnData == null) {
-        addParseError(new SQLParseError(_column, "Unable to resolve column " + _column.getValue()));
-      }
+    }
+    if (_columnData != null) {
+      setType(_columnData.getColumnType());
     }
   }
 
@@ -60,13 +68,5 @@ public class ColumnReference extends SQLParsedElement {
 
   public String getName() {
     return _column.getValue();
-  }
-
-  public IType getGosuType() {
-    if (_columnData == null) {
-      return IJavaType.OBJECT;
-    } else {
-      return _columnData.getColumnType().getGosuType();
-    }
   }
 }

@@ -1,5 +1,7 @@
 package tosa.loader.parser.tree;
 
+import tosa.loader.data.DBColumnTypeImpl;
+import tosa.loader.data.DBData;
 import tosa.loader.parser.Token;
 
 import java.util.Map;
@@ -10,6 +12,12 @@ public class StringLiteralExpression extends SQLParsedElement{
   public StringLiteralExpression(Token str) {
     super(str);
     _value = str;
+  }
+
+  @Override
+  public void resolveTypes(DBData dbData) {
+    super.resolveTypes(dbData);
+    setType(DBColumnTypeImpl.STRING);
   }
 
   @Override

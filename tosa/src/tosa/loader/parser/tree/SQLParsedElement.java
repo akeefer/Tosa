@@ -1,5 +1,9 @@
 package tosa.loader.parser.tree;
 
+import gw.lang.reflect.IType;
+import gw.lang.reflect.java.IJavaType;
+import tosa.api.IDBColumnType;
+import tosa.loader.data.DBColumnTypeImpl;
 import tosa.loader.data.DBData;
 import tosa.loader.parser.SQLParseException;
 import tosa.loader.parser.Token;
@@ -20,6 +24,7 @@ public abstract class SQLParsedElement {
   private Token _last;
   private List<SQLParsedElement> _children;
   private SQLParsedElement _parent;
+  private IDBColumnType _dbType;
   private Set<SQLParseError> _errors = new HashSet<SQLParseError>();
   public static final Token INFER = new Token(TokenType.UNKNOWN, "Infer This Token", 0, 0, 0, 0);
 
@@ -178,6 +183,18 @@ public abstract class SQLParsedElement {
     }
   }
 
+  public void resolveTypes(DBData dbData) {
+    for (SQLParsedElement child : getChildren()) {
+      child.resolveTypes(dbData);
+    }
+  }
+
+  public void resolveVars(DBData dbData) {
+    for (SQLParsedElement child : getChildren()) {
+      child.resolveVars(dbData);
+    }
+  }
+
   public void verify(DBData dbData) {
     for (SQLParsedElement child : getChildren()) {
       child.verify(dbData);
@@ -242,6 +259,14 @@ public abstract class SQLParsedElement {
     }
   }
 
+  public void setType(IDBColumnType columnType) {
+    _dbType = columnType;
+  }
+
+  public IDBColumnType getDBType() {
+    return _dbType;
+  }
+
   private Token findFirstToken(List<? extends SQLParsedElement> children, Token defaultToken) {
     for (int i = 0; i < children.size(); i++) {
       SQLParsedElement child = children.get(i);
@@ -260,5 +285,9 @@ public abstract class SQLParsedElement {
       }
     }
     return defaultToken == INFER ? null : defaultToken;
+  }
+
+  public IType getVarTypeForChild() {
+    return IJavaType.STRING;
   }
 }

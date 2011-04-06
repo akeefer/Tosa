@@ -1,5 +1,8 @@
 package tosa.loader.parser.tree;
 
+import gw.lang.reflect.IType;
+import gw.lang.reflect.java.IJavaType;
+
 import java.util.Map;
 
 public class SQLOrExpression extends SQLParsedElement {
@@ -17,5 +20,10 @@ public class SQLOrExpression extends SQLParsedElement {
     _lhs.toSQL(prettyPrint, indent, sb, values);
     sb.append(" OR ");
     _rhs.toSQL(prettyPrint, indent, sb, values);
+  }
+
+  @Override
+  public IType getVarTypeForChild() {
+    return IJavaType.BOOLEAN;
   }
 }

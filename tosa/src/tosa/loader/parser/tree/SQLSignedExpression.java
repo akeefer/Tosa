@@ -1,5 +1,6 @@
 package tosa.loader.parser.tree;
 
+import gw.lang.reflect.IType;
 import tosa.loader.parser.Token;
 
 import java.util.Map;
@@ -12,6 +13,11 @@ public class SQLSignedExpression extends SQLParsedElement{
     super(op, rhs);
     _op = op;
     _rhs = rhs;
+  }
+
+  @Override
+  public IType getVarTypeForChild() {
+    return getParent().getVarTypeForChild();
   }
 
   @Override

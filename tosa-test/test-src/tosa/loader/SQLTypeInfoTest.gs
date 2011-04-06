@@ -93,10 +93,10 @@ class SQLTypeInfoTest {
 
   @Test
   function testBasicBetweenComparisonWorks() {
-    var result = test.query.SampleBetweenQuery.select("2001-1-1", "2101-1-1")
+    var result = test.query.SampleBetweenQuery.select("1/1/2001".toDate(), "1/1/2101".toDate())
     Assert.assertEquals(1, result.Count)
 
-    result = test.query.SampleBetweenQuery.select("2101-1-1", "2101-1-1")
+    result = test.query.SampleBetweenQuery.select("1/1/2101".toDate(), "1/1/2101".toDate())
     Assert.assertEquals(0, result.Count)
   }
 
@@ -132,9 +132,9 @@ class SQLTypeInfoTest {
 
   @Test
   function testBasicVariableWorks() {
-    var result = test.query.SampleComparisonQueryWithVar.select( "2001-1-1" )
+    var result = test.query.SampleComparisonQueryWithVar.select( "1/1/2001".toDate() )
     Assert.assertEquals(1, result.Count)
-    result = test.query.SampleComparisonQueryWithVar.select( "2101-1-1" )
+    result = test.query.SampleComparisonQueryWithVar.select( "1/1/2101".toDate() )
     Assert.assertEquals(0, result.Count)
   }
 

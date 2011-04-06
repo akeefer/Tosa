@@ -1,14 +1,19 @@
 package tosa.loader.parser.tree;
 
+import gw.lang.reflect.IType;
+import gw.lang.reflect.java.IJavaType;
+import tosa.api.IDBColumnType;
+import tosa.loader.data.DBData;
 import tosa.loader.parser.Token;
 
 import java.util.List;
 import java.util.Map;
 
 public class VariableExpression extends SQLParsedElement {
+
   private Token _name;
-  private boolean _isList;
-  private Object _;
+  private IType _gosuType;
+  private boolean _list;
 
   public VariableExpression(Token name) {
     super(name);
@@ -17,12 +22,14 @@ public class VariableExpression extends SQLParsedElement {
 
   @Override
   protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
-    if (isList()) {
+    if (_list) {
       if (values == null) {
         sb.append("()");
       } else {
         Object val = values.get(getName());
-        if (val instanceof List) {
+        if (val == null) {
+          sb.append("()");
+        } else {
           sb.append("(");
           int size = ((List) val).size();
           for (int i = 0; i < size; i++) {
@@ -32,8 +39,6 @@ public class VariableExpression extends SQLParsedElement {
             sb.append("?");
           }
           sb.append(")");
-        } else {
-          sb.append("()");
         }
       }
     } else {
@@ -41,15 +46,21 @@ public class VariableExpression extends SQLParsedElement {
     }
   }
 
+  @Override
+  public void resolveVars(DBData dbData) {
+    _gosuType = getParent().getVarTypeForChild();
+    _list = IJavaType.LIST.isAssignableFrom(_gosuType);
+  }
+
   public String getName() {
     return _name.getValue();
   }
 
-  public void setList(boolean b) {
-    _isList = true;
+  public IType getGosuType() {
+    return _gosuType;
   }
 
   public boolean isList() {
-    return _isList;
+    return _list;
   }
 }

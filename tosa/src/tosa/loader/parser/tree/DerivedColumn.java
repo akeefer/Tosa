@@ -1,7 +1,6 @@
 package tosa.loader.parser.tree;
 
-import gw.lang.reflect.IType;
-import gw.lang.reflect.java.IJavaType;
+import tosa.loader.data.DBData;
 import tosa.loader.parser.Token;
 
 import java.util.Map;
@@ -18,6 +17,12 @@ public class DerivedColumn extends SQLParsedElement {
   }
 
   @Override
+  public void resolveTypes(DBData dbData) {
+    super.resolveTypes(dbData);
+    setType(_value.getDBType());
+  }
+
+  @Override
   protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
     _value.toSQL(prettyPrint, indent, sb, values);
     sb.append(" AS ");
@@ -26,9 +31,5 @@ public class DerivedColumn extends SQLParsedElement {
 
   public String getName() {
     return _colName.getValue();
-  }
-
-  public IType getGosuType() {
-    return IJavaType.OBJECT;
   }
 }

@@ -1,5 +1,8 @@
 package tosa.loader.parser.tree;
 
+import gw.lang.reflect.IType;
+import gw.lang.reflect.java.IJavaType;
+
 import java.util.Map;
 
 public class LikePredicate extends SQLParsedElement{
@@ -12,6 +15,11 @@ public class LikePredicate extends SQLParsedElement{
     _lhs = lhs;
     _pattern = pattern;
     _not = notFound;
+  }
+
+  @Override
+  public IType getVarTypeForChild() {
+    return IJavaType.STRING;
   }
 
   @Override

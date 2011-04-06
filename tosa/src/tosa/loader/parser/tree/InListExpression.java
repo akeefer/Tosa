@@ -1,5 +1,7 @@
 package tosa.loader.parser.tree;
 
+import gw.lang.reflect.IType;
+import tosa.api.IDBColumnType;
 import tosa.loader.parser.Token;
 
 import java.util.List;
@@ -11,6 +13,17 @@ public class InListExpression extends SQLParsedElement {
   public InListExpression(Token first, List<SQLParsedElement> values) {
     super(first, values);
     _values = values;
+  }
+
+  @Override
+  public IType getVarTypeForChild() {
+    InPredicate parent = (InPredicate) getParent();
+    IDBColumnType type = parent.getLHS().getDBType();
+    if (type != null) {
+      return type.getGosuType();
+    } else {
+      return null;
+    }
   }
 
   @Override

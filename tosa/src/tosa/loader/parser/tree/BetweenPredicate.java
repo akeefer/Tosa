@@ -1,5 +1,7 @@
 package tosa.loader.parser.tree;
 
+import gw.lang.reflect.IType;
+
 import java.util.Map;
 
 public class BetweenPredicate extends SQLParsedElement{
@@ -19,6 +21,15 @@ public class BetweenPredicate extends SQLParsedElement{
     _not = not;
     _symmetric = symmetric;
     _asymmetric = asymmeteric;
+  }
+
+  @Override
+  public IType getVarTypeForChild() {
+    if (_lhs.getDBType() != null) {
+      return _lhs.getDBType().getGosuType();
+    } else {
+      return null;
+    }
   }
 
   @Override

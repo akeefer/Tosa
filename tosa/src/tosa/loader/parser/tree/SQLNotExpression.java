@@ -1,5 +1,7 @@
 package tosa.loader.parser.tree;
 
+import tosa.loader.data.DBColumnTypeImpl;
+import tosa.loader.data.DBData;
 import tosa.loader.parser.Token;
 
 import java.util.Map;
@@ -10,6 +12,12 @@ public class SQLNotExpression extends SQLParsedElement {
   public SQLNotExpression(Token start, SQLParsedElement rhs) {
     super(start, rhs);
     _rhs = rhs;
+  }
+
+  @Override
+  public void resolveTypes(DBData dbData) {
+    super.resolveTypes(dbData);
+    setType(DBColumnTypeImpl.BOOLEAN);
   }
 
   @Override

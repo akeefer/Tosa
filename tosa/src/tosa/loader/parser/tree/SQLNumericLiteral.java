@@ -1,5 +1,7 @@
 package tosa.loader.parser.tree;
 
+import tosa.loader.data.DBColumnTypeImpl;
+import tosa.loader.data.DBData;
 import tosa.loader.parser.Token;
 
 import java.math.BigDecimal;
@@ -13,9 +15,14 @@ public class SQLNumericLiteral extends SQLParsedElement {
     _value = value;
   }
 
-  public SQLNumericLiteral(Token start, Token end, BigDecimal value) {
-    super(start, end);
-    _value = value;
+  @Override
+  public void resolveTypes(DBData dbData) {
+    super.resolveTypes(dbData);
+    if (_value instanceof BigDecimal) {
+      setType(DBColumnTypeImpl.DOUBLE);
+    } else {
+      setType(DBColumnTypeImpl.INT);
+    }
   }
 
   @Override

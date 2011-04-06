@@ -1,6 +1,8 @@
 package tosa.loader.parser.tree;
 
 import gw.lang.reflect.IType;
+import gw.lang.reflect.java.IJavaType;
+import tosa.api.IDBColumnType;
 import tosa.loader.SQLParameterInfo;
 import tosa.loader.data.ColumnData;
 import tosa.loader.data.DBData;
@@ -52,7 +54,7 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
     for (VariableExpression var : _variables) {
       SQLParameterInfo pi = pis.get(var.getName());
       if (pi == null) {
-        pi = new SQLParameterInfo(var.getName(), null);
+        pi = new SQLParameterInfo(var.getName());
         pis.put(var.getName(), pi);
       }
       pi.addVariableExpression(var);
@@ -112,10 +114,12 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
     HashMap<String, IType> cols = new HashMap<String, IType>();
     if (hasSpecificColumns()) {
       for (SQLParsedElement col : _selectList.getChildren()) {
+        IDBColumnType type = col.getDBType();
+        IType gosuType = type == null ? IJavaType.OBJECT : type.getGosuType();
         if (col instanceof ColumnReference) {
-          cols.put(((ColumnReference) col).getName(), ((ColumnReference) col).getGosuType());
+          cols.put(((ColumnReference) col).getName(), gosuType);
         } else if (col instanceof DerivedColumn) {
-          cols.put(((DerivedColumn) col).getName(), ((DerivedColumn) col).getGosuType());
+          cols.put(((DerivedColumn) col).getName(), gosuType);
         }
       }
     } else if(hasMultipleTableTargets()) {

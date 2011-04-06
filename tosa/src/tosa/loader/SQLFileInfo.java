@@ -32,7 +32,7 @@ public class SQLFileInfo {
           String content = new String(StreamUtil.getContent(is));
           is.close();
           QueryParser parser = new QueryParser(Token.tokenize(content), _db.getDBData());
-          return parser.parseSelect();
+          return parser.parseTopLevelSelect();
         } catch (IOException e) {
           throw GosuExceptionUtil.forceThrow(e);
         }

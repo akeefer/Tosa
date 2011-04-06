@@ -1,5 +1,8 @@
 package tosa.loader.parser.tree;
 
+import gw.lang.reflect.IType;
+import tosa.loader.data.DBColumnTypeImpl;
+import tosa.loader.data.DBData;
 import tosa.loader.parser.Token;
 
 import java.util.Map;
@@ -14,6 +17,23 @@ public class ComparisonPredicate extends SQLParsedElement{
     _lhs = lhs;
     _op = op;
     _rhs = rhs;
+  }
+
+  @Override
+  public void resolveTypes(DBData dbData) {
+    super.resolveTypes(dbData);
+    setType(DBColumnTypeImpl.BOOLEAN);
+  }
+
+  @Override
+  public IType getVarTypeForChild() {
+    if (_lhs.getDBType() != null) {
+      return _lhs.getDBType().getGosuType();
+    } else if (_rhs.getDBType() != null) {
+      return _rhs.getDBType().getGosuType();
+    } else {
+      return null;
+    }
   }
 
   @Override

@@ -18,6 +18,18 @@ public class QueryParser implements SQLParserConstants {
     _data = dbData;
   }
 
+  public SelectStatement parseTopLevelSelect() {
+    SelectStatement select = parseSelect();
+    if (select != null) {
+      if (_data != null) {
+        select.resolveTypes(_data);
+        select.resolveVars(_data);
+        select.verify(_data);
+      }
+    }
+    return select;
+  }
+
   public SelectStatement parseSelect() {
     if (match(SELECT)) {
       Token start = lastMatch();
@@ -25,11 +37,7 @@ public class QueryParser implements SQLParserConstants {
       SQLParsedElement selectList = parseSelectList();
       TableExpression tableExpr = parseTableExpression();
       SQLParsedElement orderByExpr = parseOrderByClause();
-      SelectStatement select = new SelectStatement(start, quantifier, selectList, tableExpr, orderByExpr);
-      if (_data != null) {
-        select.verify(_data);
-      }
-      return select;
+      return new SelectStatement(start, quantifier, selectList, tableExpr, orderByExpr);
     }
     return null;
   }
@@ -236,7 +244,6 @@ public class QueryParser implements SQLParserConstants {
 
     SQLParsedElement varRef = parseVariableReference();
     if (varRef != null) {
-      ((VariableExpression) varRef).setList(true);
       return varRef;
     }
 
