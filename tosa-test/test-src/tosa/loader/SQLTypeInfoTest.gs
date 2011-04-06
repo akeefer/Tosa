@@ -305,4 +305,22 @@ class SQLTypeInfoTest {
     Assert.assertEquals(1, result.Count)
     Assert.assertEquals(2, result.first().Number)
   }
+
+  @Test
+  function testExistsSelectWorks() {
+    var result = test.query.SampleExistsQuery.select("blah")
+    Assert.assertEquals(0, result.Count)
+    
+    result = test.query.SampleExistsQuery.select("misc")
+    Assert.assertEquals(1, result.Count)
+  }
+
+  @Test @Ignore("H2 does not implement UNIQUE" )
+  function testUniqueSelectWorks() {
+    var result = test.query.SampleUniqueQuery.select("blah")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleUniqueQuery.select("misc")
+    Assert.assertEquals(1, result.Count)
+  }
 }

@@ -156,6 +156,17 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parsePredicate() {
+
+    SQLParsedElement existsPredicate = parseExistsPredicate();
+    if (existsPredicate != null) {
+      return existsPredicate;
+    }
+
+    SQLParsedElement uniquePredicate = parseUniquePredicate();
+    if (uniquePredicate != null) {
+      return uniquePredicate;
+    }
+
     SQLParsedElement initialValue = parseRowValue();
     if (initialValue != null) {
       SQLParsedElement comparison = parseComparisonOrQuantifiedComparisonPredicate(initialValue);
@@ -182,8 +193,26 @@ public class QueryParser implements SQLParserConstants {
       if (nullPredicate != null) {
         return nullPredicate;
       }
+    } else {
     }
+
     return unexpectedToken();
+  }
+
+  private SQLParsedElement parseUniquePredicate() {
+    if (match(UNIQUE)) {
+      return new UniquePredicate(lastMatch(), parseSubQuery());
+    } else {
+      return null;
+    }
+  }
+
+  private SQLParsedElement parseExistsPredicate() {
+    if (match(EXISTS)) {
+      return new ExistsPredicate(lastMatch(), parseSubQuery());
+    } else {
+      return null;
+    }
   }
 
   private SQLParsedElement parseNullPredicate(SQLParsedElement initialValue) {
