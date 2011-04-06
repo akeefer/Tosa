@@ -1,0 +1,4 @@
+SELECT *
+FROM Bar
+WHERE
+  Misc = SOME (SELECT Misc FROM Bar)

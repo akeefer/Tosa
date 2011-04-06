@@ -237,4 +237,6 @@ public interface SQLParserConstants {
   public static final String MAX = "MAX";
   public static final String MIN = "MIN";
   public static final String SUM = "SUM";
+
+  public static final String SOME = "SOME";
 }

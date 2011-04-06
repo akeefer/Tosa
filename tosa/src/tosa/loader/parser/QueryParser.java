@@ -105,10 +105,8 @@ public class QueryParser implements SQLParserConstants {
   private SQLParsedElement parseWhereClause() {
     if (match(WHERE)) {
       return new WhereClause(lastMatch(), parseSearchOrExpression());
-    } else if (_currentToken.isEOF() || peek(ORDER, BY) || peek(GROUP, BY)) {
-      return null;
     } else {
-      return unexpectedToken();
+      return null;
     }
   }
 
@@ -160,7 +158,7 @@ public class QueryParser implements SQLParserConstants {
   private SQLParsedElement parsePredicate() {
     SQLParsedElement initialValue = parseRowValue();
     if (initialValue != null) {
-      SQLParsedElement comparison = parseComparisonPredicate(initialValue);
+      SQLParsedElement comparison = parseComparisonOrQuantifiedComparisonPredicate(initialValue);
       if (comparison != null) {
         return comparison;
       }
@@ -209,11 +207,20 @@ public class QueryParser implements SQLParserConstants {
     }
   }
 
-  private SQLParsedElement parseComparisonPredicate(SQLParsedElement initialValue) {
+  private SQLParsedElement parseComparisonOrQuantifiedComparisonPredicate(SQLParsedElement initialValue) {
     if (matchAny(EQ_OP, LT_OP, LTEQ_OP, GT_OP, GTEQ_OP)) {
       Token op = lastMatch();
-      SQLParsedElement comparisonValue = parseValueExpression();
-      return new ComparisonPredicate(initialValue, op, comparisonValue);
+      if (matchAny(SOME, ALL)) {
+        Token quantifier = lastMatch();
+        SQLParsedElement subQuery = parseSubQuery();
+        if (subQuery == null) {
+          quantifier.addTemporaryError(new SQLParseError(quantifier, "Expected subquery"));
+        }
+        return new QuantifiedComparison(op, quantifier, initialValue, subQuery);
+      } else {
+        SQLParsedElement comparisonValue = parseValueExpression();
+        return new ComparisonPredicate(initialValue, op, comparisonValue);
+      }
     } else {
       return null;
     }
@@ -230,15 +237,21 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parseInPredicateValue() {
-    //TODO cgross - table subquery
+
+    SQLParsedElement subQuery = parseSubQuery();
+    if (subQuery != null) {
+      return subQuery;
+    }
+
     if (match(OPEN_PAREN)) {
       Token first = lastMatch();
       List<SQLParsedElement> values = new ArrayList<SQLParsedElement>();
-      if (!match(CLOSE_PAREN)) {
+      if (!peek(CLOSE_PAREN)) {
         do {
           values.add(parseRowValue());
         } while (match(COMMA));
       }
+      expect(CLOSE_PAREN);
       return new InListExpression(first, values);
     }
 
@@ -248,6 +261,18 @@ public class QueryParser implements SQLParserConstants {
     }
 
     return unexpectedToken();
+  }
+
+  private SQLParsedElement parseSubQuery() {
+    if (peek(OPEN_PAREN, SELECT)) {
+      match(OPEN_PAREN);
+      Token start = lastMatch();
+      SelectStatement subSelect = parseSelect();
+      expect(CLOSE_PAREN);
+      return new SubSelectExpression(start, subSelect, lastMatch());
+    } else {
+      return null;
+    }
   }
 
   private SQLParsedElement parseBetweenPredicate(SQLParsedElement initialValue) {

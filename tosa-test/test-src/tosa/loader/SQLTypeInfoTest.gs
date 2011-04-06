@@ -131,6 +131,24 @@ class SQLTypeInfoTest {
   }
 
   @Test
+  function testInComparisonWithSubSelectWorks() {
+    var result = test.query.SampleInQueryWithSubSelect.select()
+    Assert.assertEquals(1, result.Count)
+  }
+
+  @Test
+  function testQuantifiedComparisonWithSomeWorks() {
+    var result = test.query.SampleQueryWithQuantifiedSomeComparison.select()
+    Assert.assertEquals(1, result.Count)
+  }
+
+  @Test
+  function testQuantifiedComparisonWithAllWorks() {
+    var result = test.query.SampleQueryWithQuantifiedAllComparison.select()
+    Assert.assertEquals(1, result.Count)
+  }
+
+  @Test
   function testBasicVariableWorks() {
     var result = test.query.SampleComparisonQueryWithVar.select( "1/1/2001".toDate() )
     Assert.assertEquals(1, result.Count)
