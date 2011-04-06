@@ -141,8 +141,16 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parseBooleanTestExpression() {
-    return parseBooleanPrimaryExpression();
-    //TODO cgross IS NOT TRUE
+    SQLParsedElement sqlParsedElement = parseBooleanPrimaryExpression();
+    if (match(IS)) {
+      boolean not = match(NOT);
+      if (!(match(TRUE)|| match(FALSE))) {
+        _currentToken.addTemporaryError(new SQLParseError(_currentToken, "Expected TRUE or FALSE"));
+      }
+      return new BooleanIsNotExpression(sqlParsedElement, lastMatch(), not);
+    } else {
+      return sqlParsedElement;
+    }
   }
 
   private SQLParsedElement parseBooleanPrimaryExpression() {

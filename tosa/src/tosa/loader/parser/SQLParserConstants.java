@@ -239,4 +239,7 @@ public interface SQLParserConstants {
   public static final String SUM = "SUM";
 
   public static final String SOME = "SOME";
+
+  public static final String TRUE = "TRUE";
+  public static final String FALSE = "FALSE";
 }

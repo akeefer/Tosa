@@ -92,6 +92,18 @@ class SQLTypeInfoTest {
   }
 
   @Test
+  function testBasicColumnComparisonIsFalseWorks() {
+    var result = test.query.SampleComparisonIsFalseQuery.select()
+    Assert.assertEquals(0, result.Count)
+  }
+
+  @Test
+  function testBasicColumnComparisonIsTrueWorks() {
+    var result = test.query.SampleComparisonIsTrueQuery.select()
+    Assert.assertEquals(1, result.Count)
+  }
+
+  @Test
   function testBasicBetweenComparisonWorks() {
     var result = test.query.SampleBetweenQuery.select("1/1/2001".toDate(), "1/1/2101".toDate())
     Assert.assertEquals(1, result.Count)
