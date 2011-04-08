@@ -473,6 +473,24 @@ public class QueryParser implements SQLParserConstants {
 
   private SQLParsedElement parseNumericPrimary() {
 
+    SQLParsedElement numericValueFunction = parseNumericValueFunction();
+    if (numericValueFunction != null) {
+      return numericValueFunction;
+    }
+
+    return parseValueExpressionPrimary();
+  }
+
+  private SQLParsedElement parseValueExpressionPrimary() {
+    SQLParsedElement pe = parseParenthesizedValueExpression();
+    if (pe != null) {
+      return pe;
+    } else {
+      return parseNonparenthesizedValueExpressionPrimary();
+    }
+  }
+
+  private SQLParsedElement parseNonparenthesizedValueExpressionPrimary() {
     SQLParsedElement numericLiteral = parseNumericLiteral();
     if (numericLiteral != null) {
       return numericLiteral;
@@ -488,6 +506,21 @@ public class QueryParser implements SQLParserConstants {
       return columnRef;
     }
 
+    return null;
+  }
+
+  private SQLParsedElement parseParenthesizedValueExpression() {
+    if (match(OPEN_PAREN)) {
+      Token paren = lastMatch();
+      SQLParsedElement expr = parseValueExpression();
+      expect(CLOSE_PAREN);
+      return new SQLParenthesizedExpression(paren, expr, lastMatch());
+    } else {
+      return null;
+    }
+  }
+
+  private SQLParsedElement parseNumericValueFunction() {
     return null;
   }
 
