@@ -27,6 +27,7 @@ class SQLTypeInfoTest {
     clearTable("Foo")
     clearTable("ForOrderByTests")
     clearTable("ForGroupByTests")
+    clearTable("ForNumericTests")
   }
 
   private function clearTable(tableName : String) {
@@ -51,14 +52,21 @@ class SQLTypeInfoTest {
       new ForOrderByTests() { :Number=2, :Date=sqlDate("4/22/2008"), :Str="z", :Str2="a" },
       new ForOrderByTests() { :Number=3, :Date=sqlDate("4/22/2007"), :Str="a", :Str2="a" }
     }
-    orderBys.each( \ ob -> ob.update() )
+    orderBys*.update()
 
     var groupBys = {
       new ForGroupByTests() { :Number=1, :Date=sqlDate("4/22/2009"), :Str="a", :Str2="a" },
       new ForGroupByTests() { :Number=2, :Date=sqlDate("4/22/2008"), :Str="b", :Str2="a" },
       new ForGroupByTests() { :Number=3, :Date=sqlDate("4/22/2007"), :Str="c", :Str2="b" }
     }
-    groupBys.each( \ ob -> ob.update() )
+    groupBys*.update()
+
+    var forNumericTests = {
+      new ForNumericTests() { :Number=1 },
+      new ForNumericTests() { :Number=2 },
+      new ForNumericTests() { :Number=3 }
+    }
+    forNumericTests*.update()
   }
 
   private function sqlDate( s : String ) : java.sql.Date {
@@ -322,7 +330,7 @@ class SQLTypeInfoTest {
   function testExistsSelectWorks() {
     var result = test.query.SampleExistsQuery.select("blah")
     Assert.assertEquals(0, result.Count)
-    
+
     result = test.query.SampleExistsQuery.select("misc")
     Assert.assertEquals(1, result.Count)
   }
@@ -334,5 +342,53 @@ class SQLTypeInfoTest {
 
     result = test.query.SampleUniqueQuery.select("misc")
     Assert.assertEquals(1, result.Count)
+  }
+
+  @Test
+  function testLikeSelectWorks() {
+    var result = test.query.SampleLikeQuery.select("blah")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleLikeQuery.select("misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleLikeQuery.select("mi%")
+    Assert.assertEquals(1, result.Count)
+  }
+
+  @Test
+  function testLikeSelectWithConcatWorks() {
+    var result = test.query.SampleLikeWithConcatQuery.select("blah")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleLikeWithConcatQuery.select("misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleLikeWithConcatQuery.select("mi")
+    Assert.assertEquals(1, result.Count)
+  }
+
+  @Test
+  function testAdd() {
+    var result = test.query.SampleAddQuery.select(0)
+    Assert.assertEquals(2, result.Count)
+
+    result = test.query.SampleAddQuery.select(1)
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleAddQuery.select(2)
+    Assert.assertEquals(0, result.Count)
+  }
+
+  @Test
+  function testSubtract() {
+    var result = test.query.SampleSubtractQuery.select(3)
+    Assert.assertEquals(2, result.Count)
+
+    result = test.query.SampleSubtractQuery.select(2)
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleSubtractQuery.select(1)
+    Assert.assertEquals(0, result.Count)
   }
 }

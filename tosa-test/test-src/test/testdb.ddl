@@ -25,6 +25,11 @@ CREATE TABLE "ForGroupByTests" (
     "Str2" VARCHAR(50)
 );
 
+CREATE TABLE "ForNumericTests" (
+    "id" INT PRIMARY KEY AUTO_INCREMENT,
+    "Number" INT
+);
+
 CREATE TABLE "Foo"(
     "id" INT PRIMARY KEY AUTO_INCREMENT,
     "FirstName" VARCHAR(50),

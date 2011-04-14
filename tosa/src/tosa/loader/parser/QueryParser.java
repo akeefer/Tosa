@@ -26,6 +26,9 @@ public class QueryParser implements SQLParserConstants {
         select.resolveVars(_data);
         select.verify(_data);
       }
+      if (!_currentToken.isEOF()) {
+        select.addParseError(new SQLParseError(_currentToken, "Unexpected token : " + _currentToken.getValue()));
+      }
     }
     return select;
   }
@@ -104,33 +107,33 @@ public class QueryParser implements SQLParserConstants {
 
   private SQLParsedElement parseWhereClause() {
     if (match(WHERE)) {
-      return new WhereClause(lastMatch(), parseSearchOrExpression());
+      return new WhereClause(lastMatch(), parseSearchCondition());
     } else {
       return null;
     }
   }
 
-  private SQLParsedElement parseSearchOrExpression() {
-    SQLParsedElement lhs = parseSearchAndExpression();
-    if (match(OR)) {
-      SQLParsedElement rhs = parseSearchOrExpression();
-      return new SQLOrExpression(lhs, rhs);
-    } else {
-      return lhs;
-    }
+  private SQLParsedElement parseSearchCondition() {
+    return parseBooleanValueExpression();
   }
 
-  private SQLParsedElement parseSearchAndExpression() {
-    SQLParsedElement lhs = parseSearchNotExpression();
-    if (match(AND)) {
-      SQLParsedElement rhs = parseSearchAndExpression();
-      return new SQLAndExpression(lhs, rhs);
-    } else {
-      return lhs;
+  private SQLParsedElement parseBooleanValueExpression() {
+    SQLParsedElement lhs = parseBooleanTerm();
+    while (match(OR)) {
+      lhs = new SQLOrExpression(lhs, parseBooleanTerm());
     }
+    return lhs;
   }
 
-  private SQLParsedElement parseSearchNotExpression() {
+  private SQLParsedElement parseBooleanTerm() {
+    SQLParsedElement lhs = parseBooleanFactor();
+    while (match(AND)) {
+      lhs = new SQLAndExpression(lhs, parseBooleanTerm());
+    }
+    return lhs;
+  }
+
+  private SQLParsedElement parseBooleanFactor() {
     if (match(NOT)) {
       Token last = lastMatch();
       SQLParsedElement val = parseBooleanTestExpression();
@@ -155,7 +158,7 @@ public class QueryParser implements SQLParserConstants {
 
   private SQLParsedElement parseBooleanPrimaryExpression() {
     if (match(OPEN_PAREN)) {
-      SQLParsedElement elt = parseSearchOrExpression();
+      SQLParsedElement elt = parseBooleanValueExpression();
       expect(CLOSE_PAREN);
       return elt;
     } else {
@@ -201,7 +204,6 @@ public class QueryParser implements SQLParserConstants {
       if (nullPredicate != null) {
         return nullPredicate;
       }
-    } else {
     }
 
     return unexpectedToken();
@@ -355,29 +357,13 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parseValueExpression() {
+    
+    //NOTE cgross - I decided to punt here and just merge the numeric, string, date and interval expressions types
+    //              This is what H2 does and I think it is a reasonable compromise given the complexity of the SQL grammar
+    //              Note that I omit boolean values, since that introduces ambiguity and, really, who uses nested logical
+    //              operators?  Jerk faces, that's who.
 
-    SQLParsedElement elt = parseNumericValueExpression();
-    if (elt != null) {
-      return elt;
-    }
-
-    elt = parseStringValueExpression();
-    if (elt != null) {
-      return elt;
-    }
-
-    elt = parseDateTimeValueExpression();
-    if (elt != null) {
-      return elt;
-    }
-
-    elt = parseIntervalValueExpression();
-    if (elt != null) {
-      return elt;
-    }
-
-    //TODO cgross - this might not belong here.  Distinction between value primary and value is?
-    elt = parseSetFunctionExpression();
+    SQLParsedElement elt = parseNumericOrStringOrDateTimeOrIntervalValueExpression();
     if (elt != null) {
       return elt;
     }
@@ -400,14 +386,113 @@ public class QueryParser implements SQLParserConstants {
       SQLParsedElement value = parseValueExpression();
       expect(CLOSE_PAREN);
       return new SetFunctionExpression(first, value, lastMatch());
-    } else if(_currentToken.isSymbol() && _currentToken.nextToken().match(OPEN_PAREN)) {
-      return parseFunctionCall();
     } else {
       return null;
     }
   }
 
-  private SQLParsedElement parseFunctionCall() {
+  private SQLParsedElement parseNumericOrStringOrDateTimeOrIntervalValueExpression() {
+    return parseStringConcatenation();
+  }
+
+  private SQLParsedElement parseStringConcatenation() {
+    SQLParsedElement lhs = parseNumericExpression();
+    while (match(CONCAT_OP)) {
+      lhs = new ConcatenationExpression(lhs, parseNumericExpression());
+    }
+    return lhs;
+  }
+
+  private SQLParsedElement parseNumericExpression() {
+    SQLParsedElement lhs = parseTerm();
+    while (matchAny(PLUS_OP, MINUS_OP)) {
+      lhs = new SQLAdditiveExpression(lhs, lastMatch(), parseTerm());
+    }
+    return lhs;
+  }
+
+  private SQLParsedElement parseTerm() {
+    SQLParsedElement lhs = parseFactor();
+    while (matchAny(TIMES_OP, DIV_OP)) {
+      lhs = new SQLMultiplicitiveExpression(lhs, lastMatch(), parseFactor());
+    }
+    return lhs;
+  }
+
+  private SQLParsedElement parseFactor() {
+    if (matchAny(PLUS_OP, MINUS_OP)) {
+      return new SQLSignedExpression(lastMatch(), parseNumericPrimary());
+    } else {
+      return parseNumericPrimary();
+    }
+  }
+
+  private SQLParsedElement parseNumericPrimary() {
+    return parseValueExpressionPrimary();
+  }
+
+  private SQLParsedElement parseValueExpressionPrimary() {
+    if (match(OPEN_PAREN)) {
+      Token paren = lastMatch();
+      SQLParsedElement expr = parseValueExpression();
+      expect(CLOSE_PAREN);
+      return new SQLParenthesizedExpression(paren, expr, lastMatch());
+    } else {
+      return parseNonparenthesizedValueExpressionPrimary();
+    }
+  }
+
+  private SQLParsedElement parseNonparenthesizedValueExpressionPrimary() {
+
+    SQLParsedElement numericLiteral = parseNumericLiteral();
+    if (numericLiteral != null) {
+      return numericLiteral;
+    }
+
+    SQLParsedElement stringLiteral = parseStringLiteral();
+    if (stringLiteral != null) {
+      return stringLiteral;
+    }
+
+    SQLParsedElement varRef = parseVariableReference();
+    if (varRef != null) {
+      return varRef;
+    }
+
+    SQLParsedElement columnRef = parseColumnReference();
+    if (columnRef != null) {
+      return columnRef;
+    }
+
+    SQLParsedElement setFunction = parseSetFunctionExpression();
+    if (setFunction != null) {
+      return setFunction;
+    }
+
+    SQLParsedElement numericFunction = parseNumericFunctionExpression();
+    if (numericFunction != null) {
+      return numericFunction;
+    }
+
+    SQLParsedElement dateFunction = parseDateFunctionExpression();
+    if (dateFunction != null) {
+      return dateFunction;
+    }
+
+    SQLParsedElement stringFunction = parseStringFunctionExpression();
+    if (stringFunction != null) {
+      return stringFunction;
+    }
+
+    SQLParsedElement generalFunction = parseGeneralFunctionExpression();
+    if (generalFunction != null) {
+      return generalFunction;
+    }
+
+    return null;
+  }
+
+  private SQLParsedElement parseGeneralFunctionExpression() {
     if (_currentToken.isSymbol() && _currentToken.nextToken().match(OPEN_PAREN)) {
       Token functionName = takeToken();
       Token paren = takeToken();
@@ -421,19 +506,11 @@ public class QueryParser implements SQLParserConstants {
       }
       return new GenericFunctionCall(functionName, args, lastMatch());
     } else {
-      return unexpectedToken();
+      return null;
     }
   }
 
-  private SQLParsedElement parseIntervalValueExpression() {
-    return null;  //To change body of created methods use File | Settings | File Templates.
-  }
-
-  private SQLParsedElement parseDateTimeValueExpression() {
-    return null;  //To change body of created methods use File | Settings | File Templates.
-  }
-
-  private SQLParsedElement parseStringValueExpression() {
+  private SQLParsedElement parseStringLiteral() {
     if (_currentToken.isString()) {
       return new StringLiteralExpression(takeToken());
     } else {
@@ -441,86 +518,18 @@ public class QueryParser implements SQLParserConstants {
     }
   }
 
-  private SQLParsedElement parseNumericValueExpression() {
-    SQLParsedElement lhs = parseTerm();
-    if (matchAny(PLUS_OP, MINUS_OP)) {
-      Token op = lastMatch();
-      SQLParsedElement rhs = parseNumericValueExpression();
-      return new SQLAdditiveExpression(lhs, op, rhs);
-    } else {
-      return lhs;
-    }
-  }
-
-  private SQLParsedElement parseTerm() {
-    SQLParsedElement lhs = parseFactor();
-    if (matchAny(TIMES_OP, DIV_OP)) {
-      Token op = lastMatch();
-      SQLParsedElement rhs = parseTerm();
-      return new SQLMultiplicitiveExpression(lhs, op, rhs);
-    } else {
-      return lhs;
-    }
-  }
-
-  private SQLParsedElement parseFactor() {
-    if (matchAny(PLUS_OP, MINUS_OP)) {
-      return new SQLSignedExpression(lastMatch(), parseNumericPrimary());
-    } else {
-      return parseNumericPrimary();
-    }
-  }
-
-  private SQLParsedElement parseNumericPrimary() {
-
-    SQLParsedElement numericValueFunction = parseNumericValueFunction();
-    if (numericValueFunction != null) {
-      return numericValueFunction;
-    }
-
-    return parseValueExpressionPrimary();
-  }
-
-  private SQLParsedElement parseValueExpressionPrimary() {
-    SQLParsedElement pe = parseParenthesizedValueExpression();
-    if (pe != null) {
-      return pe;
-    } else {
-      return parseNonparenthesizedValueExpressionPrimary();
-    }
-  }
-
-  private SQLParsedElement parseNonparenthesizedValueExpressionPrimary() {
-    SQLParsedElement numericLiteral = parseNumericLiteral();
-    if (numericLiteral != null) {
-      return numericLiteral;
-    }
-
-    SQLParsedElement varRef = parseVariableReference();
-    if (varRef != null) {
-      return varRef;
-    }
-
-    SQLParsedElement columnRef = parseColumnReference();
-    if (columnRef != null) {
-      return columnRef;
-    }
-
+  private SQLParsedElement parseNumericFunctionExpression() {
+    //TODO numeric value functions
     return null;
   }
 
-  private SQLParsedElement parseParenthesizedValueExpression() {
-    if (match(OPEN_PAREN)) {
-      Token paren = lastMatch();
-      SQLParsedElement expr = parseValueExpression();
-      expect(CLOSE_PAREN);
-      return new SQLParenthesizedExpression(paren, expr, lastMatch());
-    } else {
-      return null;
-    }
+  private SQLParsedElement parseStringFunctionExpression() {
+    //TODO string value functions
+    return null;
   }
 
-  private SQLParsedElement parseNumericValueFunction() {
+  private SQLParsedElement parseDateFunctionExpression() {
+    //TODO string value functions
     return null;
   }
 
@@ -618,7 +627,7 @@ public class QueryParser implements SQLParserConstants {
   private SQLParsedElement parseJoinSpecification() {
     if (match(ON)) {
       Token start = lastMatch();
-      SQLParsedElement condition = parseSearchOrExpression();
+      SQLParsedElement condition = parseBooleanValueExpression();
       return new JoinCondition(start, condition);
     } else {
       // TODO cgross - support named columns join ???
@@ -695,19 +704,11 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private boolean peek(String str) {
-    if (_currentToken.match(str)) {
-      return true;
-    } else {
-      return false;
-    }
+    return _currentToken.match(str);
   }
 
   private boolean peek(String str1, String str2) {
-    if (_currentToken.match(str1) && _currentToken.nextToken().match(str2)) {
-      return true;
-    } else {
-      return false;
-    }
+    return _currentToken.match(str1) && _currentToken.nextToken().match(str2);
   }
 
   private boolean match(String str1, String str2, String str3) {

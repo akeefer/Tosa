@@ -59,7 +59,7 @@ public class Token {
   public static Token tokenize(String contents) {
     Token first = null;
     Token previous = null;
-    Tokenizer tokenizer = new Tokenizer(contents);
+    Tokenizer tokenizer = new Tokenizer(contents, SQLParserConstants.OPS.get());
     while (tokenizer.hasMoreTokens()) {
       Token t = tokenizer.nextToken();
       if (previous != null) {
