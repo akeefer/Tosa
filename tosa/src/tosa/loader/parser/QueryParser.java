@@ -519,12 +519,32 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parseNumericFunctionExpression() {
-    //TODO numeric value functions
+    if (match(MOD)) {
+      Token start = lastMatch();
+      expect(OPEN_PAREN);
+      SQLParsedElement first = parseNumericExpression();
+      expect(COMMA);
+      SQLParsedElement second = parseNumericExpression();
+      expect(CLOSE_PAREN);
+      return new ModExpression(start, first, second, lastMatch());
+    } else if (match(ABS)) {
+      Token start = lastMatch();
+      expect(OPEN_PAREN);
+      SQLParsedElement value = parseNumericExpression();
+      expect(CLOSE_PAREN);
+      return new AbsExpression(start, value, lastMatch());
+    }
     return null;
   }
 
   private SQLParsedElement parseStringFunctionExpression() {
-    //TODO string value functions
+    if (matchAny(UPPER, LOWER)) {
+      Token start = lastMatch();
+      expect(OPEN_PAREN);
+      SQLParsedElement value = parseStringConcatenation();
+      expect(CLOSE_PAREN);
+      return new StringCaseChangeExpression(start, value, lastMatch());
+    }
     return null;
   }
 

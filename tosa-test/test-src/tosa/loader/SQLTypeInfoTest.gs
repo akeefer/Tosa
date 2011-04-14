@@ -391,4 +391,34 @@ class SQLTypeInfoTest {
     result = test.query.SampleSubtractQuery.select(1)
     Assert.assertEquals(0, result.Count)
   }
+
+  @Test
+  function testMod() {
+    var result = test.query.SampleModQuery.select(1)
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleModQuery.select(2)
+    Assert.assertEquals(2, result.Count)
+
+    result = test.query.SampleModQuery.select(3)
+    Assert.assertEquals(1, result.Count)
+  }
+
+  @Test
+  function testAbs() {
+    var result = test.query.SampleAbsQuery.select(1)
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleAbsQuery.select(2)
+    Assert.assertEquals(2, result.Count)
+
+    result = test.query.SampleAbsQuery.select(3)
+    Assert.assertEquals(1, result.Count)
+  }
+
+  @Test
+  function testUpper() {
+    var result = test.query.SampleUpperQuery.select()
+    Assert.assertEquals(1, result.Count)
+  }
 }
