@@ -6,6 +6,7 @@ import tosa.api.IDBColumnType;
 import tosa.loader.data.DBData;
 import tosa.loader.parser.Token;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -62,5 +63,10 @@ public class VariableExpression extends SQLParsedElement {
 
   public boolean isList() {
     return _list;
+  }
+
+  public boolean shouldApply(HashMap<String, Object> args) {
+    SQLOptionalExpression option = getAncestor(SQLOptionalExpression.class);
+    return option == null || option.applies(args);
   }
 }

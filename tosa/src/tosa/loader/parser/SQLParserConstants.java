@@ -263,4 +263,6 @@ public interface SQLParserConstants {
 
   public static final String UPPER = "UPPER";
   public static final String LOWER = "LOWER";
+
+  public static final String OPTIONAL = "OPTIONAL";
 }

@@ -1,5 +1,6 @@
 package tosa.loader;
 
+import gw.lang.parser.ISymbol;
 import gw.lang.reflect.*;
 import gw.lang.reflect.java.IJavaType;
 import gw.util.GosuExceptionUtil;
@@ -17,7 +18,6 @@ public class SQLTypeInfo extends BaseTypeInfo {
 
   private List<IMethodInfo> _methods;
   private ISQLType _sqlType;
-  private static final Object NOT_PRESENT_SENTINAL = new Object();
   private SQLParseException _sqlpe;
 
   public SQLTypeInfo(ISQLType sqlType) {
@@ -74,18 +74,20 @@ public class SQLTypeInfo extends BaseTypeInfo {
       List<VariableExpression> vars = _sqlType.getData().getVariables();
       int position = 1;
       for (VariableExpression var : vars) {
-        Object value = values.get(var.getName());
-        if (var.isList()) {
-          if (value != null) {
-            List valueList = (List) value;
-            for (Object listValue : valueList) {
-              stmt.setObject(position, listValue);
-              position++;
+        if (var.shouldApply(values)) {
+          Object value = values.get(var.getName());
+          if (var.isList()) {
+            if (value != null) {
+              List valueList = (List) value;
+              for (Object listValue : valueList) {
+                stmt.setObject(position, listValue);
+                position++;
+              }
             }
+          } else {
+            stmt.setObject(position, value);
+            position++;
           }
-        } else {
-          stmt.setObject(position, value);
-          position++;
         }
       }
 
@@ -178,7 +180,7 @@ public class SQLTypeInfo extends BaseTypeInfo {
     ArrayList<ParameterInfoBuilder> builders = new ArrayList<ParameterInfoBuilder>();
     List<SQLParameterInfo> pis = _sqlType.getData().getParameterInfos();
     for (SQLParameterInfo pi : pis) {
-      builders.add(new ParameterInfoBuilder().withName(pi.getName()).withType(pi.getGosuType()).withDefValue(NOT_PRESENT_SENTINAL));
+      builders.add(new ParameterInfoBuilder().withName(pi.getName().substring(1)).withType(pi.getGosuType()).withDefValue(ISymbol.NULL_DEFAULT_VALUE));
     }
     return builders.toArray(new ParameterInfoBuilder[0]);
   }

@@ -36,6 +36,6 @@ public class SQLParameterInfo {
   }
 
   public IType getGosuType() {
-    return _type == null ? IJavaType.OBJECT : _type;
+    return _type == null ? IJavaType.STRING : _type;
   }
 }

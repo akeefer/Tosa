@@ -149,6 +149,12 @@ class SQLTypeInfoTest {
     var result = test.query.SampleInQueryWithList.select(null)
     Assert.assertEquals(0, result.Count)
   }
+  
+  @Test
+  function testInComparisonWithNamedArgWorks() {
+    var result = test.query.SampleInQueryWithList.select(:lst = null)
+    Assert.assertEquals(0, result.Count)
+  }
 
   @Test
   function testInComparisonWithSubSelectWorks() {
@@ -420,5 +426,173 @@ class SQLTypeInfoTest {
   function testUpper() {
     var result = test.query.SampleUpperQuery.select()
     Assert.assertEquals(1, result.Count)
+  }
+
+  @Test
+  function testOptionalParameter() {
+    var result = test.query.SampleOptionalQuery.select(null)
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalQuery.select(:misc=null)
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalQuery.select()
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalQuery.select("misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalQuery.select("bar")
+    Assert.assertEquals(0, result.Count)
+  }
+
+  @Test
+  function testOptionalOrParameter() {
+    var result = test.query.SampleOptionalOrQuery.select()
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc1=null)
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc1="misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc2="misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc3="misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc1="blah")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc2="blah")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc3="blah")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc1="misc", :misc2="misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc1="blah", :misc2="misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc1="misc", :misc2="blah")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc1="blah", :misc2="blah")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc1="misc", :misc3="misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc1="blah", :misc3="misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc1="misc", :misc3="blah")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc1="blah", :misc3="blah")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc2="misc", :misc3="misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc2="blah", :misc3="misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc2="misc", :misc3="blah")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc2="blah", :misc3="blah")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc1="misc", :misc2="misc", :misc3="misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc1="blah", :misc2="misc", :misc3="misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc1="blah", :misc2="blah", :misc3="misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalOrQuery.select(:misc1="blah", :misc2="blah", :misc3="blah")
+    Assert.assertEquals(0, result.Count)
+  }
+
+  @Test
+  function testOptionalAndParameter() {
+    var result = test.query.SampleOptionalAndQuery.select()
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc1=null)
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc1="misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc2="misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc3="misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc1="blah")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc2="blah")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc3="blah")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc1="misc", :misc2="misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc1="blah", :misc2="misc")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc1="misc", :misc2="blah")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc1="blah", :misc2="blah")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc1="misc", :misc3="misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc1="blah", :misc3="misc")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc1="misc", :misc3="blah")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc1="blah", :misc3="blah")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc2="misc", :misc3="misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc2="blah", :misc3="misc")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc2="misc", :misc3="blah")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc2="blah", :misc3="blah")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc1="misc", :misc2="misc", :misc3="misc")
+    Assert.assertEquals(1, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc1="blah", :misc2="misc", :misc3="misc")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc1="blah", :misc2="blah", :misc3="misc")
+    Assert.assertEquals(0, result.Count)
+
+    result = test.query.SampleOptionalAndQuery.select(:misc1="blah", :misc2="blah", :misc3="blah")
+    Assert.assertEquals(0, result.Count)
   }
 }

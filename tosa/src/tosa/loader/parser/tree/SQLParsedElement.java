@@ -141,10 +141,14 @@ public abstract class SQLParsedElement {
     return lst;
   }
 
-  public <T extends SQLParsedElement> List<T> findDirectDescendents(Class<T> clazz) {
-    ArrayList<T> lst = new ArrayList<T>();
-    findDescendents(getClass(), clazz, lst);
-    return lst;
+  public <T> T getAncestor(Class<T> type) {
+    if (type.isAssignableFrom(this.getClass())) {
+      return (T) this;
+    } else if(getParent() == null) {
+      return null;
+    } else {
+      return getParent().getAncestor(type);
+    }
   }
 
   @Override

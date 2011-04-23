@@ -1,5 +1,6 @@
 package tosa.loader.parser;
 
+import gw.internal.gosu.parser.ParenthesizedExpression;
 import tosa.loader.data.DBData;
 import tosa.loader.parser.tree.*;
 
@@ -157,10 +158,16 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parseBooleanPrimaryExpression() {
-    if (match(OPEN_PAREN)) {
+    if (match(OPTIONAL, OPEN_PAREN)) {
+      Token openParen = lastMatch();
       SQLParsedElement elt = parseBooleanValueExpression();
       expect(CLOSE_PAREN);
-      return elt;
+      return new SQLOptionalExpression(openParen, elt, lastMatch());
+    } else if (match(OPEN_PAREN)) {
+      Token openParen = lastMatch();
+      SQLParsedElement elt = parseBooleanValueExpression();
+      expect(CLOSE_PAREN);
+      return new SQLParenthesizedExpression(openParen, elt, lastMatch());
     } else {
       return parsePredicate();
     }
