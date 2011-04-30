@@ -10,6 +10,7 @@ import tosa.loader.parser.Token;
 import tosa.loader.parser.tree.*;
 
 import java.io.*;
+import java.util.HashMap;
 import java.util.List;
 
 public class SQLFileInfo {
@@ -31,7 +32,7 @@ public class SQLFileInfo {
           String content = new String(StreamUtil.getContent(is));
           is.close();
           QueryParser parser = new QueryParser(Token.tokenize(content), _db.getDBData());
-          return parser.parseSelect();
+          return parser.parseTopLevelSelect();
         } catch (IOException e) {
           throw GosuExceptionUtil.forceThrow(e);
         }
@@ -47,8 +48,8 @@ public class SQLFileInfo {
     return _db;
   }
 
-  public String getSQL() {
-    return _select.get().toSQL();
+  public String getSQL(HashMap<String, Object> values) {
+    return _select.get().toSQL(values);
   }
 
   public SelectStatement getSelect() {
@@ -57,5 +58,13 @@ public class SQLFileInfo {
 
   public List<SQLParameterInfo> getParameterInfos() {
     return _select.get().getParameters();
+  }
+
+  public List<VariableExpression> getVariables() {
+    return _select.get().getVariables();
+  }
+
+  public String getFileName() {
+    return _sql.getName();
   }
 }

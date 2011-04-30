@@ -3,7 +3,6 @@ package tosa.loader.parser.mysql;
 import org.slf4j.LoggerFactory;
 import tosa.loader.data.ColumnData;
 import tosa.loader.data.DBColumnTypeImpl;
-import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
 import tosa.loader.data.types.DateColumnTypePersistenceHandler;
 import tosa.loader.data.types.TimestampColumnTypePersistenceHandler;

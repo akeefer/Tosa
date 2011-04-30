@@ -3,6 +3,7 @@ package tosa.loader.parser.tree;
 import tosa.loader.parser.Token;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -18,14 +19,14 @@ public class ColumnDefinition extends SQLParsedElement {
   private List<SQLParsedElement> _columnOptions;
 
   public ColumnDefinition(Token start, Token end, Token name, ColumnDataType columnDataType, List<SQLParsedElement> columnOptions) {
-    super(start, end, collectChildren(columnDataType, columnOptions));
+    super(start, collectChildren(columnDataType, columnOptions), end);
     _name = name;
     _columnDataType = columnDataType;
     _columnOptions = columnOptions;
   }
 
   @Override
-  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
+  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
     // TODO - AHK
   }
 

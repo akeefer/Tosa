@@ -1,5 +1,6 @@
 package tosa.loader.parser;
 
+import gw.internal.gosu.parser.ParenthesizedExpression;
 import tosa.loader.data.DBData;
 import tosa.loader.parser.tree.*;
 
@@ -18,98 +19,122 @@ public class QueryParser implements SQLParserConstants {
     _data = dbData;
   }
 
+  public SelectStatement parseTopLevelSelect() {
+    SelectStatement select = parseSelect();
+    if (select != null) {
+      if (_data != null) {
+        select.resolveTypes(_data);
+        select.resolveVars(_data);
+        select.verify(_data);
+      }
+      if (!_currentToken.isEOF()) {
+        select.addParseError(new SQLParseError(_currentToken, "Unexpected token : " + _currentToken.getValue()));
+      }
+    }
+    return select;
+  }
+
   public SelectStatement parseSelect() {
     if (match(SELECT)) {
       Token start = lastMatch();
       SQLParsedElement quantifier = parseSetQuantifers();
       SQLParsedElement selectList = parseSelectList();
       TableExpression tableExpr = parseTableExpression();
-      SelectStatement select = new SelectStatement(start, tableExpr.lastToken(), quantifier, selectList, tableExpr);
-      if (_data != null) {
-        select.verify(_data);
-      }
-      return select;
+      SQLParsedElement orderByExpr = parseOrderByClause();
+      return new SelectStatement(start, quantifier, selectList, tableExpr, orderByExpr);
     }
     return null;
   }
 
-  private Token lastMatch() {
-    return _currentToken.previous();
-  }
-
-  private boolean expect(String str) {
-    //TODO cgross - parse error at the token level
-    return match(str);
-  }
-
-  private boolean match(String str) {
-    if (_currentToken.match(str)) {
-      _currentToken = _currentToken.nextToken();
-      return true;
+  private SQLParsedElement parseOrderByClause() {
+    if (match(ORDER, BY)) {
+      Token first = lastMatch().previous();
+      return new OrderByClause(first, parseSortSpecificationList());
     } else {
-      return false;
+      return null;
     }
   }
 
-  private boolean match(String str1, String str2) {
-    if (_currentToken.match(str1) && _currentToken.nextToken().match(str2)) {
-      _currentToken = _currentToken.nextToken().nextToken();
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  private boolean match(String str1, String str2, String str3) {
-    if (_currentToken.match(str1) &&
-      _currentToken.nextToken().match(str2) &&
-      _currentToken.nextToken().nextToken().match(str3)) {
-      _currentToken = _currentToken.nextToken().nextToken().nextToken();
-      return true;
-    } else {
-      return false;
-    }
+  private List<SQLParsedElement> parseSortSpecificationList() {
+    ArrayList<SQLParsedElement> lst = new ArrayList<SQLParsedElement>();
+    do {
+      SQLParsedElement valueExpr = parseValueExpression();
+      boolean ascending = false;
+      boolean descending = false;
+      if (match(ASC)) {
+        ascending = true;
+      } else if (match(DESC)) {
+        descending = true;
+      }
+      lst.add(new SortSpecification(valueExpr, lastMatch(), ascending, descending));
+    } while (match(COMMA));
+    return lst;
   }
 
   private TableExpression parseTableExpression() {
-    Token start = _currentToken;
     TableFromClause fromClause = parseFromClause();
     SQLParsedElement whereClause = parseWhereClause();
-    TableExpression table = new TableExpression(start, lastMatch(), fromClause, whereClause);
-    return table;
+    SQLParsedElement groupByClause = parseGroupByClause();
+    return new TableExpression(fromClause, whereClause, groupByClause);
+  }
+
+  private SQLParsedElement parseGroupByClause() {
+    if (match(GROUP, BY)) {
+      Token start = lastMatch().previous();
+      return new GroupByClause(start, parseGroupingElementList());
+    } else {
+      return null;
+    }
+  }
+
+  private List<SQLParsedElement> parseGroupingElementList() {
+    ArrayList<SQLParsedElement> groupBys = new ArrayList<SQLParsedElement>();
+    do {
+      SQLParsedElement ge = parseGroupingElement();
+      groupBys.add(ge);
+    } while (match(COMMA));
+    return groupBys;
+  }
+
+  private SQLParsedElement parseGroupingElement() {
+    //TODO cgross - support exotic group by targets
+    SQLParsedElement colRef = parseColumnReference();
+    if (colRef != null) {
+      return colRef;
+    } else {
+      return unexpectedToken();
+    }
   }
 
   private SQLParsedElement parseWhereClause() {
     if (match(WHERE)) {
-      return new WhereClause(lastMatch(), parseSearchOrExpression());
-    } else if(_currentToken.isEOF()) {
+      return new WhereClause(lastMatch(), parseSearchCondition());
+    } else {
       return null;
-    } else {
-      throw new IllegalStateException("This should be a parse error.");
     }
   }
 
-  private SQLParsedElement parseSearchOrExpression() {
-    SQLParsedElement lhs = parseSearchAndExpression();
-    if (match(OR)) {
-      SQLParsedElement rhs = parseSearchOrExpression();
-      return new SQLOrExpression(lhs, rhs);
-    } else {
-      return lhs;
-    }
+  private SQLParsedElement parseSearchCondition() {
+    return parseBooleanValueExpression();
   }
 
-  private SQLParsedElement parseSearchAndExpression() {
-    SQLParsedElement lhs = parseSearchNotExpression();
-    if (match(AND)) {
-      SQLParsedElement rhs = parseSearchAndExpression();
-      return new SQLAndExpression(lhs, rhs);
-    } else {
-      return lhs;
+  private SQLParsedElement parseBooleanValueExpression() {
+    SQLParsedElement lhs = parseBooleanTerm();
+    while (match(OR)) {
+      lhs = new SQLOrExpression(lhs, parseBooleanTerm());
     }
+    return lhs;
   }
 
-  private SQLParsedElement parseSearchNotExpression() {
+  private SQLParsedElement parseBooleanTerm() {
+    SQLParsedElement lhs = parseBooleanFactor();
+    while (match(AND)) {
+      lhs = new SQLAndExpression(lhs, parseBooleanTerm());
+    }
+    return lhs;
+  }
+
+  private SQLParsedElement parseBooleanFactor() {
     if (match(NOT)) {
       Token last = lastMatch();
       SQLParsedElement val = parseBooleanTestExpression();
@@ -120,24 +145,49 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parseBooleanTestExpression() {
-    return parseBooleanPrimaryExpression();
-    //TODO cgross IS NOT TRUE
+    SQLParsedElement sqlParsedElement = parseBooleanPrimaryExpression();
+    if (match(IS)) {
+      boolean not = match(NOT);
+      if (!(match(TRUE)|| match(FALSE))) {
+        _currentToken.addTemporaryError(new SQLParseError(_currentToken, "Expected TRUE or FALSE"));
+      }
+      return new BooleanIsNotExpression(sqlParsedElement, lastMatch(), not);
+    } else {
+      return sqlParsedElement;
+    }
   }
 
   private SQLParsedElement parseBooleanPrimaryExpression() {
-    if (match(OPEN_PAREN)) {
-      SQLParsedElement elt = parseSearchOrExpression();
-      expectToken(elt, CLOSE_PAREN);
-      return elt;
+    if (match(OPTIONAL, OPEN_PAREN)) {
+      Token openParen = lastMatch();
+      SQLParsedElement elt = parseBooleanValueExpression();
+      expect(CLOSE_PAREN);
+      return new SQLOptionalExpression(openParen, elt, lastMatch());
+    } else if (match(OPEN_PAREN)) {
+      Token openParen = lastMatch();
+      SQLParsedElement elt = parseBooleanValueExpression();
+      expect(CLOSE_PAREN);
+      return new SQLParenthesizedExpression(openParen, elt, lastMatch());
     } else {
       return parsePredicate();
     }
   }
 
   private SQLParsedElement parsePredicate() {
+
+    SQLParsedElement existsPredicate = parseExistsPredicate();
+    if (existsPredicate != null) {
+      return existsPredicate;
+    }
+
+    SQLParsedElement uniquePredicate = parseUniquePredicate();
+    if (uniquePredicate != null) {
+      return uniquePredicate;
+    }
+
     SQLParsedElement initialValue = parseRowValue();
     if (initialValue != null) {
-      SQLParsedElement comparison = parseComparsionPredicate(initialValue);
+      SQLParsedElement comparison = parseComparisonOrQuantifiedComparisonPredicate(initialValue);
       if (comparison != null) {
         return comparison;
       }
@@ -162,15 +212,32 @@ public class QueryParser implements SQLParserConstants {
         return nullPredicate;
       }
     }
+
     return unexpectedToken();
+  }
+
+  private SQLParsedElement parseUniquePredicate() {
+    if (match(UNIQUE)) {
+      return new UniquePredicate(lastMatch(), parseSubQuery());
+    } else {
+      return null;
+    }
+  }
+
+  private SQLParsedElement parseExistsPredicate() {
+    if (match(EXISTS)) {
+      return new ExistsPredicate(lastMatch(), parseSubQuery());
+    } else {
+      return null;
+    }
   }
 
   private SQLParsedElement parseNullPredicate(SQLParsedElement initialValue) {
     if (match(IS, NOT, NULL)) {
-      return new IsNotNullPredicate(initialValue, _currentToken.previous(), true);
+      return new IsNotNullPredicate(initialValue, lastMatch(), true);
     } else if (match(IS, NULL)) {
       _currentToken = _currentToken.nextToken().nextToken();
-      return new IsNotNullPredicate(initialValue, _currentToken.previous(), false);
+      return new IsNotNullPredicate(initialValue, lastMatch(), false);
     } else {
       return null;
     }
@@ -186,10 +253,20 @@ public class QueryParser implements SQLParserConstants {
     }
   }
 
-  private SQLParsedElement parseComparsionPredicate(SQLParsedElement initialValue) {
+  private SQLParsedElement parseComparisonOrQuantifiedComparisonPredicate(SQLParsedElement initialValue) {
     if (matchAny(EQ_OP, LT_OP, LTEQ_OP, GT_OP, GTEQ_OP)) {
-      SQLParsedElement comparisonValue = parseValueExpression();
-      return new ComparisonPredicate(initialValue, initialValue.nextToken(), comparisonValue);
+      Token op = lastMatch();
+      if (matchAny(SOME, ALL)) {
+        Token quantifier = lastMatch();
+        SQLParsedElement subQuery = parseSubQuery();
+        if (subQuery == null) {
+          quantifier.addTemporaryError(new SQLParseError(quantifier, "Expected subquery"));
+        }
+        return new QuantifiedComparison(op, quantifier, initialValue, subQuery);
+      } else {
+        SQLParsedElement comparisonValue = parseValueExpression();
+        return new ComparisonPredicate(initialValue, op, comparisonValue);
+      }
     } else {
       return null;
     }
@@ -206,25 +283,42 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parseInPredicateValue() {
-    //TODO cgross - table subquery
+
+    SQLParsedElement subQuery = parseSubQuery();
+    if (subQuery != null) {
+      return subQuery;
+    }
+
     if (match(OPEN_PAREN)) {
       Token first = lastMatch();
       List<SQLParsedElement> values = new ArrayList<SQLParsedElement>();
-      if (!match(CLOSE_PAREN)) {
+      if (!peek(CLOSE_PAREN)) {
         do {
           values.add(parseRowValue());
         } while (match(COMMA));
       }
-      return new InListExpression(first,  _currentToken.previous(), values);
+      expect(CLOSE_PAREN);
+      return new InListExpression(first, values);
     }
 
-//    // TODO cgross - Accept refs here (as lists)
-//    SQLParsedElement varRef = parseVariableReference();
-//    if (varRef != null) {
-//      return varRef;
-//    }
+    SQLParsedElement varRef = parseVariableReference();
+    if (varRef != null) {
+      return varRef;
+    }
 
     return unexpectedToken();
+  }
+
+  private SQLParsedElement parseSubQuery() {
+    if (peek(OPEN_PAREN, SELECT)) {
+      match(OPEN_PAREN);
+      Token start = lastMatch();
+      SelectStatement subSelect = parseSelect();
+      expect(CLOSE_PAREN);
+      return new SubSelectExpression(start, subSelect, lastMatch());
+    } else {
+      return null;
+    }
   }
 
   private SQLParsedElement parseBetweenPredicate(SQLParsedElement initialValue) {
@@ -260,14 +354,8 @@ public class QueryParser implements SQLParserConstants {
   private UnexpectedTokenExpression unexpectedToken() {
     Token unexpectedToken = takeToken();
     UnexpectedTokenExpression utExpr = new UnexpectedTokenExpression(unexpectedToken);
-    utExpr.addParseError(new SQLParseError(unexpectedToken, "Unexpected Token"));
+    utExpr.addParseError(new SQLParseError(unexpectedToken, "Unexpected Token: " + unexpectedToken.getValue()));
     return utExpr;
-  }
-
-  private void expectToken(SQLParsedElement elt, String str) {
-    if (!match(str)) {
-      elt.addParseError(new SQLParseError(_currentToken, "Expected " + str));
-    }
   }
 
   private SQLParsedElement parseRowValue() {
@@ -276,66 +364,66 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parseValueExpression() {
+    
+    //NOTE cgross - I decided to punt here and just merge the numeric, string, date and interval expressions types
+    //              This is what H2 does and I think it is a reasonable compromise given the complexity of the SQL grammar
+    //              Note that I omit boolean values, since that introduces ambiguity and, really, who uses nested logical
+    //              operators?  Jerk faces, that's who.
 
-    SQLParsedElement elt = parseNumericValueExpression();
+    SQLParsedElement elt = parseNumericOrStringOrDateTimeOrIntervalValueExpression();
     if (elt != null) {
       return elt;
     }
 
-    elt = parseStringValueExpression();
-    if (elt != null) {
-      return elt;
-    }
-
-    elt = parseDateTimeValueExpression();
-    if (elt != null) {
-      return elt;
-    }
-
-    elt = parseIntervalValueExpression();
-    if (elt != null) {
-      return elt;
-    }
-
-    return null;
+    return unexpectedToken();
   }
 
-  private SQLParsedElement parseIntervalValueExpression() {
-    return null;  //To change body of created methods use File | Settings | File Templates.
-  }
-
-  private SQLParsedElement parseDateTimeValueExpression() {
-    return null;  //To change body of created methods use File | Settings | File Templates.
-  }
-
-  private SQLParsedElement parseStringValueExpression() {
-    if (_currentToken.isString()) {
-      return new StringLiteralExpression(takeToken());
+  private SQLParsedElement parseSetFunctionExpression() {
+    if (match(COUNT, OPEN_PAREN, ASTERISK )) {
+      Token start = lastMatch().previous().previous();
+      expect(CLOSE_PAREN);
+      return new CountAllExpression(start, lastMatch());
+    } else if (match(COUNT) ||
+      match(AVG) ||
+      match(SUM) ||
+      match(MAX) ||
+      match(MIN)) {
+      Token first = lastMatch();
+      expect(OPEN_PAREN);
+      SQLParsedElement value = parseValueExpression();
+      expect(CLOSE_PAREN);
+      return new SetFunctionExpression(first, value, lastMatch());
     } else {
       return null;
     }
   }
 
-  private SQLParsedElement parseNumericValueExpression() {
-    SQLParsedElement lhs = parseTerm();
-    if (matchAny(PLUS_OP, MINUS_OP)) {
-      Token op = lastMatch();
-      SQLParsedElement rhs = parseNumericValueExpression();
-      return new SQLAdditiveExpression(lhs, op, rhs);
-    } else {
-      return lhs;
+  private SQLParsedElement parseNumericOrStringOrDateTimeOrIntervalValueExpression() {
+    return parseStringConcatenation();
+  }
+
+  private SQLParsedElement parseStringConcatenation() {
+    SQLParsedElement lhs = parseNumericExpression();
+    while (match(CONCAT_OP)) {
+      lhs = new ConcatenationExpression(lhs, parseNumericExpression());
     }
+    return lhs;
+  }
+
+  private SQLParsedElement parseNumericExpression() {
+    SQLParsedElement lhs = parseTerm();
+    while (matchAny(PLUS_OP, MINUS_OP)) {
+      lhs = new SQLAdditiveExpression(lhs, lastMatch(), parseTerm());
+    }
+    return lhs;
   }
 
   private SQLParsedElement parseTerm() {
     SQLParsedElement lhs = parseFactor();
-    if (matchAny(TIMES_OP, DIV_OP)) {
-      Token op = lastMatch();
-      SQLParsedElement rhs = parseTerm();
-      return new SQLMultiplicitiveExpression(lhs, op, rhs);
-    } else {
-      return lhs;
+    while (matchAny(TIMES_OP, DIV_OP)) {
+      lhs = new SQLMultiplicitiveExpression(lhs, lastMatch(), parseFactor());
     }
+    return lhs;
   }
 
   private SQLParsedElement parseFactor() {
@@ -347,10 +435,30 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parseNumericPrimary() {
+    return parseValueExpressionPrimary();
+  }
+
+  private SQLParsedElement parseValueExpressionPrimary() {
+    if (match(OPEN_PAREN)) {
+      Token paren = lastMatch();
+      SQLParsedElement expr = parseValueExpression();
+      expect(CLOSE_PAREN);
+      return new SQLParenthesizedExpression(paren, expr, lastMatch());
+    } else {
+      return parseNonparenthesizedValueExpressionPrimary();
+    }
+  }
+
+  private SQLParsedElement parseNonparenthesizedValueExpressionPrimary() {
 
     SQLParsedElement numericLiteral = parseNumericLiteral();
     if (numericLiteral != null) {
       return numericLiteral;
+    }
+
+    SQLParsedElement stringLiteral = parseStringLiteral();
+    if (stringLiteral != null) {
+      return stringLiteral;
     }
 
     SQLParsedElement varRef = parseVariableReference();
@@ -363,6 +471,92 @@ public class QueryParser implements SQLParserConstants {
       return columnRef;
     }
 
+    SQLParsedElement setFunction = parseSetFunctionExpression();
+    if (setFunction != null) {
+      return setFunction;
+    }
+
+    SQLParsedElement numericFunction = parseNumericFunctionExpression();
+    if (numericFunction != null) {
+      return numericFunction;
+    }
+
+    SQLParsedElement dateFunction = parseDateFunctionExpression();
+    if (dateFunction != null) {
+      return dateFunction;
+    }
+
+    SQLParsedElement stringFunction = parseStringFunctionExpression();
+    if (stringFunction != null) {
+      return stringFunction;
+    }
+
+    SQLParsedElement generalFunction = parseGeneralFunctionExpression();
+    if (generalFunction != null) {
+      return generalFunction;
+    }
+
+    return null;
+  }
+
+  private SQLParsedElement parseGeneralFunctionExpression() {
+    if (_currentToken.isSymbol() && _currentToken.nextToken().match(OPEN_PAREN)) {
+      Token functionName = takeToken();
+      Token paren = takeToken();
+      List<SQLParsedElement> args = new ArrayList<SQLParsedElement>();
+      while (!match(CLOSE_PAREN)) {
+        SQLParsedElement arg = parseValueExpression();
+        args.add(arg);
+        if (!peek(CLOSE_PAREN)) {
+          expect(COMMA);
+        }
+      }
+      return new GenericFunctionCall(functionName, args, lastMatch());
+    } else {
+      return null;
+    }
+  }
+
+  private SQLParsedElement parseStringLiteral() {
+    if (_currentToken.isString()) {
+      return new StringLiteralExpression(takeToken());
+    } else {
+      return null;
+    }
+  }
+
+  private SQLParsedElement parseNumericFunctionExpression() {
+    if (match(MOD)) {
+      Token start = lastMatch();
+      expect(OPEN_PAREN);
+      SQLParsedElement first = parseNumericExpression();
+      expect(COMMA);
+      SQLParsedElement second = parseNumericExpression();
+      expect(CLOSE_PAREN);
+      return new ModExpression(start, first, second, lastMatch());
+    } else if (match(ABS)) {
+      Token start = lastMatch();
+      expect(OPEN_PAREN);
+      SQLParsedElement value = parseNumericExpression();
+      expect(CLOSE_PAREN);
+      return new AbsExpression(start, value, lastMatch());
+    }
+    return null;
+  }
+
+  private SQLParsedElement parseStringFunctionExpression() {
+    if (matchAny(UPPER, LOWER)) {
+      Token start = lastMatch();
+      expect(OPEN_PAREN);
+      SQLParsedElement value = parseStringConcatenation();
+      expect(CLOSE_PAREN);
+      return new StringCaseChangeExpression(start, value, lastMatch());
+    }
+    return null;
+  }
+
+  private SQLParsedElement parseDateFunctionExpression() {
+    //TODO string value functions
     return null;
   }
 
@@ -375,7 +569,7 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parseColumnReference() {
-    if (_currentToken.isSymbol()) {
+    if (_currentToken.isSymbol() && !_currentToken.nextToken().match(OPEN_PAREN)) {
       Token base = takeToken();
       if (match(".") && _currentToken.isSymbol()) {
         return new ColumnReference(base, takeToken());
@@ -407,26 +601,70 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private TableFromClause parseFromClause() {
-    if (match(FROM)) {
+    if (expect(FROM)) {
       Token start = lastMatch();
-      ArrayList<SimpleTableReference> refs = new ArrayList<SimpleTableReference>();
+      ArrayList<SQLParsedElement> refs = new ArrayList<SQLParsedElement>();
       do {
-        SimpleTableReference ref = parseTableReference();
+        SQLParsedElement ref = parseTableReference();
         refs.add(ref);
       }
       while (match(COMMA));
       return new TableFromClause(start, refs);
     } else {
-      TableFromClause from = new TableFromClause(_currentToken, Collections.<SimpleTableReference>emptyList());
-      expectToken(from, FROM);
-      takeToken();
-      return from;
+      return new TableFromClause(lastMatch(), Collections.EMPTY_LIST);
     }
   }
 
-  private SimpleTableReference parseTableReference() {
+  private SQLParsedElement parseTableReference() {
+    SQLParsedElement primaryTable = parseTablePrimary();
+    return parseJoinedTable(primaryTable);
+  }
+
+  private SQLParsedElement parseJoinedTable(SQLParsedElement joinTarget) {
+    // TODO cgross - other types of joins
+    if(match(JOIN) ||
+       match(INNER, JOIN) ||
+       match(LEFT, OUTER, JOIN) ||
+       match(RIGHT, OUTER, JOIN) ||
+       match(FULL, OUTER, JOIN)) {
+      Token lastMatch = lastMatch();
+      //TODO cgross - grammar says this is a table entry.  Ambiguity?
+      SQLParsedElement table = parseTablePrimary();
+      SQLParsedElement joinSpec = parseJoinSpecification();
+      return parseJoinedTable(new QualifiedJoin(joinTarget, table, joinSpec, getJoinType(lastMatch)));
+    } else {
+      return joinTarget;
+    }
+  }
+
+  private QualifiedJoin.JoinType getJoinType(Token lastMatch) {
+    if (lastMatch.endOf(INNER, JOIN)) {
+      return QualifiedJoin.JoinType.INNER;
+    } else if (lastMatch.endOf(LEFT, OUTER, JOIN)) {
+      return QualifiedJoin.JoinType.LEFT_OUTER;
+    } else if (lastMatch.endOf(RIGHT, OUTER, JOIN)) {
+      return QualifiedJoin.JoinType.RIGHT_OUTER;
+    } else if (lastMatch.endOf(FULL, OUTER, JOIN)) {
+      return QualifiedJoin.JoinType.FULL_OUTER;
+    } else {
+      return QualifiedJoin.JoinType.REGULAR;      
+    }
+  }
+
+  private SQLParsedElement parseJoinSpecification() {
+    if (match(ON)) {
+      Token start = lastMatch();
+      SQLParsedElement condition = parseBooleanValueExpression();
+      return new JoinCondition(start, condition);
+    } else {
+      // TODO cgross - support named columns join ???
+      return unexpectedToken();
+    }
+  }
+
+  private SQLParsedElement parseTablePrimary() {
+    //TODO cgross - shouldn't allow keywords, should support AS and derived column lists
     return new SimpleTableReference(takeToken());
-    //TODO cgross more exotic table references
   }
 
   private SQLParsedElement parseSelectList() {
@@ -438,20 +676,23 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parseSelectSubList() {
-    Token start = _currentToken;
     ArrayList<SQLParsedElement> cols = new ArrayList<SQLParsedElement>();
     do {
       SQLParsedElement value = parseValueExpression();
       if (!(value instanceof ColumnReference)) {
-        value.addParseError(new SQLParseError(value.firstToken(), value.lastToken(), "Only column references are supported right now."));
+        if (match(AS)) {
+          Token colName = takeToken();
+          if (!colName.isSymbol()) {
+            colName.addTemporaryError(new SQLParseError(colName, "Expected a column name!"));
+          }
+          value = new DerivedColumn(value, colName);
+        } else {
+          value.addParseError(new SQLParseError(value.firstToken(), value.lastToken(), "Only column references are supported right now."));
+        }
       }
-      if (value != null) {
-        cols.add(value);
-      } else {
-        break;
-      }
+      cols.add(value);
     } while (match(COMMA));
-    return new ColumnSelectList(start, lastMatch(), cols);
+    return new ColumnSelectList(cols);
   }
 
   private SQLParsedElement parseSetQuantifers() {
@@ -470,4 +711,56 @@ public class QueryParser implements SQLParserConstants {
     }
     return false;
   }
+
+  private boolean match(String str) {
+    if (_currentToken.match(str)) {
+      _currentToken = _currentToken.nextToken();
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private boolean match(String str1, String str2) {
+    if (_currentToken.match(str1) && _currentToken.nextToken().match(str2)) {
+      _currentToken = _currentToken.nextToken().nextToken();
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private boolean peek(String str) {
+    return _currentToken.match(str);
+  }
+
+  private boolean peek(String str1, String str2) {
+    return _currentToken.match(str1) && _currentToken.nextToken().match(str2);
+  }
+
+  private boolean match(String str1, String str2, String str3) {
+    if (_currentToken.match(str1) &&
+      _currentToken.nextToken().match(str2) &&
+      _currentToken.nextToken().nextToken().match(str3)) {
+      _currentToken = _currentToken.nextToken().nextToken().nextToken();
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private Token lastMatch() {
+    return _currentToken.previous();
+  }
+
+  private boolean expect(String str) {
+    if (match(str)) {
+      return true;
+    } else {
+      _currentToken.addTemporaryError(new SQLParseError(_currentToken, _currentToken, "Expected " + str));
+      _currentToken = _currentToken.nextToken();
+      return false;
+    }
+  }
+
 }

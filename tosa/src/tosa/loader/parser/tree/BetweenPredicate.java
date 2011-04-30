@@ -1,5 +1,9 @@
 package tosa.loader.parser.tree;
 
+import gw.lang.reflect.IType;
+
+import java.util.Map;
+
 public class BetweenPredicate extends SQLParsedElement{
 
   private SQLParsedElement _lhs;
@@ -10,7 +14,7 @@ public class BetweenPredicate extends SQLParsedElement{
   private boolean _asymmetric;
 
   public BetweenPredicate(SQLParsedElement lhs, SQLParsedElement bottom, SQLParsedElement top, boolean not, boolean symmetric, boolean asymmeteric) {
-    super(lhs.firstToken(), top.lastToken(), lhs, bottom, top);
+    super(lhs, bottom, top);
     _lhs = lhs;
     _bottom = bottom;
     _top = top;
@@ -20,8 +24,17 @@ public class BetweenPredicate extends SQLParsedElement{
   }
 
   @Override
-  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
-    _lhs.toSQL(prettyPrint, indent, sb);
+  public IType getVarTypeForChild() {
+    if (_lhs.getDBType() != null) {
+      return _lhs.getDBType().getGosuType();
+    } else {
+      return null;
+    }
+  }
+
+  @Override
+  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
+    _lhs.toSQL(prettyPrint, indent, sb, values);
     if(_not) {
       sb.append(" NOT");
     }
@@ -31,9 +44,9 @@ public class BetweenPredicate extends SQLParsedElement{
     } else if (_asymmetric) {
       sb.append("ASYMMETRIC ");
     }
-    _bottom.toSQL(prettyPrint, indent, sb);
+    _bottom.toSQL(prettyPrint, indent, sb, values);
     sb.append(" AND ");
-    _top.toSQL(prettyPrint,indent, sb);
+    _top.toSQL(prettyPrint,indent, sb, values);
   }
 
 }

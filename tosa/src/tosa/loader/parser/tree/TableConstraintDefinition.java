@@ -4,6 +4,7 @@ import tosa.loader.parser.Token;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -38,7 +39,7 @@ public class TableConstraintDefinition extends SQLParsedElement {
   private List<SQLParsedElement> _indexOptions;
 
   public TableConstraintDefinition(Token start, Token end, ConstraintType constraintType, Token symbolName, IndexName indexName, IndexType indexType, List<IndexColumnName> columnNames, List<SQLParsedElement> indexOptions) {
-    super(start, end, collectChildren(indexName, indexType, columnNames,  indexOptions));
+    super(collectChildren(indexName, indexType, columnNames,  indexOptions));
     _constraintType = constraintType;
     _symbolName = symbolName;
     _indexName = indexName;
@@ -48,7 +49,7 @@ public class TableConstraintDefinition extends SQLParsedElement {
   }
 
   @Override
-  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
+  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
     // TODO - AHK
   }
 

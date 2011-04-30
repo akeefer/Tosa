@@ -4,6 +4,7 @@ import gw.fs.IDirectory;
 import gw.fs.IFile;
 import gw.fs.ResourcePath;
 import gw.lang.reflect.TypeSystem;
+import gw.lang.reflect.java.IJavaType;
 import gw.util.GosuExceptionUtil;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -13,7 +14,11 @@ import tosa.api.IDBConnection;
 import tosa.api.IDBObject;
 import tosa.dbmd.DatabaseImpl;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -21,6 +26,8 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Iterator;
+import java.util.Map;
+
 import static org.junit.Assert.*;
 
 public class SQLTypeTest {
@@ -40,11 +47,11 @@ public class SQLTypeTest {
     insertBar("2010-10-10", "Foo");
 
     SQLType sType = parse("SELECT * FROM Bar");
-    Iterator<IDBObject> rs = executeQuery(IDBObject.class, sType).iterator();
+    Iterator<Map> rs = executeQuery(Map.class, sType).iterator();
     assertTrue(rs.hasNext());
-    IDBObject obj = rs.next();
-    assertEquals(slqDate("2010-10-10"), obj.getColumnValue("Date"));
-    assertEquals("Foo", obj.getColumnValue("Misc"));
+    Map obj = rs.next();
+    assertEquals(slqDate("2010-10-10"), obj.get("Date"));
+    assertEquals("Foo", obj.get("Misc"));
     assertFalse(rs.hasNext());
   }
 
@@ -68,11 +75,11 @@ public class SQLTypeTest {
     insertBar("2012-10-11", "Bar");
 
     SQLType sType = parse("SELECT * FROM Bar WHERE Date < '2011-1-1'");
-    Iterator<IDBObject> rs = executeQuery(IDBObject.class, sType).iterator();
+    Iterator<Map> rs = executeQuery(Map.class, sType).iterator();
     assertTrue(rs.hasNext());
-    IDBObject obj = rs.next();
-    assertEquals(slqDate("2010-10-10"), obj.getColumnValue("Date"));
-    assertEquals("Foo", obj.getColumnValue("Misc"));
+    Map obj = rs.next();
+    assertEquals(slqDate("2010-10-10"), obj.get("Date"));
+    assertEquals("Foo", obj.get("Misc"));
     assertFalse(rs.hasNext());
   }
 
@@ -82,11 +89,11 @@ public class SQLTypeTest {
     insertBar("2012-10-11", "Bar");
 
     SQLType sType = parse("SELECT * FROM Bar WHERE Date < :foo");
-    Iterator<IDBObject> rs = executeQuery(IDBObject.class, sType, "2011-1-1").iterator();
+    Iterator<Map> rs = executeQuery(Map.class, sType, "2011-1-1").iterator();
     assertTrue(rs.hasNext());
-    IDBObject obj = rs.next();
-    assertEquals(slqDate("2010-10-10"), obj.getColumnValue("Date"));
-    assertEquals("Foo", obj.getColumnValue("Misc"));
+    Map obj = rs.next();
+    assertEquals(slqDate("2010-10-10"), obj.get("Date"));
+    assertEquals("Foo", obj.get("Misc"));
     assertFalse(rs.hasNext());
   }
 
@@ -96,11 +103,11 @@ public class SQLTypeTest {
     insertBar("2012-10-11", "Bar");
 
     SQLType sType = parse("SELECT * FROM Bar WHERE Date < :foo AND Misc LIKE :bar");
-    Iterator<IDBObject> rs = executeQuery(IDBObject.class, sType, "2011-1-1", "Foo").iterator();
+    Iterator<Map> rs = executeQuery(Map.class, sType, "2011-1-1", "Foo").iterator();
     assertTrue(rs.hasNext());
-    IDBObject obj = rs.next();
-    assertEquals(slqDate("2010-10-10"), obj.getColumnValue("Date"));
-    assertEquals("Foo", obj.getColumnValue("Misc"));
+    Map obj = rs.next();
+    assertEquals(slqDate("2010-10-10"), obj.get("Date"));
+    assertEquals("Foo", obj.get("Misc"));
     assertFalse(rs.hasNext());
   }
 
@@ -109,7 +116,7 @@ public class SQLTypeTest {
     insertBar("2010-10-10", "Foo");
 
     SQLType sType = parse("SELECT * FROM Bar WHERE Date IS NOT NULL");
-    Iterator<IDBObject> rs = executeQuery(IDBObject.class, sType).iterator();
+    Iterator<Map> rs = executeQuery(Map.class, sType).iterator();
     assertTrue(rs.hasNext());
     rs.next();
     assertFalse(rs.hasNext());
@@ -120,7 +127,7 @@ public class SQLTypeTest {
     insertBar("2010-10-10", "Foo");
 
     SQLType sType = parse("SELECT * FROM Bar WHERE Date IS NULL");
-    Iterator<IDBObject> rs = executeQuery(IDBObject.class, sType).iterator();
+    Iterator<Map> rs = executeQuery(Map.class, sType).iterator();
     assertFalse(rs.hasNext());
   }
 
@@ -153,7 +160,7 @@ public class SQLTypeTest {
 
 
   private <T> Iterable<T> executeQuery(Class<T> clz, SQLType sType, Object... args) {
-    return (Iterable<T>) sType.getTypeInfo().invokeQuery(args);
+    return (Iterable<T>) sType.getTypeInfo().invokeQuery( IJavaType.MAP.getGenericType().getParameterizedType(IJavaType.STRING, IJavaType.OBJECT), args);
   }
 
   private SQLType parse(String sql) {
@@ -207,7 +214,7 @@ public class SQLTypeTest {
 
     @Override
     public String getName() {
-      throw new UnsupportedOperationException();
+      return "String : " + _content;
     }
 
     @Override
