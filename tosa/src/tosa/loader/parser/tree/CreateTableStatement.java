@@ -4,6 +4,7 @@ import tosa.loader.parser.Token;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -17,12 +18,12 @@ public class CreateTableStatement extends SQLParsedElement {
   private Token _tableName;
 
   public CreateTableStatement(Token first, Token last, Token tableName, List<SQLParsedElement> children) {
-    super(first, last, children);
+    super(first, children, last);
     _tableName = tableName;
   }
 
   @Override
-  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
+  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
     // TODO - AHK
 
   }

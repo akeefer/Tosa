@@ -1,6 +1,9 @@
 package tosa.loader.parser.tree;
 
-import tosa.loader.parser.Token;
+import gw.lang.reflect.IType;
+import gw.lang.reflect.java.IJavaType;
+
+import java.util.Map;
 
 public class LikePredicate extends SQLParsedElement{
   private SQLParsedElement _lhs;
@@ -8,19 +11,24 @@ public class LikePredicate extends SQLParsedElement{
   private boolean _not;
 
   public LikePredicate(SQLParsedElement lhs, SQLParsedElement pattern, boolean notFound) {
-    super(lhs.firstToken(), pattern.lastToken(), lhs, pattern);
+    super(lhs, pattern);
     _lhs = lhs;
     _pattern = pattern;
     _not = notFound;
   }
 
   @Override
-  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb) {
-    _lhs.toSQL(prettyPrint, indent, sb);
+  public IType getVarTypeForChild() {
+    return IJavaType.STRING;
+  }
+
+  @Override
+  protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
+    _lhs.toSQL(prettyPrint, indent, sb, values);
     if (_not) {
       sb.append(" NOT");
     }
     sb.append(" LIKE ");
-    _pattern.toSQL(prettyPrint, indent, sb);
+    _pattern.toSQL(prettyPrint, indent, sb, values);
   }
 }

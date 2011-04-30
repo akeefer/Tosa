@@ -1,1 +1,1 @@
-SELECT * FROM Bar where Date BETWEEN :date1 AND :date2
+SELECT * FROM Bar where Date BETWEEN :start AND :end

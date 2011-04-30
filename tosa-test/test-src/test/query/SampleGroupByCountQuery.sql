@@ -1,0 +1,3 @@
+SELECT Str2, COUNT(*) AS Cnt
+FROM ForGroupByTests
+GROUP BY Str2

@@ -1,5 +1,8 @@
 package tosa.loader.parser;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by IntelliJ IDEA.
  * User: alan
@@ -9,21 +12,34 @@ package tosa.loader.parser;
  */
 public interface SQLParserConstants {
 
-  public static final String CLOSE_PAREN = ")";
-  public static final String COMMA = ",";
-  public static final String EQUALS = "=";
-  public static final String OPEN_PAREN = "(";
-  public static final String SEMI_COLON = ";";
-  public static final String ASTERISK = "*";
-  public static final String EQ_OP = "=";
-  public static final String LT_OP = "<";
-  public static final String LTEQ_OP = "<=";
-  public static final String GT_OP = ">";
-  public static final String GTEQ_OP = ">=";
-  public static final String PLUS_OP = "+";
-  public static final String MINUS_OP = "+";
-  public static final String TIMES_OP = "*";
-  public static final String DIV_OP = "/";
+  class OPS {
+    private static final List<String> OPS = new ArrayList<String>();
+    public static List<String> get(){
+      return OPS;
+    }
+
+    private static String reg(String op) {
+      OPS.add(op);
+      return op;
+    }
+  }
+
+  public static final String CLOSE_PAREN = OPS.reg(")");
+  public static final String COMMA = OPS.reg(",");
+  public static final String EQUALS = OPS.reg("=");
+  public static final String OPEN_PAREN = OPS.reg("(");
+  public static final String SEMI_COLON = OPS.reg(";");
+  public static final String ASTERISK = OPS.reg("*");
+  public static final String EQ_OP = OPS.reg("=");
+  public static final String LT_OP = OPS.reg("<");
+  public static final String LTEQ_OP = OPS.reg("<=");
+  public static final String GT_OP = OPS.reg(">");
+  public static final String GTEQ_OP = OPS.reg(">=");
+  public static final String PLUS_OP = OPS.reg("+");
+  public static final String MINUS_OP = OPS.reg("-");
+  public static final String TIMES_OP = OPS.reg("*");
+  public static final String DIV_OP = OPS.reg("/");
+  public static final String CONCAT_OP = OPS.reg("||");
 
   public static final String ACTION = "ACTION";
   public static final String ASC = "ASC";
@@ -224,4 +240,29 @@ public interface SQLParserConstants {
   public static final String BETWEEN = "BETWEEN";
   public static final String SYMMETRIC = "SYMMETRIC";
   public static final String ASYMMETRIC = "ASYMMETRIC";
+  public static final String JOIN = "JOIN";
+  public static final String INNER = "INNER";
+  public static final String LEFT = "LEFT";
+  public static final String RIGHT = "RIGHT";
+  public static final String OUTER = "OUTER";
+  public static final String ORDER = "ORDER";
+  public static final String GROUP = "GROUP";
+
+  public static final String COUNT = "COUNT";
+  public static final String AVG = "AVG";
+  public static final String MAX = "MAX";
+  public static final String MIN = "MIN";
+  public static final String SUM = "SUM";
+  public static final String MOD = "MOD";
+  public static final String ABS = "ABS";
+
+  public static final String SOME = "SOME";
+
+  public static final String TRUE = "TRUE";
+  public static final String FALSE = "FALSE";
+
+  public static final String UPPER = "UPPER";
+  public static final String LOWER = "LOWER";
+
+  public static final String OPTIONAL = "OPTIONAL";
 }

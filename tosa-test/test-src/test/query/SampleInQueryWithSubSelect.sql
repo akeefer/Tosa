@@ -1,0 +1,4 @@
+SELECT *
+FROM Bar
+WHERE
+  Misc IN (SELECT DISTINCT Misc FROM Bar)

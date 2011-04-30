@@ -1,0 +1,3 @@
+SELECT * FROM Bar
+WHERE
+  'MISC' = UPPER(Misc)

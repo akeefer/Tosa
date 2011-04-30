@@ -1,0 +1,2 @@
+SELECT * FROM Bar
+FULL OUTER JOIN Foo ON Foo.Bar_id=Bar.id

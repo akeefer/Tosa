@@ -2,11 +2,10 @@ package tosa.loader.parser;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class Tokenizer {
-
-  private static final String[] OPERATORS = {".", "+", "(", ")"};
 
   private String _currentStringValue;
   private String _contents;
@@ -17,9 +16,10 @@ public class Tokenizer {
   private int _currentStartOffset;
   private int _currentEndOffset;
   private TokenType _type;
+  private List<String> _operators;
 
-
-  public Tokenizer(String contents) {
+  public Tokenizer(String contents, List<String> operators) {
+    _operators = operators;
     _contents = contents;
     _line = 1;
     _col = 1;
@@ -121,7 +121,7 @@ public class Tokenizer {
   }
 
   private boolean consumeOperator() {
-    for (String operator : OPERATORS) {
+    for (String operator : _operators) {
       boolean matched = true;
       for (int i = 0; i < operator.length(); i++) {
         if (!canPeek(i) || peek(i) != operator.charAt(i)) {
