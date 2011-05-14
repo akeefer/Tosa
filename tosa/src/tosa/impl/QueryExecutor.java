@@ -15,14 +15,11 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 // TODO - This class likely needs a different name
-public interface SimpleQueryExecutor {
+public interface QueryExecutor {
 
-  // TODO - AHK - Should these be in terms of IDBTable or IDBType?
-  int countWhere(String profilerTag, IDBType targetType, String whereClause, IPreparedStatementParameter... parameters);
+  int count(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters);
 
-  int count(String profilerTag, IDBType targetType, String sqlStatement, IPreparedStatementParameter... parameters);
-
-  List<IDBObject> find(String profilerTag, IDBType targetType, String sqlStatement, IPreparedStatementParameter... parameters);
+  List<IDBObject> selectEntity(String profilerTag, IDBType targetType, String sqlStatement, IPreparedStatementParameter... parameters);
 
   void update(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters);
 }

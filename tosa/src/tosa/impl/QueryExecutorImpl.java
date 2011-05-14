@@ -2,11 +2,7 @@ package tosa.impl;
 
 import org.slf4j.profiler.Profiler;
 import tosa.CachedDBObject;
-import tosa.api.IDBColumn;
-import tosa.api.IDBObject;
-import tosa.api.IDBTable;
-import tosa.api.IPreparedStatementParameter;
-import tosa.api.IQueryResultProcessor;
+import tosa.api.*;
 import tosa.loader.IDBType;
 import tosa.loader.Util;
 
@@ -22,24 +18,23 @@ import java.util.List;
  * Time: 3:41 PM
  * To change this template use File | Settings | File Templates.
  */
-public class SimpleQueryExecutorImpl implements SimpleQueryExecutor {
+public class QueryExecutorImpl implements QueryExecutor {
+
+  private IDatabase _db;
+
+  public QueryExecutorImpl(IDatabase db) {
+    _db = db;
+  }
 
   // TODO - AHK - Clean up the query execution API for reals . . .
 
   @Override
-  public int countWhere(String profilerTag, IDBType targetType, String whereClause, IPreparedStatementParameter... parameters) {
-    // TODO - AHK - Quoting
-    String fullQuery = "SELECT count(*) as count FROM \"" + targetType.getTable().getName() + "\" WHERE " + whereClause;
-    return count(profilerTag, targetType, fullQuery, parameters);
-  }
-
-  @Override
-  public int count(String profilerTag, IDBType targetType, String sqlStatement, IPreparedStatementParameter... parameters) {
+  public int count(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
     // TODO - AHK - Verify that it starts with "SELECT count(*) as count"
     Profiler profiler = Util.newProfiler(profilerTag);
     profiler.start(sqlStatement + " (" + Arrays.asList(parameters) + ")");
     try {
-      List<Integer> results = targetType.getTable().getDatabase().getDBExecutionKernel().executeSelect(
+      List<Integer> results = _db.getDBExecutionKernel().executeSelect(
           sqlStatement,
           new CountQueryResultProcessor(),
           parameters);
@@ -63,12 +58,13 @@ public class SimpleQueryExecutorImpl implements SimpleQueryExecutor {
   }
 
   @Override
-  public List<IDBObject> find(String profilerTag, IDBType type, String sqlStatement, IPreparedStatementParameter... parameters) {
+  public List<IDBObject> selectEntity(String profilerTag, IDBType type, String sqlStatement, IPreparedStatementParameter... parameters) {
     // TODO - AHK - Ensure that it starts with SELECT * ?
+    // TODO - AHK - Verify that the db type is from the database we have?
     Profiler profiler = Util.newProfiler(profilerTag);
     profiler.start(sqlStatement + " (" + Arrays.asList(sqlStatement) + ")");
     try {
-      return type.getTable().getDatabase().getDBExecutionKernel().executeSelect(sqlStatement,
+      return _db.getDBExecutionKernel().executeSelect(sqlStatement,
           new CachedDBQueryResultProcessor(type),
           parameters);
     } finally {
@@ -78,7 +74,15 @@ public class SimpleQueryExecutorImpl implements SimpleQueryExecutor {
 
   @Override
   public void update(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
-    // TODO - AHK
+    // TODO - AHK - Verify it starts with UPDATE ?
+    Profiler profiler = Util.newProfiler(profilerTag);
+    profiler.start(sqlStatement + " (" + Arrays.asList(sqlStatement) + ")");
+    try {
+      _db.getDBExecutionKernel().executeUpdate(sqlStatement,
+          parameters);
+    } finally {
+      profiler.stop();
+    }
   }
 
   // TODO - AHK - This is a duplicate AND it's public

@@ -68,10 +68,10 @@ public class EntityCollectionImplTest {
   }
 
   private EntityCollectionImpl createList(IDBObject bar) {
-    return createList(bar, new SimpleQueryExecutorImpl());
+    return createList(bar, new QueryExecutorImpl(bar.getDBTable().getDatabase()));
   }
 
-  private EntityCollectionImpl createList(IDBObject bar, SimpleQueryExecutor queryExecutor) {
+  private EntityCollectionImpl createList(IDBObject bar, QueryExecutor queryExecutor) {
     IDBType fooType = (IDBType) TypeSystem.getByFullName("test.testdb.Foo");
     EntityCollectionImpl foos = new EntityCollectionImpl(bar, fooType, fooType.getTable().getColumn("Bar_id"), queryExecutor);
     return foos;
@@ -123,19 +123,15 @@ public class EntityCollectionImplTest {
   @Test
   public void testSizeIssuesCountStarQueryIfArrayHasNotBeenLoaded() {
     IDBObject bar = createAndCommitBar();
-    EntityCollectionImpl list = createList(bar, new SimpleQueryExecutor() {
+    EntityCollectionImpl list = createList(bar, new QueryExecutor() {
+
       @Override
-      public int countWhere(String profilerTag, IDBType targetType, String whereClause, IPreparedStatementParameter... parameters) {
+      public int count(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
         return 42;
       }
 
       @Override
-      public int count(String profilerTag, IDBType targetType, String sqlStatement, IPreparedStatementParameter... parameters) {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public List<IDBObject> find(String profilerTag, IDBType targetType, String sqlStatement, IPreparedStatementParameter... parameters) {
+      public List<IDBObject> selectEntity(String profilerTag, IDBType targetType, String sqlStatement, IPreparedStatementParameter... parameters) {
         throw new UnsupportedOperationException();
       }
 
@@ -345,9 +341,9 @@ public class EntityCollectionImplTest {
     // TODO - AHK - Verify that the results haven't been loaded somehow
     list.add(foo2);
     assertEquals(3, list.size());
-    assertEquals(foo1.getColumnValue("id"), list.get(0));
-    assertEquals(foo3.getColumnValue("id"), list.get(1));
-    assertEquals(foo2.getColumnValue("id"), list.get(2));
+    assertEquals(foo1.getColumnValue("id"), list.get(0).getColumnValue("id"));
+    assertEquals(foo2.getColumnValue("id"), list.get(1).getColumnValue("id"));
+    assertEquals(foo3.getColumnValue("id"), list.get(2).getColumnValue("id"));
   }
 
   @Test
@@ -360,12 +356,12 @@ public class EntityCollectionImplTest {
 
     EntityCollectionImpl list = createList(bar);
     assertEquals(2, list.size());
-    // TODO - AHK - For the load of the cached result set
+    // TODO - AHK - Force the load of the cached result set
     list.add(foo2);
     assertEquals(3, list.size());
-    assertEquals(foo1.getColumnValue("id"), list.get(0));
-    assertEquals(foo3.getColumnValue("id"), list.get(1));
-    assertEquals(foo2.getColumnValue("id"), list.get(2));
+    assertEquals(foo1.getColumnValue("id"), list.get(0).getColumnValue("id"));
+    assertEquals(foo3.getColumnValue("id"), list.get(1).getColumnValue("id"));
+    assertEquals(foo2.getColumnValue("id"), list.get(2).getColumnValue("id"));
   }
 
   @Test
