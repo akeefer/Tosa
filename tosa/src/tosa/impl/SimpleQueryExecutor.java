@@ -23,4 +23,6 @@ public interface SimpleQueryExecutor {
   int count(String profilerTag, IDBType targetType, String sqlStatement, IPreparedStatementParameter... parameters);
 
   List<IDBObject> find(String profilerTag, IDBType targetType, String sqlStatement, IPreparedStatementParameter... parameters);
+
+  void update(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters);
 }

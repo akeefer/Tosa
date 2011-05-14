@@ -138,6 +138,11 @@ public class EntityCollectionImplTest {
       public List<IDBObject> find(String profilerTag, IDBType targetType, String sqlStatement, IPreparedStatementParameter... parameters) {
         throw new UnsupportedOperationException();
       }
+
+      @Override
+      public void update(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
+        throw new UnsupportedOperationException();
+      }
     });
     assertEquals(42, list.size());
   }

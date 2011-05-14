@@ -1,5 +1,7 @@
 package tosa.api;
 
+import gw.lang.reflect.features.PropertyReference;
+
 import java.util.List;
 
 /**
@@ -19,4 +21,8 @@ public interface EntityCollection<T extends IDBObject> extends Iterable<T> {
   void add(T element);
 
   void remove(T element);
+
+  void load();
+
+  void unload();
 }

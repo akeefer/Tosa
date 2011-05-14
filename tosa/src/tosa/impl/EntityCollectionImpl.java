@@ -90,7 +90,10 @@ value = new QueryExecutor().findFromSql(
           GosuExceptionUtil.forceThrow(e);
         }
       } else {
-        // Issue the DB update
+        // TODO - AHK - Issue the DB update
+        // TODO - AHK - Profiler tag name
+        // TODO - AHK - Quoting
+        // _queryExecutor.update("TODO", "UPDATE \"" + _fkColumn.getTable().getName() + "\" SET \"" + _fkColumn.getName() + "\" = ? WHERE \"id\" = ?", idValue, fkValue);
       }
       // TODO - Set the back-pointer
       // TODO - AHK - Unclear if the list should be re-sorted, or if it should be added in insertion order
@@ -106,7 +109,17 @@ value = new QueryExecutor().findFromSql(
 
   @Override
   public void remove(T element) {
-    //To change body of implemented methods use File | Settings | File Templates.
+    // TODO - AHK
+  }
+
+  @Override
+  public void load() {
+    // TODO - AHK
+  }
+
+  @Override
+  public void unload() {
+    // TODO - AHK
   }
 
   private void loadResultsIfNecessary() {

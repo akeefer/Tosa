@@ -76,6 +76,11 @@ public class SimpleQueryExecutorImpl implements SimpleQueryExecutor {
     }
   }
 
+  @Override
+  public void update(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
+    // TODO - AHK
+  }
+
   // TODO - AHK - This is a duplicate AND it's public
   // TODO - AHK The general query execution API here just needs a weeeee bit of help
   public static class CachedDBQueryResultProcessor implements IQueryResultProcessor<IDBObject> {
