@@ -18,6 +18,12 @@ public interface IDBObject extends IGosuObject {
 
   void setColumnValue(String columnName, Object value);
 
+  IDBObject getFkValue(String columnName);
+
+  void setFkValue(String columnName, IDBObject value);
+
+  Long getId();
+
   boolean isNew();
 
   void update() throws SQLException;

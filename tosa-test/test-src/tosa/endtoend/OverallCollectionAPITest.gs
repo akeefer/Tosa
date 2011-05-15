@@ -26,9 +26,18 @@ class OverallCollectionAPITest {
     var foo = new Foo()
     bar.Foos.add(foo)
 
+    assertFooIsInBarsArrayInDatabase(bar, foo)
+    assertFooIsInBarsArrayInMemory(bar, foo)
+  }
+
+  private function assertFooIsInBarsArrayInDatabase(bar : Bar, foo : Foo) : Foo {
     var queryResults = Foo.findWithSql("select * from \"Foo\" where \"Bar_id\" = ${bar.id}")
     Assert.assertEquals(1, queryResults.size())
+    Assert.assertEquals(queryResults.get(0).id, foo.id)
+    return queryResults.get(0)
+  }
 
+  private function assertFooIsInBarsArrayInMemory(bar : Bar, foo : Foo) {
     Assert.assertEquals(1, bar.Foos.size())
     Assert.assertSame(foo, bar.Foos.get(0))
   }
@@ -37,6 +46,7 @@ class OverallCollectionAPITest {
   function testArrayAdditionToNotYetInsertedObjectThrowsException() {
     var bar = new Bar()
     var foo = new Foo()
+
     try {
       bar.Foos.add(foo)
       Assert.fail("Expected an IllegalStateException")
@@ -50,18 +60,14 @@ class OverallCollectionAPITest {
     var bar = new Bar()
     bar.update()
 
-    var foo = new Foo()
-    foo.FirstName = "First"
+    var foo = new Foo(){ :FirstName = "First"}
     bar.Foos.add(foo)
     foo.LastName = "Last"
 
-    var queryResults = Foo.findWithSql("select * from \"Foo\" where \"Bar_id\" = ${bar.id}")
-    Assert.assertEquals(1, queryResults.size())
-    Assert.assertEquals("First", queryResults.get(0).FirstName)
-    Assert.assertEquals(null, queryResults.get(0).LastName)
-
-    Assert.assertEquals(1, bar.Foos.size())
-    Assert.assertSame(foo, bar.Foos.get(0))
+    var fooInDB = assertFooIsInBarsArrayInDatabase(bar, foo)
+    Assert.assertEquals("First", fooInDB.FirstName)
+    Assert.assertEquals(null, fooInDB.LastName)
+    assertFooIsInBarsArrayInMemory(bar, foo)
   }
 
   @Test
@@ -75,13 +81,10 @@ class OverallCollectionAPITest {
     foo.LastName = "Last"
     bar.Foos.add(foo)
 
-    var queryResults = Foo.findWithSql("select * from \"Foo\" where \"Bar_id\" = ${bar.id}")
-    Assert.assertEquals(1, queryResults.size())
-    Assert.assertEquals(null, queryResults.get(0).FirstName)
-    Assert.assertEquals(null, queryResults.get(0).LastName)
-
-    Assert.assertEquals(1, bar.Foos.size())
-    Assert.assertSame(foo, bar.Foos.get(0))
+    var fooInDB = assertFooIsInBarsArrayInDatabase(bar, foo)
+    Assert.assertEquals(null, fooInDB.FirstName)
+    Assert.assertEquals(null, fooInDB.LastName)
+    assertFooIsInBarsArrayInMemory(bar, foo)
   }
 
   @Test
@@ -93,16 +96,12 @@ class OverallCollectionAPITest {
     foo.update()
     bar.Foos.add(foo)
 
-    var queryResults = Foo.findWithSql("select * from \"Foo\" where \"Bar_id\" = ${bar.id}")
-    Assert.assertEquals(1, queryResults.size())
-
-    Assert.assertEquals(1, bar.Foos.size())
-    Assert.assertSame(foo, bar.Foos.get(0))
+    assertFooIsInBarsArrayInDatabase(bar, foo)
+    assertFooIsInBarsArrayInMemory(bar, foo)
 
     bar.Foos.remove(foo)
-    queryResults = Foo.findWithSql("select * from \"Foo\" where \"Bar_id\" = ${bar.id}")
+    var queryResults = Foo.findWithSql("select * from \"Foo\" where \"Bar_id\" = ${bar.id}")
     Assert.assertEquals(0, queryResults.size())
-
     Assert.assertEquals(0, bar.Foos.size())
   }
 

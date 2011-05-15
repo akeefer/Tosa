@@ -85,30 +85,30 @@ value = new QueryExecutor().findFromSql(
 
     Object existingId = element.getColumnValue(_fkColumn.getName());
     if (existingId == null) {
+      // We always set the back-pointer and the column
+      element.setFkValue(_fkColumn.getName(), _owner);
       if (element.isNew()) {
-        element.setColumnValue(_fkColumn.getName(), _owner.getColumnValue(DBTypeInfo.ID_COLUMN));
+        // For newly-created elements, we insert them immediately
         try {
           element.update();
         } catch (SQLException e) {
           GosuExceptionUtil.forceThrow(e);
         }
       } else {
-        // TODO - AHK - Issue the DB update
-        // TODO - AHK - Profiler tag name
-        // TODO - AHK - Quoting
+        // For entities already in the database, we issue the update statement in the database directly
         IDBColumn idColumn = _fkColumn.getTable().getColumn(DBTypeInfo.ID_COLUMN);
         String updateSql = SimpleSqlBuilder.update(_fkColumn.getTable()).set(_fkColumn, "?").where(idColumn, "=", "?").toString();
         IPreparedStatementParameter fkParam = idColumn.wrapParameterValue(_owner.getColumnValue(DBTypeInfo.ID_COLUMN));
         IPreparedStatementParameter idParam = idColumn.wrapParameterValue(element.getColumnValue(DBTypeInfo.ID_COLUMN));
         _queryExecutor.update("EntityCollectionImpl.add()", updateSql, fkParam, idParam);
       }
-      // TODO - Set the back-pointer
-      // TODO - AHK - Unclear if the list should be re-sorted, or if it should be added in insertion order
       if (_cachedResults != null) {
+        // TODO - AHK - Unclear if the list should be re-sorted, or if it should be added in insertion order
         _cachedResults.add(element);
       }
     } else if (existingId.equals(_owner.getColumnValue(DBTypeInfo.ID_COLUMN))) {
-      // That's fine, it's a no-op
+      // That's fine, it's a no-op, but we still want to set the back-pointer
+      element.setFkValue(_fkColumn.getName(), _owner);
     } else {
       throw new IllegalArgumentException("The element with id " + element.getColumnValue(DBTypeInfo.ID_COLUMN) + " is already attached to another owner, with id " + existingId);
     }
@@ -121,18 +121,16 @@ value = new QueryExecutor().findFromSql(
 
   @Override
   public void load() {
-    // TODO - AHK
+    loadResultsIfNecessary();
   }
 
   @Override
   public void unload() {
-    // TODO - AHK
+    _cachedResults = null;
   }
 
   private void loadResultsIfNecessary() {
     if (_cachedResults == null) {
-      // TODO - AHK - Profiler tag
-      // TODO - AHK - Constant for the id column name
       IDBColumn idColumn = _fkColumn.getTable().getColumn(DBTypeInfo.ID_COLUMN);
       String sql = SimpleSqlBuilder.select("*").from(_fkColumn.getTable()).where(_fkColumn, "=", "?").order_by(idColumn).toString();
       IPreparedStatementParameter param = _fkColumn.wrapParameterValue(_owner.getColumnValue(DBTypeInfo.ID_COLUMN));

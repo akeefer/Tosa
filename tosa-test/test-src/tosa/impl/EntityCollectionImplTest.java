@@ -270,13 +270,14 @@ public class EntityCollectionImplTest {
   }
 
   @Test
-  public void testAddIsANoOpIfEntityIsAlreadyInThisCollection() {
+  public void testAddSetsFkPointerIfEntityIsAlreadyInThisCollection() {
     IDBObject bar = createAndCommitBar();
     IDBObject foo = createAndCommitFoo(bar);
     EntityCollectionImpl list = createList(bar);
     assertEquals(1, list.size());
     list.add(foo);
     assertEquals(1, list.size());
+    // TODO - AHK - Test that the back-pointer is set
   }
 
   @Test
@@ -356,7 +357,7 @@ public class EntityCollectionImplTest {
 
     EntityCollectionImpl list = createList(bar);
     assertEquals(2, list.size());
-    // TODO - AHK - Force the load of the cached result set
+    list.load();
     list.add(foo2);
     assertEquals(3, list.size());
     assertEquals(foo1.getColumnValue("id"), list.get(0).getColumnValue("id"));

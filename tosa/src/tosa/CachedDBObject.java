@@ -4,9 +4,13 @@ import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.gs.IGosuObject;
 import org.slf4j.profiler.Profiler;
 import tosa.api.*;
+import tosa.dbmd.DBTableImpl;
+import tosa.impl.QueryExecutorImpl;
+import tosa.impl.SimpleSqlBuilder;
 import tosa.loader.DBTypeInfo;
 import tosa.loader.IDBType;
 import tosa.loader.Util;
+import tosa.loader.data.DBColumnTypeImpl;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -25,8 +29,21 @@ import java.util.Map;
 public class CachedDBObject implements IDBObject {
   private Map<String, Object> _columns;
   private Map<String, Object> _cachedValues;
+  private Map<String, IDBObject> _cachedFks;
+  private Map<String, EntityCollection> _cachedArrays;
   private IDBType _type;
   private boolean _new;
+
+  public CachedDBObject(IDBType type, boolean isNew) {
+    // TODO - AHK
+    _type = (IDBType) TypeSystem.getOrCreateTypeReference(type);
+    _new = isNew;
+    _columns = new HashMap<String, Object>();
+    _cachedValues = new HashMap<String, Object>(); // TODO - AHK - Remove this
+    _cachedFks = new HashMap<String, IDBObject>();
+    _cachedArrays = new HashMap<String, EntityCollection>();
+    // TODO - AHK - There's room for perf improvements here
+  }
 
   @Override
   public IDBType getIntrinsicType() {
@@ -58,21 +75,63 @@ public class CachedDBObject implements IDBObject {
     _columns.put(columnName, value);
   }
 
+  @Override
+  public IDBObject getFkValue(String columnName) {
+    IDBColumn column = getAndValidateFkColumn(columnName);
+
+    IDBObject fkObject = _cachedFks.get(columnName);
+    if (fkObject != null) {
+      return fkObject;
+    }
+
+    Long fkID = (Long) _columns.get(columnName);
+    if (fkID == null) {
+      return null;
+    }
+
+    fkObject = loadEntity(column.getFKTarget(), fkID);
+    if (fkObject == null) {
+      throw new IllegalStateException("Column " + columnName + " on table " + _type.getTable().getName() + " has a value of " + fkID + ", but no corresponding row was found in the database");
+    }
+
+    return fkObject;
+  }
+
+  @Override
+  public void setFkValue(String columnName, IDBObject value) {
+    IDBColumn column = getAndValidateFkColumn(columnName);
+    // TODO - AHK - Validate that the value is of the correct type
+    _columns.put(columnName, value.getId());
+    _cachedFks.put(columnName, value);
+  }
+
+  private IDBColumn getAndValidateFkColumn(String columnName) {
+    IDBColumn column = _type.getTable().getColumn(columnName);
+    if (column == null) {
+      throw new IllegalArgumentException("Column name " + columnName + " is not a valid column on the  " + _type.getTable().getName() + " table");
+    }
+    if (!column.isFK()) {
+      throw new IllegalArgumentException("Column " + columnName + " on table " + _type.getTable().getName() + " is not a foreign key");
+    }
+    return column;
+  }
+
+  @Override
+  public Long getId() {
+    return (Long) getColumnValue(DBTypeInfo.ID_COLUMN);
+  }
+
+  // TODO - AHK - Kill this
   public Map<String, Object> getColumns() {
     return _columns;
   }
 
+   // TODO - AHK - Kill this
   public Map<String, Object> getCachedValues() {
     return _cachedValues;
   }
 
-  public CachedDBObject(IDBType type, boolean isNew) {
-    // TODO - AHK
-    _type = (IDBType) TypeSystem.getOrCreateTypeReference(type);
-    _new = isNew;
-    _columns = new HashMap<String, Object>();
-    _cachedValues = new HashMap<String, Object>();
-  }
+
 
   @Override
   public void update() throws SQLException {
@@ -192,6 +251,23 @@ public class CachedDBObject implements IDBObject {
       }
     }
     return false;
+  }
+
+  private IDBObject loadEntity(IDBTable table, Long id) {
+    IDBColumn idColumn = table.getColumn(DBTypeInfo.ID_COLUMN);
+    // TODO - AHK - Need some better way to convert between the two
+    IDBType resultType = (IDBType) TypeSystem.getByFullName(table.getDatabase().getNamespace() + "." + table.getName());
+    String sql = SimpleSqlBuilder.select("*").from(table.getName()).where(idColumn, "=", "?").toString();
+    IPreparedStatementParameter param = idColumn.wrapParameterValue(id);
+    // TODO - AHK - Fetch this from somewhere?
+    List<IDBObject> results = new QueryExecutorImpl(table.getDatabase()).selectEntity("CachedDBObject.loadEntity()", resultType, sql, param);
+    if (results.isEmpty()) {
+      return null;
+    } else if (results.size() == 1) {
+      return results.get(0);
+    } else {
+      throw new IllegalStateException("Expected to get one result back from query " + sql + " (" + param + ") but got " + results.size() );
+    }
   }
 
 }

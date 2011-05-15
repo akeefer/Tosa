@@ -1,16 +1,16 @@
 CREATE TABLE "Bar"(
-    "id" INT PRIMARY KEY AUTO_INCREMENT,
+    "id" BIGINT PRIMARY KEY AUTO_INCREMENT,
     "Date" DATE,
     "Misc" VARCHAR(50)
 );
 
 CREATE TABLE "SortPage"(
-    "id" INT PRIMARY KEY AUTO_INCREMENT,
+    "id" BIGINT PRIMARY KEY AUTO_INCREMENT,
     "Number" INT
 );
 
 CREATE TABLE "ForOrderByTests" (
-    "id" INT PRIMARY KEY AUTO_INCREMENT,
+    "id" BIGINT PRIMARY KEY AUTO_INCREMENT,
     "Number" INT,
     "Date" DATE,
     "Str" VARCHAR(50),
@@ -18,7 +18,7 @@ CREATE TABLE "ForOrderByTests" (
 );
 
 CREATE TABLE "ForGroupByTests" (
-    "id" INT PRIMARY KEY AUTO_INCREMENT,
+    "id" BIGINT PRIMARY KEY AUTO_INCREMENT,
     "Number" INT,
     "Date" DATE,
     "Str" VARCHAR(50),
@@ -26,12 +26,12 @@ CREATE TABLE "ForGroupByTests" (
 );
 
 CREATE TABLE "ForNumericTests" (
-    "id" INT PRIMARY KEY AUTO_INCREMENT,
+    "id" BIGINT PRIMARY KEY AUTO_INCREMENT,
     "Number" INT
 );
 
 CREATE TABLE "Foo"(
-    "id" INT PRIMARY KEY AUTO_INCREMENT,
+    "id" BIGINT PRIMARY KEY AUTO_INCREMENT,
     "FirstName" VARCHAR(50),
     "LastName" VARCHAR(50),
     "Bar_id" INT,

@@ -122,7 +122,7 @@ class DBTypeInfoTest {
 
       var idProp = typeinfo.getProperty("id")
       Assert.assertNotNull(idProp)
-      Assert.assertEquals(Integer, idProp.FeatureType)
+      Assert.assertEquals(Long, idProp.FeatureType)
 
       var firstNameProp = typeinfo.getProperty("FirstName")
       Assert.assertNotNull(firstNameProp)
@@ -153,7 +153,7 @@ class DBTypeInfoTest {
 
       idProp = typeinfo.getProperty("id")
       Assert.assertNotNull(idProp)
-      Assert.assertEquals(Integer, idProp.FeatureType)
+      Assert.assertEquals(Long, idProp.FeatureType)
 
       var miscProp = typeinfo.getProperty("Misc")
       Assert.assertNotNull(miscProp)
