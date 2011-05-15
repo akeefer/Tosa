@@ -72,6 +72,8 @@ public class CachedDBObject implements IDBObject {
 
   @Override
   public void setColumnValue(String columnName, Object value) {
+    // TODO - AHK - Validate that the column name is legal and that the value is legal
+    // TODO - AHK - Invalidate any fk back-pointers associated with that column if the value has changed
     _columns.put(columnName, value);
   }
 

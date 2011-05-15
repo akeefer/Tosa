@@ -6,6 +6,7 @@ import org.junit.Test;
 import test.TestEnv;
 import tosa.CachedDBObject;
 import tosa.api.IDBObject;
+import tosa.api.IDatabase;
 import tosa.api.IPreparedStatementParameter;
 import tosa.dbmd.DatabaseImpl;
 import tosa.loader.DBTypeInfo;
@@ -79,7 +80,10 @@ public class EntityCollectionImplTest {
 
   @Test
   public void testSizeReturnsZeroIfArrayIsEmptyAndHasBeenLoaded() {
-    // TODO
+    IDBObject bar = createAndCommitBar();
+    EntityCollectionImpl list = createList(bar);
+    list.load();
+    assertEquals(0, list.size());
   }
 
   @Test
@@ -91,7 +95,12 @@ public class EntityCollectionImplTest {
 
   @Test
   public void testSizeReturnsCorrectSizeForNonEmptyLoadedArray() {
-   // TODO
+    IDBObject bar = createAndCommitBar();
+    createAndCommitFoo(bar);
+    createAndCommitFoo(bar);
+    EntityCollectionImpl list = createList(bar);
+    list.load();
+    assertEquals(2, list.size());
   }
 
   @Test
@@ -105,7 +114,15 @@ public class EntityCollectionImplTest {
 
   @Test
   public void testSizeReturnsOriginalSizeForLoadedArrayAfterChangesInDB() {
-    // TODO
+    IDBObject bar = createAndCommitBar();
+    createAndCommitFoo(bar);
+    createAndCommitFoo(bar);
+    EntityCollectionImpl list = createList(bar);
+    list.load();
+    assertEquals(2, list.size());
+    createAndCommitFoo(bar);
+    createAndCommitFoo(bar);
+    assertEquals(2, list.size());
   }
 
   @Test
@@ -123,29 +140,25 @@ public class EntityCollectionImplTest {
   @Test
   public void testSizeIssuesCountStarQueryIfArrayHasNotBeenLoaded() {
     IDBObject bar = createAndCommitBar();
-    EntityCollectionImpl list = createList(bar, new QueryExecutor() {
-
-      @Override
-      public int count(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
-        return 42;
-      }
-
-      @Override
-      public List<IDBObject> selectEntity(String profilerTag, IDBType targetType, String sqlStatement, IPreparedStatementParameter... parameters) {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public void update(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
-        throw new UnsupportedOperationException();
-      }
-    });
-    assertEquals(42, list.size());
+    QueryExecutorSpy spy = new QueryExecutorSpy();
+    EntityCollectionImpl list = createList(bar, spy);
+    assertEquals(0, list.size());
+    assertTrue(spy.countCalled());
+    assertFalse(spy.selectCalled());
+    assertFalse(spy.updateCalled());
   }
 
   @Test
   public void testSizeDoesNotIssueQueriesIfArrayHasBeenLoaded() {
-    // TODO
+    IDBObject bar = createAndCommitBar();
+    createAndCommitFoo(bar);
+    createAndCommitFoo(bar);
+    QueryExecutorSpy spy = new QueryExecutorSpy();
+    EntityCollectionImpl list = createList(bar, spy);
+    list.load();
+    spy.reset();
+    assertEquals(2, list.size());
+    assertFalse(spy.anyCalled());
   }
 
   @Test
@@ -277,7 +290,7 @@ public class EntityCollectionImplTest {
     assertEquals(1, list.size());
     list.add(foo);
     assertEquals(1, list.size());
-    // TODO - AHK - Test that the back-pointer is set
+    assertSame(bar, foo.getFkValue("Bar_id"));
   }
 
   @Test
@@ -312,7 +325,7 @@ public class EntityCollectionImplTest {
   }
 
   @Test
-  public void testAddInsertsNewObjectInDatabaseIfObjectIsNotYetCommitted() {
+  public void testAddInsertsNewObjectInDatabaseAndSetsFkBackPointerIfObjectIsNotYetCommitted() {
     IDBObject bar = createAndCommitBar();
     IDBObject foo = createFoo();
     assertNull(foo.getColumnValue("id"));
@@ -321,12 +334,23 @@ public class EntityCollectionImplTest {
     list.add(foo);
     assertNotNull(foo.getColumnValue("id"));
     assertFalse(foo.isNew());
-    // TODO - AHK - Actually query for it in the DB?
+    assertSame(bar, foo.getFkValue("Bar_id"));
+    String sql = SimpleSqlBuilder.select("count as count(*)").from(foo.getDBTable()).where("\"id\" = " + foo.getId() + " AND \"Bar_id\" = " + bar.getId()).toString();
+    assertEquals(1, new QueryExecutorImpl(getDB()).count("", sql));
   }
 
   @Test
-  public void testAddUpdatesFkInDatabaseIfObjectHasAlreadyBeenPersisted() {
-    // TODO - AHK
+  public void testAddUpdatesFkInDatabaseAndSetsFkBackPointerIfObjectHasAlreadyBeenPersisted() {
+    IDBObject bar = createAndCommitBar();
+    IDBObject foo = createFoo();
+    update(foo);
+    String sql = SimpleSqlBuilder.select("count as count(*)").from(foo.getDBTable()).where("\"id\" = " + foo.getId() + " AND \"Bar_id\" = " + bar.getId()).toString();
+    assertEquals(0, new QueryExecutorImpl(getDB()).count("", sql));
+    EntityCollectionImpl list = createList(bar);
+    list.add(foo);
+    assertEquals(bar.getId(), foo.getColumnValue("Bar_id"));
+    assertSame(bar, foo.getFkValue("Bar_id"));
+    assertEquals(1, new QueryExecutorImpl(getDB()).count("", sql));
   }
 
   @Test
@@ -339,12 +363,12 @@ public class EntityCollectionImplTest {
 
     EntityCollectionImpl list = createList(bar);
     assertEquals(2, list.size());
-    // TODO - AHK - Verify that the results haven't been loaded somehow
     list.add(foo2);
     assertEquals(3, list.size());
     assertEquals(foo1.getColumnValue("id"), list.get(0).getColumnValue("id"));
     assertEquals(foo2.getColumnValue("id"), list.get(1).getColumnValue("id"));
     assertEquals(foo3.getColumnValue("id"), list.get(2).getColumnValue("id"));
+    // TODO - AHK - Test that it's not the same object?
   }
 
   @Test
@@ -363,10 +387,60 @@ public class EntityCollectionImplTest {
     assertEquals(foo1.getColumnValue("id"), list.get(0).getColumnValue("id"));
     assertEquals(foo3.getColumnValue("id"), list.get(1).getColumnValue("id"));
     assertEquals(foo2.getColumnValue("id"), list.get(2).getColumnValue("id"));
+    assertSame(foo2, list.get(2));
   }
 
-  @Test
-  public void testAddSetsFkBackPointerOnAddedObject() {
-   // TODO - AHK - This isn't really exposed to Java-land right now . . .
+  // ----------------------------- Helper Methods/Classes
+
+  private static class QueryExecutorSpy implements QueryExecutor {
+
+    private QueryExecutorImpl _delegate;
+    private String _count;
+    private String _select;
+    private String _update;
+
+    private QueryExecutorSpy() {
+      _delegate = new QueryExecutorImpl(getDB());
+    }
+
+    @Override
+    public int count(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
+      _count = sqlStatement;
+      return _delegate.count(profilerTag, sqlStatement, parameters);
+    }
+
+    @Override
+    public List<IDBObject> selectEntity(String profilerTag, IDBType targetType, String sqlStatement, IPreparedStatementParameter... parameters) {
+      _select = sqlStatement;
+      return _delegate.selectEntity(profilerTag, targetType, sqlStatement, parameters);
+    }
+
+    @Override
+    public void update(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
+      _update = sqlStatement;
+      update(profilerTag, sqlStatement, parameters);
+    }
+
+    public boolean countCalled() {
+      return _count != null;
+    }
+
+    public boolean selectCalled() {
+      return _select != null;
+    }
+
+    public boolean updateCalled() {
+      return _update != null;
+    }
+
+    public boolean anyCalled() {
+      return countCalled() || selectCalled() || updateCalled();
+    }
+
+    public void reset() {
+      _count = null;
+      _select = null;
+      _update = null;
+    }
   }
 }
