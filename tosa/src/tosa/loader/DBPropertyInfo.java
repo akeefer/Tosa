@@ -7,6 +7,7 @@ import gw.lang.reflect.ITypeInfo;
 import gw.lang.reflect.PropertyInfoBase;
 import gw.lang.reflect.TypeSystem;
 import tosa.CachedDBObject;
+import tosa.api.IDBObject;
 import tosa.dbmd.DBColumnImpl;
 import tosa.db.execution.QueryExecutor;
 
@@ -92,10 +93,10 @@ public class DBPropertyInfo extends PropertyInfoBase {
   private class DBPropertyAccessor implements IPropertyAccessor {
     @Override
       public void setValue(Object ctx, Object value) {
-        if (_column.isFK() && value != null) {
-          ((CachedDBObject) ctx).getColumns().put(getColumnName(), ((CachedDBObject) value).getColumns().get(DBTypeInfo.ID_COLUMN));
+        if (_column.isFK()) {
+          ((CachedDBObject) ctx).setFkValue(getColumnName(), (IDBObject) value);
         } else {
-          ((CachedDBObject) ctx).getColumns().put(getColumnName(), value);
+          ((CachedDBObject) ctx).setColumnValue(getColumnName(), value);
         }
       }
 
