@@ -21,7 +21,7 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 // TODO - AHK - This name pretty much sucks
-public class EntityCollectionImpl<T extends IDBObject> implements EntityCollection<T> {
+public class ReverseFkEntityCollectionImpl<T extends IDBObject> implements EntityCollection<T> {
 
   private IDBObject _owner;
   private IDBType _fkType;
@@ -29,7 +29,7 @@ public class EntityCollectionImpl<T extends IDBObject> implements EntityCollecti
   private QueryExecutor _queryExecutor;
   private List<T> _cachedResults;
 
-  public EntityCollectionImpl(IDBObject owner, IDBType fkType, IDBColumn fkColumn, QueryExecutor queryExecutor) {
+  public ReverseFkEntityCollectionImpl(IDBObject owner, IDBType fkType, IDBColumn fkColumn, QueryExecutor queryExecutor) {
     _owner = owner;
     _fkType = fkType;
     _fkColumn = fkColumn;
@@ -41,7 +41,7 @@ public class EntityCollectionImpl<T extends IDBObject> implements EntityCollecti
     if (_cachedResults == null) {
       String text = SimpleSqlBuilder.select("count(*) as count").from(_fkType).where(_fkColumn, "=", "?").toString();
       IPreparedStatementParameter param = _fkColumn.wrapParameterValue(_owner.getColumnValue(DBTypeInfo.ID_COLUMN));
-      return _queryExecutor.count("EntityCollectionImpl.size()", text, param);
+      return _queryExecutor.count("ReverseFkEntityCollectionImpl.size()", text, param);
     } else {
       return _cachedResults.size();
     }
@@ -57,7 +57,7 @@ public class EntityCollectionImpl<T extends IDBObject> implements EntityCollecti
   public T get(int index) {
     loadResultsIfNecessary();
     if (index < 0 || index > _cachedResults.size() - 1) {
-      throw new IndexOutOfBoundsException("Index " + index + " is invalid for an EntityCollectionImpl of size " + _cachedResults.size());
+      throw new IndexOutOfBoundsException("Index " + index + " is invalid for an ReverseFkEntityCollectionImpl of size " + _cachedResults.size());
     }
     return _cachedResults.get(index);
   }
@@ -89,7 +89,7 @@ public class EntityCollectionImpl<T extends IDBObject> implements EntityCollecti
         String updateSql = SimpleSqlBuilder.update(_fkColumn.getTable()).set(_fkColumn, "?").where(idColumn, "=", "?").toString();
         IPreparedStatementParameter fkParam = idColumn.wrapParameterValue(_owner.getColumnValue(DBTypeInfo.ID_COLUMN));
         IPreparedStatementParameter idParam = idColumn.wrapParameterValue(element.getColumnValue(DBTypeInfo.ID_COLUMN));
-        _queryExecutor.update("EntityCollectionImpl.add()", updateSql, fkParam, idParam);
+        _queryExecutor.update("ReverseFkEntityCollectionImpl.add()", updateSql, fkParam, idParam);
       }
       if (_cachedResults != null) {
         // TODO - AHK - Unclear if the list should be re-sorted, or if it should be added in insertion order
@@ -122,7 +122,7 @@ public class EntityCollectionImpl<T extends IDBObject> implements EntityCollecti
     IDBColumn idColumn = _fkColumn.getTable().getColumn(DBTypeInfo.ID_COLUMN);
     String updateSql = SimpleSqlBuilder.update(_fkColumn.getTable()).set(_fkColumn, "NULL").where(idColumn, "=", "?").toString();
     IPreparedStatementParameter idParam = idColumn.wrapParameterValue(element.getColumnValue(DBTypeInfo.ID_COLUMN));
-    _queryExecutor.update("EntityCollectionImpl.remove()", updateSql, idParam);
+    _queryExecutor.update("ReverseFkEntityCollectionImpl.remove()", updateSql, idParam);
 
     if (_cachedResults != null) {
       // The _cachedResults might contain a different pointer, so we have to match up by id
@@ -150,7 +150,7 @@ public class EntityCollectionImpl<T extends IDBObject> implements EntityCollecti
       IDBColumn idColumn = _fkColumn.getTable().getColumn(DBTypeInfo.ID_COLUMN);
       String sql = SimpleSqlBuilder.select("*").from(_fkColumn.getTable()).where(_fkColumn, "=", "?").order_by(idColumn).toString();
       IPreparedStatementParameter param = _fkColumn.wrapParameterValue(_owner.getColumnValue(DBTypeInfo.ID_COLUMN));
-      _cachedResults = (List<T>) _queryExecutor.selectEntity("EntityCollectionImpl.loadResultsIfNecessary()", _fkType, sql, param);
+      _cachedResults = (List<T>) _queryExecutor.selectEntity("ReverseFkEntityCollectionImpl.loadResultsIfNecessary()", _fkType, sql, param);
     }
   }
 

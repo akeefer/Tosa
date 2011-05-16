@@ -1,17 +1,14 @@
 package tosa;
 
 import gw.lang.reflect.TypeSystem;
-import gw.lang.reflect.gs.IGosuObject;
 import org.slf4j.profiler.Profiler;
 import tosa.api.*;
-import tosa.dbmd.DBTableImpl;
-import tosa.impl.EntityCollectionImpl;
+import tosa.impl.ReverseFkEntityCollectionImpl;
 import tosa.impl.QueryExecutorImpl;
 import tosa.impl.SimpleSqlBuilder;
 import tosa.loader.DBTypeInfo;
 import tosa.loader.IDBType;
 import tosa.loader.Util;
-import tosa.loader.data.DBColumnTypeImpl;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -132,7 +129,7 @@ public class CachedDBObject implements IDBObject {
     if (result == null) {
       IDBColumn fkColumn = findFkColumnForArray(arrayName);
       IDBType fkType = (IDBType) TypeSystem.getByFullName(fkColumn.getTable().getDatabase().getNamespace() + "." + fkColumn.getTable().getName());
-      result = new EntityCollectionImpl(this, fkType, fkColumn, new QueryExecutorImpl(fkColumn.getTable().getDatabase()));
+      result = new ReverseFkEntityCollectionImpl(this, fkType, fkColumn, new QueryExecutorImpl(fkColumn.getTable().getDatabase()));
       _cachedArrays.put(arrayName, result);
     }
     return result;

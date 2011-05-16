@@ -6,7 +6,6 @@ import org.junit.Test;
 import test.TestEnv;
 import tosa.CachedDBObject;
 import tosa.api.IDBObject;
-import tosa.api.IDatabase;
 import tosa.api.IPreparedStatementParameter;
 import tosa.dbmd.DatabaseImpl;
 import tosa.loader.DBTypeInfo;
@@ -26,7 +25,7 @@ import static org.junit.Assert.*;
  * Time: 3:17 PM
  * To change this template use File | Settings | File Templates.
  */
-public class EntityCollectionImplTest {
+public class ReverseFkEntityCollectionImplTest {
 
   @BeforeClass
   static public void resetDB() {
@@ -68,20 +67,20 @@ public class EntityCollectionImplTest {
     }
   }
 
-  private EntityCollectionImpl createList(IDBObject bar) {
+  private ReverseFkEntityCollectionImpl createList(IDBObject bar) {
     return createList(bar, new QueryExecutorImpl(bar.getDBTable().getDatabase()));
   }
 
-  private EntityCollectionImpl createList(IDBObject bar, QueryExecutor queryExecutor) {
+  private ReverseFkEntityCollectionImpl createList(IDBObject bar, QueryExecutor queryExecutor) {
     IDBType fooType = (IDBType) TypeSystem.getByFullName("test.testdb.Foo");
-    EntityCollectionImpl foos = new EntityCollectionImpl(bar, fooType, fooType.getTable().getColumn("Bar_id"), queryExecutor);
+    ReverseFkEntityCollectionImpl foos = new ReverseFkEntityCollectionImpl(bar, fooType, fooType.getTable().getColumn("Bar_id"), queryExecutor);
     return foos;
   }
 
   @Test
   public void testSizeReturnsZeroIfArrayIsEmptyAndHasBeenLoaded() {
     IDBObject bar = createAndCommitBar();
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     list.load();
     assertEquals(0, list.size());
   }
@@ -89,7 +88,7 @@ public class EntityCollectionImplTest {
   @Test
   public void testSizeReturnsZeroIfArrayIsEmptyAndHasNotBeenLoaded() {
     IDBObject bar = createAndCommitBar();
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     assertEquals(0, list.size());
   }
 
@@ -98,7 +97,7 @@ public class EntityCollectionImplTest {
     IDBObject bar = createAndCommitBar();
     createAndCommitFoo(bar);
     createAndCommitFoo(bar);
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     list.load();
     assertEquals(2, list.size());
   }
@@ -108,7 +107,7 @@ public class EntityCollectionImplTest {
     IDBObject bar = createAndCommitBar();
     createAndCommitFoo(bar);
     createAndCommitFoo(bar);
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     assertEquals(2, list.size());
   }
 
@@ -117,7 +116,7 @@ public class EntityCollectionImplTest {
     IDBObject bar = createAndCommitBar();
     createAndCommitFoo(bar);
     createAndCommitFoo(bar);
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     list.load();
     assertEquals(2, list.size());
     createAndCommitFoo(bar);
@@ -130,7 +129,7 @@ public class EntityCollectionImplTest {
     IDBObject bar = createAndCommitBar();
     createAndCommitFoo(bar);
     createAndCommitFoo(bar);
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     assertEquals(2, list.size());
     createAndCommitFoo(bar);
     createAndCommitFoo(bar);
@@ -141,7 +140,7 @@ public class EntityCollectionImplTest {
   public void testSizeIssuesCountStarQueryIfArrayHasNotBeenLoaded() {
     IDBObject bar = createAndCommitBar();
     QueryExecutorSpy spy = new QueryExecutorSpy();
-    EntityCollectionImpl list = createList(bar, spy);
+    ReverseFkEntityCollectionImpl list = createList(bar, spy);
     assertEquals(0, list.size());
     assertTrue(spy.countCalled());
     assertFalse(spy.selectCalled());
@@ -154,7 +153,7 @@ public class EntityCollectionImplTest {
     createAndCommitFoo(bar);
     createAndCommitFoo(bar);
     QueryExecutorSpy spy = new QueryExecutorSpy();
-    EntityCollectionImpl list = createList(bar, spy);
+    ReverseFkEntityCollectionImpl list = createList(bar, spy);
     list.load();
     spy.reset();
     assertEquals(2, list.size());
@@ -165,7 +164,7 @@ public class EntityCollectionImplTest {
   public void testGetThrowsIndexOutOfBoundsExceptionIfArgumentIsNegative() {
     IDBObject bar = createAndCommitBar();
     createAndCommitFoo(bar);
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     try {
       list.get(-1);
       fail("Expected an IndexOutOfBoundsException");
@@ -178,7 +177,7 @@ public class EntityCollectionImplTest {
   public void testGetThrowsIndexOutOfBoundsExceptionIfArgumentIsGreaterThanSizeOfCollection() {
     IDBObject bar = createAndCommitBar();
     createAndCommitFoo(bar);
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     try {
       list.get(2);
       fail("Expected an IndexOutOfBoundsException");
@@ -191,7 +190,7 @@ public class EntityCollectionImplTest {
   public void testGetThrowsIndexOutOfBoundsExceptionIfArgumentIsEqualToSizeOfCollection() {
     IDBObject bar = createAndCommitBar();
     createAndCommitFoo(bar);
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     try {
       list.get(1);
       fail("Expected an IndexOutOfBoundsException");
@@ -204,7 +203,7 @@ public class EntityCollectionImplTest {
   public void testGetReturnsAppropriateElementIfArgumentIsValid() {
     IDBObject bar = createAndCommitBar();
     IDBObject foo = createAndCommitFoo(bar);
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     IDBObject fooFromDB = list.get(0);
     assertEquals(foo.getColumnValue("id"), fooFromDB.getColumnValue("id"));
   }
@@ -212,7 +211,7 @@ public class EntityCollectionImplTest {
   @Test
   public void testIteratorHasNextReturnsFalseForEmptyList() {
     IDBObject bar = createAndCommitBar();
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     assertFalse(list.iterator().hasNext());
   }
 
@@ -220,7 +219,7 @@ public class EntityCollectionImplTest {
   public void testIteratorHasNextReturnsTrueAtStartOfNonEmptyList() {
     IDBObject bar = createAndCommitBar();
     IDBObject foo1 = createAndCommitFoo(bar);
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     assertTrue(list.iterator().hasNext());
   }
 
@@ -230,7 +229,7 @@ public class EntityCollectionImplTest {
     IDBObject foo1 = createAndCommitFoo(bar);
     IDBObject foo2 = createAndCommitFoo(bar);
     IDBObject foo3 = createAndCommitFoo(bar);
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     Iterator<IDBObject> it = list.iterator();
     assertTrue(it.hasNext());
     assertEquals(foo1.getColumnValue("id"), it.next().getColumnValue("id"));
@@ -245,7 +244,7 @@ public class EntityCollectionImplTest {
   public void testIteratorHasNextReturnsFalseAtEndOfList() {
     IDBObject bar = createAndCommitBar();
     IDBObject foo1 = createAndCommitFoo(bar);
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     Iterator<IDBObject> it = list.iterator();
     assertTrue(it.hasNext());
     it.next();
@@ -256,7 +255,7 @@ public class EntityCollectionImplTest {
   public void testIteratorRemoveThrowsUnsupportedOperationException() {
     IDBObject bar = createAndCommitBar();
     IDBObject foo1 = createAndCommitFoo(bar);
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     Iterator<IDBObject> it = list.iterator();
     it.next();
     try {
@@ -273,7 +272,7 @@ public class EntityCollectionImplTest {
   public void testAddThrowsIllegalStateExceptionIfOwningEntityHasNotYetBeenCommitted() {
     IDBObject bar = new CachedDBObject((IDBType) TypeSystem.getByFullName("test.testdb.Bar"), true);
     IDBObject foo = createFoo();
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     try {
       list.add(foo);
       fail("Expected add to throw an IllegalStateException");
@@ -286,7 +285,7 @@ public class EntityCollectionImplTest {
   public void testAddSetsFkPointerIfEntityIsAlreadyInThisCollection() {
     IDBObject bar = createAndCommitBar();
     IDBObject foo = createAndCommitFoo(bar);
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     assertEquals(1, list.size());
     list.add(foo);
     assertEquals(1, list.size());
@@ -301,7 +300,7 @@ public class EntityCollectionImplTest {
     setBarId(bar2, foo);
     update(foo);
 
-    EntityCollectionImpl list = createList(bar1);
+    ReverseFkEntityCollectionImpl list = createList(bar1);
     try {
       list.add(foo);
       fail("Expected add to throw an IllegalArgumentException");
@@ -315,7 +314,7 @@ public class EntityCollectionImplTest {
     IDBObject bar1 = createAndCommitBar();
     IDBObject bar2 = createAndCommitBar();
 
-    EntityCollectionImpl list = createList(bar1);
+    ReverseFkEntityCollectionImpl list = createList(bar1);
     try {
       list.add(bar2);
       fail("Expected add to throw an IllegalArgumentException");
@@ -330,7 +329,7 @@ public class EntityCollectionImplTest {
     IDBObject foo = createFoo();
     assertNull(foo.getColumnValue("id"));
     assertTrue(foo.isNew());
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     list.add(foo);
     assertNotNull(foo.getColumnValue("id"));
     assertFalse(foo.isNew());
@@ -344,7 +343,7 @@ public class EntityCollectionImplTest {
     IDBObject foo = createFoo();
     update(foo);
     assertEquals(0, countMatchesInDB(foo, bar));
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     list.add(foo);
     assertEquals(bar.getId(), foo.getColumnValue("Bar_id"));
     assertSame(bar, foo.getFkValue("Bar_id"));
@@ -359,7 +358,7 @@ public class EntityCollectionImplTest {
     update(foo2);
     IDBObject foo3 = createAndCommitFoo(bar);
 
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     assertEquals(2, list.size());
     list.add(foo2);
     assertEquals(3, list.size());
@@ -377,7 +376,7 @@ public class EntityCollectionImplTest {
     update(foo2);
     IDBObject foo3 = createAndCommitFoo(bar);
 
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     assertEquals(2, list.size());
     list.load();
     list.add(foo2);
@@ -393,7 +392,7 @@ public class EntityCollectionImplTest {
     IDBObject bar = createAndCommitBar();
     createAndCommitFoo(bar);
     createAndCommitFoo(bar);
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     list.load();
     assertEquals(2, list.size());
     createAndCommitFoo(bar);
@@ -424,7 +423,7 @@ public class EntityCollectionImplTest {
   public void testRemoveWillThrowIllegalStateExceptionIfOwnerIsNew() {
     IDBObject bar = new CachedDBObject((IDBType) TypeSystem.getByFullName("test.testdb.Bar"), true);
     IDBObject foo = createFoo();
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     try {
       list.remove(foo);
       fail("Expected add to throw an IllegalStateException");
@@ -437,7 +436,7 @@ public class EntityCollectionImplTest {
   public void testRemoveWillThrowIllegalArgumentExceptionIfElementIsOfWrongType() {
     IDBObject bar = createAndCommitBar();
     IDBObject bar2 = createAndCommitBar();
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     try {
       list.remove(bar2);
       fail("Expected remove to throw an IllegalStateException");
@@ -450,7 +449,7 @@ public class EntityCollectionImplTest {
   public void testRemoveWillImmediatelyUpdateDatabaseIfArrayNotLoadedYet() {
     IDBObject bar = createAndCommitBar();
     IDBObject foo = createAndCommitFoo(bar);
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     list.unload();
     assertEquals(1, countMatchesInDB(foo, bar));
     list.remove(foo);
@@ -461,7 +460,7 @@ public class EntityCollectionImplTest {
   public void testRemoveWillImmediatelyUpdateDatabaseAndRemoveFromCachedResultsIfArrayLoaded() {
     IDBObject bar = createAndCommitBar();
     IDBObject foo = createAndCommitFoo(bar);
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     list.load();
     assertEquals(1, countMatchesInDB(foo, bar));
     list.remove(foo);
@@ -474,7 +473,7 @@ public class EntityCollectionImplTest {
   public void testRemoveWillNullOutFkColumnOnElement() {
     IDBObject bar = createAndCommitBar();
     IDBObject foo = createAndCommitFoo(bar);
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     assertEquals(bar.getId(), foo.getColumnValue("Bar_id"));
     list.remove(foo);
     assertNull(foo.getColumnValue("Bar_id"));
@@ -484,7 +483,7 @@ public class EntityCollectionImplTest {
   public void testRemoveWillNullOutCachedFkObjectOnElement() {
     IDBObject bar = createAndCommitBar();
     IDBObject foo = createAndCommitFoo(bar);
-    EntityCollectionImpl list = createList(bar);
+    ReverseFkEntityCollectionImpl list = createList(bar);
     assertNotNull(foo.getFkValue("Bar_id"));
     list.remove(foo);
     assertNull(foo.getFkValue("Bar_id"));

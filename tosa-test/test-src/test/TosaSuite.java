@@ -25,7 +25,7 @@ public class TosaSuite extends Suite {
 
   public static Class[] getAllTestClasses() {
     return classesFor(
-      "tosa.impl.EntityCollectionImplTest",
+      "tosa.impl.ReverseFkEntityCollectionImplTest",
       "tosa.loader.DBTypeInfoTest",
       "tosa.loader.SQLTypeInfoTest",
       "tosa.loader.parser.SelectParsingBootstrapTest",
