@@ -5,6 +5,7 @@ import gw.lang.reflect.gs.IGosuObject;
 import org.slf4j.profiler.Profiler;
 import tosa.api.*;
 import tosa.dbmd.DBTableImpl;
+import tosa.impl.EntityCollectionImpl;
 import tosa.impl.QueryExecutorImpl;
 import tosa.impl.SimpleSqlBuilder;
 import tosa.loader.DBTypeInfo;
@@ -121,6 +122,30 @@ public class CachedDBObject implements IDBObject {
       throw new IllegalArgumentException("Column " + columnName + " on table " + _type.getTable().getName() + " is not a foreign key");
     }
     return column;
+  }
+
+  // TODO - AHK - Move this to the interface, once I figure out what the API really is
+
+  public EntityCollection getArray(String arrayName) {
+    // TODO - AHK - Validate it
+    EntityCollection result = _cachedArrays.get(arrayName);
+    if (result == null) {
+      IDBColumn fkColumn = findFkColumnForArray(arrayName);
+      IDBType fkType = (IDBType) TypeSystem.getByFullName(fkColumn.getTable().getDatabase().getNamespace() + "." + fkColumn.getTable().getName());
+      result = new EntityCollectionImpl(this, fkType, fkColumn, new QueryExecutorImpl(fkColumn.getTable().getDatabase()));
+      _cachedArrays.put(arrayName, result);
+    }
+    return result;
+  }
+
+  private IDBColumn findFkColumnForArray(String arrayName) {
+    for (IDBColumn incomingFk : getDBTable().getIncomingFKs()) {
+      if (arrayName.equals(incomingFk.getTable().getName() + "s")) {
+        return incomingFk;
+      }
+    }
+
+    return null;
   }
 
   @Override

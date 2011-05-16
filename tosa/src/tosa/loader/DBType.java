@@ -2,6 +2,7 @@ package tosa.loader;
 
 import gw.lang.reflect.*;
 import gw.util.concurrent.LazyVar;
+import tosa.api.IDBObject;
 import tosa.api.IDBTable;
 import tosa.dbmd.DBTableImpl;
 
@@ -67,7 +68,7 @@ public class DBType extends TypeBase implements IDBType {
 
   @Override
   public List<? extends IType> getInterfaces() {
-    return Collections.emptyList();
+    return Collections.singletonList(TypeSystem.get(IDBObject.class));
   }
 
   @Override

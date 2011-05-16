@@ -22,6 +22,8 @@ public interface IDBObject extends IGosuObject {
 
   void setFkValue(String columnName, IDBObject value);
 
+  EntityCollection getArray(String arrayName);
+
   Long getId();
 
   boolean isNew();

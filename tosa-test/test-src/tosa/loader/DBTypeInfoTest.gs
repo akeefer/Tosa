@@ -13,6 +13,7 @@ uses test.testdb.SortPage
 uses test.testdb.Foo
 uses test.testdb.Baz
 uses gw.lang.reflect.TypeSystem
+uses tosa.api.EntityCollection
 
 class DBTypeInfoTest {
 
@@ -165,7 +166,7 @@ class DBTypeInfoTest {
 
       var arrayProp = typeinfo.getProperty("Foos")
       Assert.assertNotNull(arrayProp)
-      Assert.assertEquals(List<test.testdb.Foo>, arrayProp.FeatureType)
+      Assert.assertEquals(EntityCollection<test.testdb.Foo>, arrayProp.FeatureType)
       Assert.assertFalse(arrayProp.Writable)
 
       joinProp = typeInfo.getProperty("Relatives")

@@ -16,6 +16,7 @@ import gw.lang.reflect.PropertyInfoBase;
 import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.java.IJavaType;
 import tosa.CachedDBObject;
+import tosa.api.EntityCollection;
 import tosa.api.IDBColumn;
 import tosa.api.IDBTable;
 import tosa.db.execution.QueryExecutor;
@@ -44,7 +45,7 @@ public class DBArrayPropertyInfo extends PropertyInfoBase {
     _name = fkColumn.getTable().getName() + "s";
     String namespace = getOwnersType().getNamespace();
     _fkType = TypeSystem.getByFullName(namespace + "." + _fkColumn.getTable().getName());
-    _type = IJavaType.LIST.getGenericType().getParameterizedType(_fkType);
+    _type = TypeSystem.get(EntityCollection.class).getGenericType().getParameterizedType(_fkType);
   }
 
   @Override
@@ -81,21 +82,7 @@ public class DBArrayPropertyInfo extends PropertyInfoBase {
     @Override
     public Object getValue(Object ctx) {
       CachedDBObject dbObject = (CachedDBObject) ctx;
-      try {
-        Object value = dbObject.getCachedValues().get(_name);
-        if (value == null) {
-          Object id = dbObject.getColumns().get(DBTypeInfo.ID_COLUMN);
-          value = new QueryExecutor().findFromSql(
-              getOwnersType().getName() + "." + _name,
-              (IDBType) _fkType,
-              "select * from \"" + _fkColumn.getTable().getName() + "\" where \"" + _fkColumn.getName() + "\" = ?",
-              Collections.singletonList(dbObject.getIntrinsicType().getTable().getColumn(DBTypeInfo.ID_COLUMN).wrapParameterValue(id)));
-          ((CachedDBObject) ctx).getCachedValues().put(_name, value);
-        }
-        return value;
-      } catch (SQLException e) {
-        throw new RuntimeException(e);
-      }
+      return dbObject.getArray(_name);
     }
 
     @Override
