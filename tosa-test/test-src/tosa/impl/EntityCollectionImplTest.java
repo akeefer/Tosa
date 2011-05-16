@@ -335,8 +335,7 @@ public class EntityCollectionImplTest {
     assertNotNull(foo.getColumnValue("id"));
     assertFalse(foo.isNew());
     assertSame(bar, foo.getFkValue("Bar_id"));
-    String sql = SimpleSqlBuilder.select("count as count(*)").from(foo.getDBTable()).where("\"id\" = " + foo.getId() + " AND \"Bar_id\" = " + bar.getId()).toString();
-    assertEquals(1, new QueryExecutorImpl(getDB()).count("", sql));
+    assertEquals(1, countMatchesInDB(foo, bar));
   }
 
   @Test
@@ -344,13 +343,12 @@ public class EntityCollectionImplTest {
     IDBObject bar = createAndCommitBar();
     IDBObject foo = createFoo();
     update(foo);
-    String sql = SimpleSqlBuilder.select("count as count(*)").from(foo.getDBTable()).where("\"id\" = " + foo.getId() + " AND \"Bar_id\" = " + bar.getId()).toString();
-    assertEquals(0, new QueryExecutorImpl(getDB()).count("", sql));
+    assertEquals(0, countMatchesInDB(foo, bar));
     EntityCollectionImpl list = createList(bar);
     list.add(foo);
     assertEquals(bar.getId(), foo.getColumnValue("Bar_id"));
     assertSame(bar, foo.getFkValue("Bar_id"));
-    assertEquals(1, new QueryExecutorImpl(getDB()).count("", sql));
+    assertEquals(1, countMatchesInDB(foo, bar));
   }
 
   @Test
@@ -390,7 +388,114 @@ public class EntityCollectionImplTest {
     assertSame(foo2, list.get(2));
   }
 
+  @Test
+  public void testUnloadWillUnloadCachedData() {
+    IDBObject bar = createAndCommitBar();
+    createAndCommitFoo(bar);
+    createAndCommitFoo(bar);
+    EntityCollectionImpl list = createList(bar);
+    list.load();
+    assertEquals(2, list.size());
+    createAndCommitFoo(bar);
+    createAndCommitFoo(bar);
+    assertEquals(2, list.size());
+    list.unload();
+    assertEquals(4, list.size());
+    list.load();
+    assertEquals(4, list.size());
+  }
+
+  // ----------------------- Tests for remove()
+
+  @Test
+  public void testRemoveWillThrowIllegalArgumentExceptionIfElementIsNotAMemberOfThisArray() {
+    IDBObject bar = createAndCommitBar();
+    IDBObject bar2 = createAndCommitBar();
+    IDBObject foo = createAndCommitFoo(bar);
+    try {
+      createList(bar2).remove(foo);
+      fail("Expected an IllegalArgumentException");
+    } catch (IllegalArgumentException e) {
+      // Expected
+    }
+  }
+
+  @Test
+  public void testRemoveWillThrowIllegalStateExceptionIfOwnerIsNew() {
+    IDBObject bar = new CachedDBObject((IDBType) TypeSystem.getByFullName("test.testdb.Bar"), true);
+    IDBObject foo = createFoo();
+    EntityCollectionImpl list = createList(bar);
+    try {
+      list.remove(foo);
+      fail("Expected add to throw an IllegalStateException");
+    } catch (IllegalStateException e) {
+      // Expected
+    }
+  }
+
+  @Test
+  public void testRemoveWillThrowIllegalArgumentExceptionIfElementIsOfWrongType() {
+    IDBObject bar = createAndCommitBar();
+    IDBObject bar2 = createAndCommitBar();
+    EntityCollectionImpl list = createList(bar);
+    try {
+      list.remove(bar2);
+      fail("Expected remove to throw an IllegalStateException");
+    } catch (IllegalArgumentException e) {
+      // Expected
+    }
+  }
+
+  @Test
+  public void testRemoveWillImmediatelyUpdateDatabaseIfArrayNotLoadedYet() {
+    IDBObject bar = createAndCommitBar();
+    IDBObject foo = createAndCommitFoo(bar);
+    EntityCollectionImpl list = createList(bar);
+    list.unload();
+    assertEquals(1, countMatchesInDB(foo, bar));
+    list.remove(foo);
+    assertEquals(0, countMatchesInDB(foo, bar));
+  }
+
+  @Test
+  public void testRemoveWillImmediatelyUpdateDatabaseAndRemoveFromCachedResultsIfArrayLoaded() {
+    IDBObject bar = createAndCommitBar();
+    IDBObject foo = createAndCommitFoo(bar);
+    EntityCollectionImpl list = createList(bar);
+    list.load();
+    assertEquals(1, countMatchesInDB(foo, bar));
+    list.remove(foo);
+    assertEquals(0, countMatchesInDB(foo, bar));
+    assertEquals(0, list.size());
+    assertFalse(list.iterator().hasNext());
+  }
+
+  @Test
+  public void testRemoveWillNullOutFkColumnOnElement() {
+    IDBObject bar = createAndCommitBar();
+    IDBObject foo = createAndCommitFoo(bar);
+    EntityCollectionImpl list = createList(bar);
+    assertEquals(bar.getId(), foo.getColumnValue("Bar_id"));
+    list.remove(foo);
+    assertNull(foo.getColumnValue("Bar_id"));
+  }
+
+  @Test
+  public void testRemoveWillNullOutCachedFkObjectOnElement() {
+    IDBObject bar = createAndCommitBar();
+    IDBObject foo = createAndCommitFoo(bar);
+    EntityCollectionImpl list = createList(bar);
+    assertNotNull(foo.getFkValue("Bar_id"));
+    list.remove(foo);
+    assertNull(foo.getFkValue("Bar_id"));
+  }
+
   // ----------------------------- Helper Methods/Classes
+
+  private int countMatchesInDB(IDBObject foo, IDBObject bar) {
+    String sql = SimpleSqlBuilder.select("count(*) as count").from(foo.getDBTable()).where("\"id\" = " + foo.getId() + " AND \"Bar_id\" = " + bar.getId()).toString();
+    return new QueryExecutorImpl(getDB()).count("", sql);
+  }
 
   private static class QueryExecutorSpy implements QueryExecutor {
 

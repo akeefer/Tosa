@@ -36,18 +36,9 @@ public class EntityCollectionImpl<T extends IDBObject> implements EntityCollecti
     _queryExecutor = queryExecutor;
   }
 
-  /*Object id = dbObject.getColumns().get(DBTypeInfo.ID_COLUMN);
-value = new QueryExecutor().findFromSql(
-  getOwnersType().getName() + "." + _name,
-  (IDBType) _fkType,
-  "select * from \"" + _fkColumn.getTable().getName() + "\" where \"" + _fkColumn.getName() + "\" = ?",
-  Collections.singletonList(dbObject.getIntrinsicType().getTable().getColumn(DBTypeInfo.ID_COLUMN).wrapParameterValue(id)));*/
-
   @Override
   public int size() {
     if (_cachedResults == null) {
-      // TODO - AHK - Always quote?  Never quote?
-      // TODO - AHK - Better debug name here
       String text = SimpleSqlBuilder.select("count(*) as count").from(_fkType).where(_fkColumn, "=", "?").toString();
       IPreparedStatementParameter param = _fkColumn.wrapParameterValue(_owner.getColumnValue(DBTypeInfo.ID_COLUMN));
       return _queryExecutor.count("EntityCollectionImpl.size()", text, param);
@@ -55,8 +46,6 @@ value = new QueryExecutor().findFromSql(
       return _cachedResults.size();
     }
   }
-
-
 
   @Override
   public Iterator<T> iterator() {
@@ -107,7 +96,7 @@ value = new QueryExecutor().findFromSql(
         _cachedResults.add(element);
       }
     } else if (existingId.equals(_owner.getColumnValue(DBTypeInfo.ID_COLUMN))) {
-      // That's fine, it's a no-op, but we still want to set the back-pointer
+      // That's fine, it's a no-op, but we still want to set the fk value so you get the right pointer back when you reference the fk
       element.setFkValue(_fkColumn.getName(), _owner);
     } else {
       throw new IllegalArgumentException("The element with id " + element.getColumnValue(DBTypeInfo.ID_COLUMN) + " is already attached to another owner, with id " + existingId);
@@ -116,7 +105,34 @@ value = new QueryExecutor().findFromSql(
 
   @Override
   public void remove(T element) {
-    // TODO - AHK
+    if (!_fkType.isAssignableFrom(element.getIntrinsicType())) {
+      throw new IllegalArgumentException("An element of type " + element.getIntrinsicType() + " cannot be added to a collection of type " + _fkType);
+    }
+
+    if (_owner.isNew()) {
+      throw new IllegalStateException("Elements cannot be removed from an entity that has not yet been persisted");
+    }
+
+    Object fkId = element.getColumnValue(_fkColumn.getName());
+    if (!_owner.getId().equals(fkId)) {
+      throw new IllegalArgumentException("The element with id " + element.getId() + " is not a member of the array on element " + _owner.getId());
+    }
+
+    element.setFkValue(_fkColumn.getName(), null);
+    IDBColumn idColumn = _fkColumn.getTable().getColumn(DBTypeInfo.ID_COLUMN);
+    String updateSql = SimpleSqlBuilder.update(_fkColumn.getTable()).set(_fkColumn, "NULL").where(idColumn, "=", "?").toString();
+    IPreparedStatementParameter idParam = idColumn.wrapParameterValue(element.getColumnValue(DBTypeInfo.ID_COLUMN));
+    _queryExecutor.update("EntityCollectionImpl.remove()", updateSql, idParam);
+
+    if (_cachedResults != null) {
+      // The _cachedResults might contain a different pointer, so we have to match up by id
+      for (int i = 0; i < _cachedResults.size(); i++) {
+        if (element.getId().equals(_cachedResults.get(i).getId())) {
+          _cachedResults.remove(i);
+          break;
+        }
+      }
+    }
   }
 
   @Override

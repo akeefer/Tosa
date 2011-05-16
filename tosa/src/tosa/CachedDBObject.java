@@ -103,8 +103,13 @@ public class CachedDBObject implements IDBObject {
   public void setFkValue(String columnName, IDBObject value) {
     IDBColumn column = getAndValidateFkColumn(columnName);
     // TODO - AHK - Validate that the value is of the correct type
-    _columns.put(columnName, value.getId());
-    _cachedFks.put(columnName, value);
+    if (value == null) {
+      _columns.put(columnName, null);
+      _cachedFks.put(columnName, null);
+    } else {
+      _columns.put(columnName, value.getId());
+      _cachedFks.put(columnName, value);
+    }
   }
 
   private IDBColumn getAndValidateFkColumn(String columnName) {
@@ -259,7 +264,7 @@ public class CachedDBObject implements IDBObject {
     IDBColumn idColumn = table.getColumn(DBTypeInfo.ID_COLUMN);
     // TODO - AHK - Need some better way to convert between the two
     IDBType resultType = (IDBType) TypeSystem.getByFullName(table.getDatabase().getNamespace() + "." + table.getName());
-    String sql = SimpleSqlBuilder.select("*").from(table.getName()).where(idColumn, "=", "?").toString();
+    String sql = SimpleSqlBuilder.select("*").from(table).where(idColumn, "=", "?").toString();
     IPreparedStatementParameter param = idColumn.wrapParameterValue(id);
     // TODO - AHK - Fetch this from somewhere?
     List<IDBObject> results = new QueryExecutorImpl(table.getDatabase()).selectEntity("CachedDBObject.loadEntity()", resultType, sql, param);
