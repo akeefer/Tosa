@@ -34,9 +34,9 @@ CREATE TABLE "Foo"(
     "id" BIGINT PRIMARY KEY AUTO_INCREMENT,
     "FirstName" VARCHAR(50),
     "LastName" VARCHAR(50),
-    "Bar_id" INT,
+    "Bar_id" BIGINT,
     "Address" TEXT,
-    "Named_SortPage_id" INTEGER
+    "Named_SortPage_id" BIGINT
 );
 
 CREATE TABLE "Baz"(
