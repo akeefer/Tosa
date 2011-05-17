@@ -21,57 +21,33 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 // TODO - AHK - This name pretty much sucks
-public class ReverseFkEntityCollectionImpl<T extends IDBObject> implements EntityCollection<T> {
+public class ReverseFkEntityCollectionImpl<T extends IDBObject> extends EntityCollectionImplBase<T> {
 
-  private IDBObject _owner;
-  private IDBType _fkType;
   private IDBColumn _fkColumn;
-  private QueryExecutor _queryExecutor;
-  private List<T> _cachedResults;
 
   public ReverseFkEntityCollectionImpl(IDBObject owner, IDBType fkType, IDBColumn fkColumn, QueryExecutor queryExecutor) {
-    _owner = owner;
-    _fkType = fkType;
+    super(owner, fkType, queryExecutor);
     _fkColumn = fkColumn;
-    _queryExecutor = queryExecutor;
+  }
+
+
+  @Override
+  protected int issueCountQuery() {
+    String text = SimpleSqlBuilder.select("count(*) as count").from(_fkType).where(_fkColumn, "=", "?").toString();
+    IPreparedStatementParameter param = _fkColumn.wrapParameterValue(_owner.getColumnValue(DBTypeInfo.ID_COLUMN));
+    return _queryExecutor.count("ReverseFkEntityCollectionImpl.size()", text, param);
   }
 
   @Override
-  public int size() {
-    if (_cachedResults == null) {
-      String text = SimpleSqlBuilder.select("count(*) as count").from(_fkType).where(_fkColumn, "=", "?").toString();
-      IPreparedStatementParameter param = _fkColumn.wrapParameterValue(_owner.getColumnValue(DBTypeInfo.ID_COLUMN));
-      return _queryExecutor.count("ReverseFkEntityCollectionImpl.size()", text, param);
-    } else {
-      return _cachedResults.size();
-    }
+  protected List<T> loadResults() {
+    IDBColumn idColumn = _fkColumn.getTable().getColumn(DBTypeInfo.ID_COLUMN);
+    String sql = SimpleSqlBuilder.select("*").from(_fkColumn.getTable()).where(_fkColumn, "=", "?").order_by(idColumn).toString();
+    IPreparedStatementParameter param = _fkColumn.wrapParameterValue(_owner.getColumnValue(DBTypeInfo.ID_COLUMN));
+    return (List<T>) _queryExecutor.selectEntity("ReverseFkEntityCollectionImpl.loadResultsIfNecessary()", _fkType, sql, param);
   }
 
   @Override
-  public Iterator<T> iterator() {
-    loadResultsIfNecessary();
-    return new EntityCollectionImplIterator(_cachedResults.iterator());
-  }
-
-  @Override
-  public T get(int index) {
-    loadResultsIfNecessary();
-    if (index < 0 || index > _cachedResults.size() - 1) {
-      throw new IndexOutOfBoundsException("Index " + index + " is invalid for an ReverseFkEntityCollectionImpl of size " + _cachedResults.size());
-    }
-    return _cachedResults.get(index);
-  }
-
-  @Override
-  public void add(T element) {
-    if (!_fkType.isAssignableFrom(element.getIntrinsicType())) {
-      throw new IllegalArgumentException("An element of type " + element.getIntrinsicType() + " cannot be added to a collection of type " + _fkType);
-    }
-
-    if (_owner.isNew()) {
-      throw new IllegalStateException("The element cannot be added to the list, as the owner is not yet committed.  You must commit the owner prior to added anything to the list.");
-    }
-
+  protected void addImpl(T element) {
     Object existingId = element.getColumnValue(_fkColumn.getName());
     if (existingId == null) {
       // We always set the back-pointer and the column
@@ -104,15 +80,7 @@ public class ReverseFkEntityCollectionImpl<T extends IDBObject> implements Entit
   }
 
   @Override
-  public void remove(T element) {
-    if (!_fkType.isAssignableFrom(element.getIntrinsicType())) {
-      throw new IllegalArgumentException("An element of type " + element.getIntrinsicType() + " cannot be added to a collection of type " + _fkType);
-    }
-
-    if (_owner.isNew()) {
-      throw new IllegalStateException("Elements cannot be removed from an entity that has not yet been persisted");
-    }
-
+  protected void removeImpl(T element) {
     Object fkId = element.getColumnValue(_fkColumn.getName());
     if (!_owner.getId().equals(fkId)) {
       throw new IllegalArgumentException("The element with id " + element.getId() + " is not a member of the array on element " + _owner.getId());
@@ -132,48 +100,6 @@ public class ReverseFkEntityCollectionImpl<T extends IDBObject> implements Entit
           break;
         }
       }
-    }
-  }
-
-  @Override
-  public void load() {
-    loadResultsIfNecessary();
-  }
-
-  @Override
-  public void unload() {
-    _cachedResults = null;
-  }
-
-  private void loadResultsIfNecessary() {
-    if (_cachedResults == null) {
-      IDBColumn idColumn = _fkColumn.getTable().getColumn(DBTypeInfo.ID_COLUMN);
-      String sql = SimpleSqlBuilder.select("*").from(_fkColumn.getTable()).where(_fkColumn, "=", "?").order_by(idColumn).toString();
-      IPreparedStatementParameter param = _fkColumn.wrapParameterValue(_owner.getColumnValue(DBTypeInfo.ID_COLUMN));
-      _cachedResults = (List<T>) _queryExecutor.selectEntity("ReverseFkEntityCollectionImpl.loadResultsIfNecessary()", _fkType, sql, param);
-    }
-  }
-
-  private class EntityCollectionImplIterator implements Iterator<T> {
-    Iterator<T> _wrappedIterator;
-
-    private EntityCollectionImplIterator(Iterator<T> wrappedIterator) {
-      _wrappedIterator = wrappedIterator;
-    }
-
-    @Override
-    public boolean hasNext() {
-      return _wrappedIterator.hasNext();
-    }
-
-    @Override
-    public T next() {
-      return _wrappedIterator.next();
-    }
-
-    @Override
-    public void remove() {
-      throw new UnsupportedOperationException();
     }
   }
 }

@@ -3,16 +3,19 @@ package tosa.impl;
 import gw.lang.reflect.TypeSystem;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import sun.java2d.pipe.SpanShapeRenderer;
 import test.TestEnv;
 import tosa.CachedDBObject;
 import tosa.api.IDBColumn;
 import tosa.api.IDBObject;
+import tosa.api.IDBTable;
 import tosa.api.IPreparedStatementParameter;
 import tosa.dbmd.DatabaseImpl;
 import tosa.loader.DBTypeLoader;
 import tosa.loader.IDBType;
 
 import java.sql.SQLException;
+import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -80,6 +83,8 @@ public class JoinArrayEntityCollectionImplTest {
     return new JoinArrayEntityCollectionImpl(foo, bazType, srcColumn, targetColumn, queryExecutor);
   }
 
+   // ---------------------- Tests for size() -------------------------------------
+
   @Test
   public void testSizeReturnsZeroIfArrayIsEmptyAndHasBeenLoaded() {
     IDBObject foo = createAndCommitFoo();
@@ -114,187 +119,195 @@ public class JoinArrayEntityCollectionImplTest {
     assertEquals(2, list.size());
   }
 
-//  @Test
-//  public void testSizeReturnsOriginalSizeForLoadedArrayAfterChangesInDB() {
-//    IDBObject bar = createAndCommitBar();
-//    createAndCommitFoo(bar);
-//    createAndCommitFoo(bar);
-//    ReverseFkEntityCollectionImpl list = createList(bar);
-//    list.load();
-//    assertEquals(2, list.size());
-//    createAndCommitFoo(bar);
-//    createAndCommitFoo(bar);
-//    assertEquals(2, list.size());
-//  }
-//
-//  @Test
-//  public void testSizeReturnsCurrentSizeForNonLoadedArrayAfterChangesInDB() {
-//    IDBObject bar = createAndCommitBar();
-//    createAndCommitFoo(bar);
-//    createAndCommitFoo(bar);
-//    ReverseFkEntityCollectionImpl list = createList(bar);
-//    assertEquals(2, list.size());
-//    createAndCommitFoo(bar);
-//    createAndCommitFoo(bar);
-//    assertEquals(4, list.size());
-//  }
-//
-//  @Test
-//  public void testSizeIssuesCountStarQueryIfArrayHasNotBeenLoaded() {
-//    IDBObject bar = createAndCommitBar();
-//    QueryExecutorSpy spy = new QueryExecutorSpy();
-//    ReverseFkEntityCollectionImpl list = createList(bar, spy);
-//    assertEquals(0, list.size());
-//    assertTrue(spy.countCalled());
-//    assertFalse(spy.selectCalled());
-//    assertFalse(spy.updateCalled());
-//  }
-//
-//  @Test
-//  public void testSizeDoesNotIssueQueriesIfArrayHasBeenLoaded() {
-//    IDBObject bar = createAndCommitBar();
-//    createAndCommitFoo(bar);
-//    createAndCommitFoo(bar);
-//    QueryExecutorSpy spy = new QueryExecutorSpy();
-//    ReverseFkEntityCollectionImpl list = createList(bar, spy);
-//    list.load();
-//    spy.reset();
-//    assertEquals(2, list.size());
-//    assertFalse(spy.anyCalled());
-//  }
-//
-//  @Test
-//  public void testGetThrowsIndexOutOfBoundsExceptionIfArgumentIsNegative() {
-//    IDBObject bar = createAndCommitBar();
-//    createAndCommitFoo(bar);
-//    ReverseFkEntityCollectionImpl list = createList(bar);
-//    try {
-//      list.get(-1);
-//      fail("Expected an IndexOutOfBoundsException");
-//    } catch (IndexOutOfBoundsException e) {
-//      // Expected
-//    }
-//  }
-//
-//  @Test
-//  public void testGetThrowsIndexOutOfBoundsExceptionIfArgumentIsGreaterThanSizeOfCollection() {
-//    IDBObject bar = createAndCommitBar();
-//    createAndCommitFoo(bar);
-//    ReverseFkEntityCollectionImpl list = createList(bar);
-//    try {
-//      list.get(2);
-//      fail("Expected an IndexOutOfBoundsException");
-//    } catch (IndexOutOfBoundsException e) {
-//      // Expected
-//    }
-//  }
-//
-//  @Test
-//  public void testGetThrowsIndexOutOfBoundsExceptionIfArgumentIsEqualToSizeOfCollection() {
-//    IDBObject bar = createAndCommitBar();
-//    createAndCommitFoo(bar);
-//    ReverseFkEntityCollectionImpl list = createList(bar);
-//    try {
-//      list.get(1);
-//      fail("Expected an IndexOutOfBoundsException");
-//    } catch (IndexOutOfBoundsException e) {
-//      // Expected
-//    }
-//  }
-//
-//  @Test
-//  public void testGetReturnsAppropriateElementIfArgumentIsValid() {
-//    IDBObject bar = createAndCommitBar();
-//    IDBObject foo = createAndCommitFoo(bar);
-//    ReverseFkEntityCollectionImpl list = createList(bar);
-//    IDBObject fooFromDB = list.get(0);
-//    assertEquals(foo.getColumnValue("id"), fooFromDB.getColumnValue("id"));
-//  }
-//
-//  @Test
-//  public void testIteratorHasNextReturnsFalseForEmptyList() {
-//    IDBObject bar = createAndCommitBar();
-//    ReverseFkEntityCollectionImpl list = createList(bar);
-//    assertFalse(list.iterator().hasNext());
-//  }
-//
-//  @Test
-//  public void testIteratorHasNextReturnsTrueAtStartOfNonEmptyList() {
-//    IDBObject bar = createAndCommitBar();
-//    IDBObject foo1 = createAndCommitFoo(bar);
-//    ReverseFkEntityCollectionImpl list = createList(bar);
-//    assertTrue(list.iterator().hasNext());
-//  }
-//
-//  @Test
-//  public void testIteratorNextReturnsItemsInIdOrder() {
-//    IDBObject bar = createAndCommitBar();
-//    IDBObject foo1 = createAndCommitFoo(bar);
-//    IDBObject foo2 = createAndCommitFoo(bar);
-//    IDBObject foo3 = createAndCommitFoo(bar);
-//    ReverseFkEntityCollectionImpl list = createList(bar);
-//    Iterator<IDBObject> it = list.iterator();
-//    assertTrue(it.hasNext());
-//    assertEquals(foo1.getColumnValue("id"), it.next().getColumnValue("id"));
-//    assertTrue(it.hasNext());
-//    assertEquals(foo2.getColumnValue("id"), it.next().getColumnValue("id"));
-//    assertTrue(it.hasNext());
-//    assertEquals(foo3.getColumnValue("id"), it.next().getColumnValue("id"));
-//    assertFalse(it.hasNext());
-//  }
-//
-//  @Test
-//  public void testIteratorHasNextReturnsFalseAtEndOfList() {
-//    IDBObject bar = createAndCommitBar();
-//    IDBObject foo1 = createAndCommitFoo(bar);
-//    ReverseFkEntityCollectionImpl list = createList(bar);
-//    Iterator<IDBObject> it = list.iterator();
-//    assertTrue(it.hasNext());
-//    it.next();
-//    assertFalse(it.hasNext());
-//  }
-//
-//  @Test
-//  public void testIteratorRemoveThrowsUnsupportedOperationException() {
-//    IDBObject bar = createAndCommitBar();
-//    IDBObject foo1 = createAndCommitFoo(bar);
-//    ReverseFkEntityCollectionImpl list = createList(bar);
-//    Iterator<IDBObject> it = list.iterator();
-//    it.next();
-//    try {
-//      it.remove();
-//      fail("Expected an UnsupportedOperationException");
-//    } catch (UnsupportedOperationException e) {
-//      // Expected
-//    }
-//  }
-//
-//  // TODO - AHK - Test for concurrent modification exceptions?
-//
-//  @Test
-//  public void testAddThrowsIllegalStateExceptionIfOwningEntityHasNotYetBeenCommitted() {
-//    IDBObject bar = new CachedDBObject((IDBType) TypeSystem.getByFullName("test.testdb.Bar"), true);
-//    IDBObject foo = createFoo();
-//    ReverseFkEntityCollectionImpl list = createList(bar);
-//    try {
-//      list.add(foo);
-//      fail("Expected add to throw an IllegalStateException");
-//    } catch (IllegalStateException e) {
-//      // Expected
-//    }
-//  }
-//
-//  @Test
-//  public void testAddSetsFkPointerIfEntityIsAlreadyInThisCollection() {
-//    IDBObject bar = createAndCommitBar();
-//    IDBObject foo = createAndCommitFoo(bar);
-//    ReverseFkEntityCollectionImpl list = createList(bar);
-//    assertEquals(1, list.size());
-//    list.add(foo);
-//    assertEquals(1, list.size());
-//    assertSame(bar, foo.getFkValue("Bar_id"));
-//  }
-//
+  @Test
+  public void testSizeReturnsOriginalSizeForLoadedArrayAfterChangesInDB() {
+    IDBObject foo = createAndCommitFoo();
+    createAndCommitBaz(foo);
+    createAndCommitBaz(foo);
+    JoinArrayEntityCollectionImpl list = createList(foo);
+    list.load();
+    assertEquals(2, list.size());
+    createAndCommitBaz(foo);
+    createAndCommitBaz(foo);
+    assertEquals(2, list.size());
+  }
+
+  @Test
+  public void testSizeReturnsCurrentSizeForNonLoadedArrayAfterChangesInDB() {
+    IDBObject foo = createAndCommitFoo();
+    createAndCommitBaz(foo);
+    createAndCommitBaz(foo);
+    JoinArrayEntityCollectionImpl list = createList(foo);
+    assertEquals(2, list.size());
+    createAndCommitBaz(foo);
+    createAndCommitBaz(foo);
+    assertEquals(4, list.size());
+  }
+
+  @Test
+  public void testSizeIssuesCountStarQueryIfArrayHasNotBeenLoaded() {
+    IDBObject foo = createAndCommitFoo();
+    QueryExecutorSpy spy = new QueryExecutorSpy();
+    JoinArrayEntityCollectionImpl list = createList(foo, spy);
+    assertEquals(0, list.size());
+    assertTrue(spy.countCalled());
+    assertFalse(spy.selectCalled());
+    assertFalse(spy.updateCalled());
+  }
+
+  @Test
+  public void testSizeDoesNotIssueQueriesIfArrayHasBeenLoaded() {
+    IDBObject foo = createAndCommitFoo();
+    createAndCommitBaz(foo);
+    createAndCommitBaz(foo);
+    QueryExecutorSpy spy = new QueryExecutorSpy();
+    JoinArrayEntityCollectionImpl list = createList(foo, spy);
+    list.load();
+    spy.reset();
+    assertEquals(2, list.size());
+    assertFalse(spy.anyCalled());
+  }
+
+  // ----------------------------- Tests for get(int)
+
+  @Test
+  public void testGetThrowsIndexOutOfBoundsExceptionIfArgumentIsNegative() {
+    IDBObject foo = createAndCommitFoo();
+    createAndCommitBaz(foo);
+    JoinArrayEntityCollectionImpl list = createList(foo);
+    try {
+      list.get(-1);
+      fail("Expected an IndexOutOfBoundsException");
+    } catch (IndexOutOfBoundsException e) {
+      // Expected
+    }
+  }
+
+  @Test
+  public void testGetThrowsIndexOutOfBoundsExceptionIfArgumentIsGreaterThanSizeOfCollection() {
+    IDBObject foo = createAndCommitFoo();
+    createAndCommitBaz(foo);
+    JoinArrayEntityCollectionImpl list = createList(foo);
+    try {
+      list.get(2);
+      fail("Expected an IndexOutOfBoundsException");
+    } catch (IndexOutOfBoundsException e) {
+      // Expected
+    }
+  }
+
+  @Test
+  public void testGetThrowsIndexOutOfBoundsExceptionIfArgumentIsEqualToSizeOfCollection() {
+    IDBObject foo = createAndCommitFoo();
+    createAndCommitBaz(foo);
+    JoinArrayEntityCollectionImpl list = createList(foo);
+    try {
+      list.get(1);
+      fail("Expected an IndexOutOfBoundsException");
+    } catch (IndexOutOfBoundsException e) {
+      // Expected
+    }
+  }
+
+  @Test
+  public void testGetReturnsAppropriateElementIfArgumentIsValid() {
+    IDBObject foo = createAndCommitFoo();
+    IDBObject baz = createAndCommitBaz(foo);
+    JoinArrayEntityCollectionImpl list = createList(foo);
+    IDBObject bazFromDB = list.get(0);
+    assertEquals(baz.getId(), bazFromDB.getId());
+  }
+
+  // ------------------------------- Tests for iterator()
+
+  @Test
+  public void testIteratorHasNextReturnsFalseForEmptyList() {
+    IDBObject foo = createAndCommitFoo();
+    JoinArrayEntityCollectionImpl list = createList(foo);
+    assertFalse(list.iterator().hasNext());
+  }
+
+  @Test
+  public void testIteratorHasNextReturnsTrueAtStartOfNonEmptyList() {
+    IDBObject foo = createAndCommitFoo();
+    IDBObject baz = createAndCommitBaz(foo);
+    JoinArrayEntityCollectionImpl list = createList(foo);
+    assertTrue(list.iterator().hasNext());
+  }
+
+  @Test
+  public void testIteratorNextReturnsItemsInIdOrder() {
+    IDBObject foo = createAndCommitFoo();
+    IDBObject baz1 = createAndCommitBaz(foo);
+    IDBObject baz2 = createAndCommitBaz(foo);
+    IDBObject baz3 = createAndCommitBaz(foo);
+    JoinArrayEntityCollectionImpl list = createList(foo);
+    Iterator<IDBObject> it = list.iterator();
+    assertTrue(it.hasNext());
+    assertEquals(baz1.getId(), it.next().getId());
+    assertTrue(it.hasNext());
+    assertEquals(baz2.getId(), it.next().getId());
+    assertTrue(it.hasNext());
+    assertEquals(baz3.getId(), it.next().getId());
+    assertFalse(it.hasNext());
+  }
+
+  @Test
+  public void testIteratorHasNextReturnsFalseAtEndOfList() {
+    IDBObject foo = createAndCommitFoo();
+    IDBObject baz = createAndCommitBaz(foo);
+    JoinArrayEntityCollectionImpl list = createList(foo);
+    Iterator<IDBObject> it = list.iterator();
+    assertTrue(it.hasNext());
+    it.next();
+    assertFalse(it.hasNext());
+  }
+
+  @Test
+  public void testIteratorRemoveThrowsUnsupportedOperationException() {
+    IDBObject foo = createAndCommitFoo();
+    IDBObject baz = createAndCommitBaz(foo);
+    JoinArrayEntityCollectionImpl list = createList(foo);
+    Iterator<IDBObject> it = list.iterator();
+    it.next();
+    try {
+      it.remove();
+      fail("Expected an UnsupportedOperationException");
+    } catch (UnsupportedOperationException e) {
+      // Expected
+    }
+  }
+
+  // TODO - AHK - Test for concurrent modification exceptions?
+
+  // -------------------------------- Tests for Add
+
+  @Test
+  public void testAddThrowsIllegalStateExceptionIfOwningEntityHasNotYetBeenCommitted() {
+    IDBObject foo = new CachedDBObject((IDBType) TypeSystem.getByFullName("test.testdb.Foo"), true);
+    IDBObject baz = createBaz();
+    JoinArrayEntityCollectionImpl list = createList(foo);
+    try {
+      list.add(baz);
+      fail("Expected add to throw an IllegalStateException");
+    } catch (IllegalStateException e) {
+      // Expected
+    }
+  }
+
+  @Test
+  public void testAddSetsArrayBackPointerIfEntityIsAlreadyInThisCollection() {
+    IDBObject foo = createAndCommitFoo();
+    IDBObject baz = createAndCommitBaz(foo);
+    JoinArrayEntityCollectionImpl list = createList(foo);
+    assertEquals(1, list.size());
+    assertEquals(1, countMatchesInDB(foo, baz));
+    list.add(baz);
+    assertEquals(1, list.size());
+    // TODO - AHK - Check that foo is in baz.Foos
+    assertEquals(1, countMatchesInDB(foo, baz));
+  }
+
 //  @Test
 //  public void testAddThrowsIllegalArgumentExceptionIfEntityIsAlreadyInAnotherCollection() {
 //    IDBObject bar1 = createAndCommitBar();
@@ -311,48 +324,47 @@ public class JoinArrayEntityCollectionImplTest {
 //      // Expected
 //    }
 //  }
-//
-//  @Test
-//  public void testAddThrowsIllegalArgumentExceptionIfEntityIsOfWrongType() {
-//    IDBObject bar1 = createAndCommitBar();
-//    IDBObject bar2 = createAndCommitBar();
-//
-//    ReverseFkEntityCollectionImpl list = createList(bar1);
-//    try {
-//      list.add(bar2);
-//      fail("Expected add to throw an IllegalArgumentException");
-//    } catch (IllegalArgumentException e) {
-//      // Expected
-//    }
-//  }
-//
-//  @Test
-//  public void testAddInsertsNewObjectInDatabaseAndSetsFkBackPointerIfObjectIsNotYetCommitted() {
-//    IDBObject bar = createAndCommitBar();
-//    IDBObject foo = createFoo();
-//    assertNull(foo.getColumnValue("id"));
-//    assertTrue(foo.isNew());
-//    ReverseFkEntityCollectionImpl list = createList(bar);
-//    list.add(foo);
-//    assertNotNull(foo.getColumnValue("id"));
-//    assertFalse(foo.isNew());
-//    assertSame(bar, foo.getFkValue("Bar_id"));
-//    assertEquals(1, countMatchesInDB(foo, bar));
-//  }
-//
-//  @Test
-//  public void testAddUpdatesFkInDatabaseAndSetsFkBackPointerIfObjectHasAlreadyBeenPersisted() {
-//    IDBObject bar = createAndCommitBar();
-//    IDBObject foo = createFoo();
-//    update(foo);
-//    assertEquals(0, countMatchesInDB(foo, bar));
-//    ReverseFkEntityCollectionImpl list = createList(bar);
-//    list.add(foo);
-//    assertEquals(bar.getId(), foo.getColumnValue("Bar_id"));
-//    assertSame(bar, foo.getFkValue("Bar_id"));
-//    assertEquals(1, countMatchesInDB(foo, bar));
-//  }
-//
+
+  @Test
+  public void testAddThrowsIllegalArgumentExceptionIfEntityIsOfWrongType() {
+    IDBObject foo1 = createAndCommitFoo();
+    IDBObject foo2 = createAndCommitFoo();
+
+    JoinArrayEntityCollectionImpl list = createList(foo1);
+    try {
+      list.add(foo2);
+      fail("Expected add to throw an IllegalArgumentException");
+    } catch (IllegalArgumentException e) {
+      // Expected
+    }
+  }
+
+  @Test
+  public void testAddInsertsNewObjectInDatabaseAndArrayBackPointerIfObjectIsNotYetCommitted() {
+    IDBObject foo = createAndCommitFoo();
+    IDBObject baz = createBaz();
+    assertNull(baz.getId());
+    assertTrue(baz.isNew());
+    JoinArrayEntityCollectionImpl list = createList(foo);
+    list.add(baz);
+    assertNotNull(baz.getId());
+    assertFalse(baz.isNew());
+    // TODO - AHK - Test that baz.Foos contains Foo
+    assertEquals(1, countMatchesInDB(foo, baz));
+  }
+
+  @Test
+  public void testAddInsertsJoinRowInDatabaseAndSetsArrayBackPointerIfObjectHasAlreadyBeenPersisted() {
+    IDBObject foo = createAndCommitFoo();
+    IDBObject baz = createBaz();
+    update(baz);
+    assertEquals(0, countMatchesInDB(foo, baz));
+    JoinArrayEntityCollectionImpl list = createList(foo);
+    list.add(baz);
+    // TODO - AHK - Test that baz.Foos contains Foo
+    assertEquals(1, countMatchesInDB(foo, baz));
+  }
+
 //  @Test
 //  public void testAddShowsElementInResultsImmediatelyIfResultsWereNotPreviouslyLoaded() {
 //    IDBObject bar = createAndCommitBar();
@@ -494,10 +506,16 @@ public class JoinArrayEntityCollectionImplTest {
 
   // ----------------------------- Helper Methods/Classes
 
-//  private int countMatchesInDB(IDBObject foo, IDBObject bar) {
-//    String sql = SimpleSqlBuilder.select("count(*) as count").from(foo.getDBTable()).where("\"id\" = " + foo.getId() + " AND \"Bar_id\" = " + bar.getId()).toString();
-//    return new QueryExecutorImpl(getDB()).count("", sql);
-//  }
+  private int countMatchesInDB(IDBObject foo, IDBObject baz) {
+    IDBTable joinTable = getDB().getTable("join_Foo_Baz");
+    String sql = SimpleSqlBuilder.substitute("SELECT count(*) as count FROM ${joinTable} WHERE ${fooColumn} = ${fooId} AND ${bazColumn} = ${bazId}",
+        "joinTable", joinTable,
+        "fooColumn", joinTable.getColumn("Foo_id"),
+        "fooId", foo.getId(),
+        "bazColumn", joinTable.getColumn("Baz_id"),
+        "bazId", baz.getId());
+    return new QueryExecutorImpl(getDB()).count("", sql);
+  }
 
   private static class QueryExecutorSpy implements QueryExecutor {
 
