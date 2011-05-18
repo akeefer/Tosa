@@ -85,6 +85,19 @@ public class QueryExecutorImpl implements QueryExecutor {
     }
   }
 
+  @Override
+  public void insert(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
+    // TODO - AHK - Verify it starts with INSERT ?
+    Profiler profiler = Util.newProfiler(profilerTag);
+    profiler.start(sqlStatement + " (" + Arrays.asList(sqlStatement) + ")");
+    try {
+      _db.getDBExecutionKernel().executeInsert(sqlStatement,
+          parameters);
+    } finally {
+      profiler.stop();
+    }
+  }
+
   // TODO - AHK - This is a duplicate AND it's public
   // TODO - AHK The general query execution API here just needs a weeeee bit of help
   public static class CachedDBQueryResultProcessor implements IQueryResultProcessor<IDBObject> {

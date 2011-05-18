@@ -1,8 +1,10 @@
 package tosa.impl;
 
+import gw.util.GosuExceptionUtil;
 import tosa.api.*;
 import tosa.loader.IDBType;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -32,7 +34,57 @@ public class JoinArrayEntityCollectionImpl<T extends IDBObject> extends EntityCo
 
   @Override
   protected void addImpl(T element) {
-    //To change body of implemented methods use File | Settings | File Templates.
+    // If the element is already in the array, then just set up the back-pointers
+    if (!isAlreadyInArray(element)) {
+
+      // If the element hasn't yet been persisted, we have to persist it so that it has an id we can insert into the join table
+      if (element.isNew()) {
+        try {
+          element.update();
+        } catch (SQLException e) {
+          GosuExceptionUtil.forceThrow(e);
+        }
+      }
+
+      String sql = SimpleSqlBuilder.substitute("INSERT INTO ${joinTable} (${srcFk}, ${targetFk}) VALUES (?, ?)",
+          "joinTable", _srcColumn.getTable(),
+          "srcFk", _srcColumn,
+          "targetFk", _targetColumn);
+      IPreparedStatementParameter srcParam = _srcColumn.wrapParameterValue(_owner.getId());
+      IPreparedStatementParameter destParam = _targetColumn.wrapParameterValue(element.getId());
+      _queryExecutor.insert("JoinArrayEntityCollectionImpl.addImpl()", sql, srcParam, destParam);
+
+      if (_cachedResults != null) {
+        _cachedResults.add(element);
+      }
+    } else {
+      // TODO - AHK - Replace the existing array reference, if necessary
+    }
+
+    // Set the array back-pointer
+    // TODO - AHK
+  }
+
+  private boolean isAlreadyInArray(T element) {
+    if (_cachedResults != null) {
+      for (T result : _cachedResults) {
+        if (result.getId().equals(element.getId())) {
+          return true;
+        }
+      }
+
+      return false;
+    } else {
+      String sql = SimpleSqlBuilder.substitute("SELECT count(*) as count FROM ${joinTable} WHERE ${srcFk} = ? AND ${targetFk} = ?",
+          "joinTable", _srcColumn.getTable(),
+          "srcFk", _srcColumn,
+          "targetFk", _targetColumn);
+      IPreparedStatementParameter srcFkParam = _srcColumn.wrapParameterValue(_owner.getId());
+      IPreparedStatementParameter targetFkParam = _srcColumn.wrapParameterValue(element.getId());
+      int numResults = _queryExecutor.count("JoinArrayEntityCollectionImpl.isAlreadyInArray()", sql, srcFkParam, targetFkParam);
+      // TODO - AHK - Report an error if there's more than one result?
+      return numResults > 0;
+    }
   }
 
   @Override
@@ -52,7 +104,7 @@ public class JoinArrayEntityCollectionImpl<T extends IDBObject> extends EntityCo
     String sql = SimpleSqlBuilder.substitute("SELECT count(*) as count FROM ${joinTable} WHERE ${srcFk} = ?",
           "joinTable", _srcColumn.getTable(),
           "srcFk", _srcColumn);
-      IPreparedStatementParameter param = _srcColumn.wrapParameterValue(_owner.getId());
-      return _queryExecutor.count("JoinArrayEntityCollectionImpl.size()", sql, param);
+    IPreparedStatementParameter param = _srcColumn.wrapParameterValue(_owner.getId());
+    return _queryExecutor.count("JoinArrayEntityCollectionImpl.size()", sql, param);
   }
 }

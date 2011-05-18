@@ -139,7 +139,7 @@ public class ReverseFkEntityCollectionImplTest {
   @Test
   public void testSizeIssuesCountStarQueryIfArrayHasNotBeenLoaded() {
     IDBObject bar = createAndCommitBar();
-    QueryExecutorSpy spy = new QueryExecutorSpy();
+    QueryExecutorSpy spy = new QueryExecutorSpy(getDB());
     ReverseFkEntityCollectionImpl list = createList(bar, spy);
     assertEquals(0, list.size());
     assertTrue(spy.countCalled());
@@ -152,7 +152,7 @@ public class ReverseFkEntityCollectionImplTest {
     IDBObject bar = createAndCommitBar();
     createAndCommitFoo(bar);
     createAndCommitFoo(bar);
-    QueryExecutorSpy spy = new QueryExecutorSpy();
+    QueryExecutorSpy spy = new QueryExecutorSpy(getDB());
     ReverseFkEntityCollectionImpl list = createList(bar, spy);
     list.load();
     spy.reset();
@@ -494,57 +494,5 @@ public class ReverseFkEntityCollectionImplTest {
   private int countMatchesInDB(IDBObject foo, IDBObject bar) {
     String sql = SimpleSqlBuilder.select("count(*) as count").from(foo.getDBTable()).where("\"id\" = " + foo.getId() + " AND \"Bar_id\" = " + bar.getId()).toString();
     return new QueryExecutorImpl(getDB()).count("", sql);
-  }
-
-  private static class QueryExecutorSpy implements QueryExecutor {
-
-    private QueryExecutorImpl _delegate;
-    private String _count;
-    private String _select;
-    private String _update;
-
-    private QueryExecutorSpy() {
-      _delegate = new QueryExecutorImpl(getDB());
-    }
-
-    @Override
-    public int count(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
-      _count = sqlStatement;
-      return _delegate.count(profilerTag, sqlStatement, parameters);
-    }
-
-    @Override
-    public List<IDBObject> selectEntity(String profilerTag, IDBType targetType, String sqlStatement, IPreparedStatementParameter... parameters) {
-      _select = sqlStatement;
-      return _delegate.selectEntity(profilerTag, targetType, sqlStatement, parameters);
-    }
-
-    @Override
-    public void update(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
-      _update = sqlStatement;
-      update(profilerTag, sqlStatement, parameters);
-    }
-
-    public boolean countCalled() {
-      return _count != null;
-    }
-
-    public boolean selectCalled() {
-      return _select != null;
-    }
-
-    public boolean updateCalled() {
-      return _update != null;
-    }
-
-    public boolean anyCalled() {
-      return countCalled() || selectCalled() || updateCalled();
-    }
-
-    public void reset() {
-      _count = null;
-      _select = null;
-      _update = null;
-    }
   }
 }

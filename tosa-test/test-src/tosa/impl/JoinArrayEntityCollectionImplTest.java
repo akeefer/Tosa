@@ -3,20 +3,17 @@ package tosa.impl;
 import gw.lang.reflect.TypeSystem;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import sun.java2d.pipe.SpanShapeRenderer;
 import test.TestEnv;
 import tosa.CachedDBObject;
 import tosa.api.IDBColumn;
 import tosa.api.IDBObject;
 import tosa.api.IDBTable;
-import tosa.api.IPreparedStatementParameter;
 import tosa.dbmd.DatabaseImpl;
 import tosa.loader.DBTypeLoader;
 import tosa.loader.IDBType;
 
 import java.sql.SQLException;
 import java.util.Iterator;
-import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -147,7 +144,7 @@ public class JoinArrayEntityCollectionImplTest {
   @Test
   public void testSizeIssuesCountStarQueryIfArrayHasNotBeenLoaded() {
     IDBObject foo = createAndCommitFoo();
-    QueryExecutorSpy spy = new QueryExecutorSpy();
+    QueryExecutorSpy spy = new QueryExecutorSpy(getDB());
     JoinArrayEntityCollectionImpl list = createList(foo, spy);
     assertEquals(0, list.size());
     assertTrue(spy.countCalled());
@@ -160,7 +157,7 @@ public class JoinArrayEntityCollectionImplTest {
     IDBObject foo = createAndCommitFoo();
     createAndCommitBaz(foo);
     createAndCommitBaz(foo);
-    QueryExecutorSpy spy = new QueryExecutorSpy();
+    QueryExecutorSpy spy = new QueryExecutorSpy(getDB());
     JoinArrayEntityCollectionImpl list = createList(foo, spy);
     list.load();
     spy.reset();
@@ -296,12 +293,28 @@ public class JoinArrayEntityCollectionImplTest {
   }
 
   @Test
-  public void testAddSetsArrayBackPointerIfEntityIsAlreadyInThisCollection() {
+  public void testAddSetsArrayBackPointerAndArrayPointerIfEntityIsAlreadyInThisCollectionAndCollectionHasBeenLoaded() {
     IDBObject foo = createAndCommitFoo();
     IDBObject baz = createAndCommitBaz(foo);
     JoinArrayEntityCollectionImpl list = createList(foo);
     assertEquals(1, list.size());
     assertEquals(1, countMatchesInDB(foo, baz));
+    list.load();
+    list.add(baz);
+    assertEquals(1, list.size());
+    // TODO - AHK - Check that foo is in baz.Foos
+    assertEquals(1, countMatchesInDB(foo, baz));
+    assertSame(baz, list.get(0));
+  }
+
+  @Test
+  public void testAddSetsArrayBackPointerIfEntityIsAlreadyInThisCollectionAndCollectionHasNotBeenLoaded() {
+    IDBObject foo = createAndCommitFoo();
+    IDBObject baz = createAndCommitBaz(foo);
+    JoinArrayEntityCollectionImpl list = createList(foo);
+    assertEquals(1, list.size());
+    assertEquals(1, countMatchesInDB(foo, baz));
+    list.unload(); // Sanity check - should be unnecessary, but just in case
     list.add(baz);
     assertEquals(1, list.size());
     // TODO - AHK - Check that foo is in baz.Foos
@@ -517,55 +530,4 @@ public class JoinArrayEntityCollectionImplTest {
     return new QueryExecutorImpl(getDB()).count("", sql);
   }
 
-  private static class QueryExecutorSpy implements QueryExecutor {
-
-    private QueryExecutorImpl _delegate;
-    private String _count;
-    private String _select;
-    private String _update;
-
-    private QueryExecutorSpy() {
-      _delegate = new QueryExecutorImpl(getDB());
-    }
-
-    @Override
-    public int count(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
-      _count = sqlStatement;
-      return _delegate.count(profilerTag, sqlStatement, parameters);
-    }
-
-    @Override
-    public List<IDBObject> selectEntity(String profilerTag, IDBType targetType, String sqlStatement, IPreparedStatementParameter... parameters) {
-      _select = sqlStatement;
-      return _delegate.selectEntity(profilerTag, targetType, sqlStatement, parameters);
-    }
-
-    @Override
-    public void update(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
-      _update = sqlStatement;
-      update(profilerTag, sqlStatement, parameters);
-    }
-
-    public boolean countCalled() {
-      return _count != null;
-    }
-
-    public boolean selectCalled() {
-      return _select != null;
-    }
-
-    public boolean updateCalled() {
-      return _update != null;
-    }
-
-    public boolean anyCalled() {
-      return countCalled() || selectCalled() || updateCalled();
-    }
-
-    public void reset() {
-      _count = null;
-      _select = null;
-      _update = null;
-    }
-  }
 }

@@ -22,4 +22,6 @@ public interface QueryExecutor {
   List<IDBObject> selectEntity(String profilerTag, IDBType targetType, String sqlStatement, IPreparedStatementParameter... parameters);
 
   void update(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters);
+
+  void insert(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters);
 }
