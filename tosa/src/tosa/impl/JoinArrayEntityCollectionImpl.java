@@ -34,7 +34,6 @@ public class JoinArrayEntityCollectionImpl<T extends IDBObject> extends EntityCo
 
   @Override
   protected void addImpl(T element) {
-    // If the element is already in the array, then just set up the back-pointers
     if (!isAlreadyInArray(element)) {
 
       // If the element hasn't yet been persisted, we have to persist it so that it has an id we can insert into the join table
@@ -58,7 +57,18 @@ public class JoinArrayEntityCollectionImpl<T extends IDBObject> extends EntityCo
         _cachedResults.add(element);
       }
     } else {
-      // TODO - AHK - Replace the existing array reference, if necessary
+      // If the element is already in the array, and the results have been cached, we really want to update the pointers
+      // so that the version in the array is the same pointer that we just got passed in.  That way "add" has the
+      // same pointer semantics if the results have been loaded, regardless of whether or not the element is already
+      // in the array:  in all cases, the element is now in the array
+      if (_cachedResults != null) {
+        for (int i = 0; i < _cachedResults.size(); i++) {
+          if (_cachedResults.get(i).getId().equals(element.getId())) {
+            _cachedResults.set(i, element);
+            break; // There should only ever be one match, so stop iterating
+          }
+        }
+      }
     }
 
     // Set the array back-pointer
