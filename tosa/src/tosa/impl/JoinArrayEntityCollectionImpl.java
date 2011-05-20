@@ -29,7 +29,30 @@ public class JoinArrayEntityCollectionImpl<T extends IDBObject> extends EntityCo
 
   @Override
   protected void removeImpl(T element) {
-    //To change body of implemented methods use File | Settings | File Templates.
+    if (!isAlreadyInArray(element)) {
+      throw new IllegalArgumentException("The element " + element.getDBTable().getName() + "(" + element.getId() +
+              ") cannot be removed from the join array on " + _owner.getDBTable().getName() + "(" + _owner.getId() + ") as it's not currently in the array");
+    }
+
+    String sql = SimpleSqlBuilder.substitute("DELETE FROM ${joinTable} WHERE ${srcFk} =? AND ${targetFk} = ?",
+          "joinTable", _srcColumn.getTable(),
+          "srcFk", _srcColumn,
+          "targetFk", _targetColumn);
+
+    IPreparedStatementParameter srcParam = _srcColumn.wrapParameterValue(_owner.getId());
+    IPreparedStatementParameter targetParam = _targetColumn.wrapParameterValue(element.getId());
+    _queryExecutor.delete("JoinArrayEntityCollectionImpl.removeImpl()", sql, srcParam, targetParam);
+
+    // If the results have already been loaded, we need to remove the element.  We can't do just .equals() or a pointer compare,
+    // since the version in there might be different, so instead we want to compare ids
+    if (_cachedResults != null) {
+      for (int i = 0; i < _cachedResults.size(); i++) {
+        if (_cachedResults.get(i).getId().equals(element.getId())) {
+          _cachedResults.remove(i);
+          break;
+        }
+      }
+    }
   }
 
   @Override
@@ -50,8 +73,8 @@ public class JoinArrayEntityCollectionImpl<T extends IDBObject> extends EntityCo
           "srcFk", _srcColumn,
           "targetFk", _targetColumn);
       IPreparedStatementParameter srcParam = _srcColumn.wrapParameterValue(_owner.getId());
-      IPreparedStatementParameter destParam = _targetColumn.wrapParameterValue(element.getId());
-      _queryExecutor.insert("JoinArrayEntityCollectionImpl.addImpl()", sql, srcParam, destParam);
+      IPreparedStatementParameter targetParam = _targetColumn.wrapParameterValue(element.getId());
+      _queryExecutor.insert("JoinArrayEntityCollectionImpl.addImpl()", sql, srcParam, targetParam);
 
       if (_cachedResults != null) {
         _cachedResults.add(element);

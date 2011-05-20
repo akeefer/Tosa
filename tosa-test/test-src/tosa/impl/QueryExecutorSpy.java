@@ -21,6 +21,7 @@ class QueryExecutorSpy implements QueryExecutor {
   private String _select;
   private String _update;
   private String _insert;
+  private String _delete;
 
   QueryExecutorSpy(IDatabase db) {
     _delegate = new QueryExecutorImpl(db);
@@ -50,6 +51,12 @@ class QueryExecutorSpy implements QueryExecutor {
     _delegate.insert(profilerTag, sqlStatement, parameters);
   }
 
+  @Override
+  public void delete(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
+    _delete = sqlStatement;
+    _delegate.delete(profilerTag, sqlStatement, parameters);
+  }
+
   public boolean countCalled() {
     return _count != null;
   }
@@ -66,8 +73,12 @@ class QueryExecutorSpy implements QueryExecutor {
     return _insert != null;
   }
 
+  public boolean deleteCalled() {
+    return _delete != null;
+  }
+
   public boolean anyCalled() {
-    return countCalled() || selectCalled() || updateCalled() || insertCalled();
+    return countCalled() || selectCalled() || updateCalled() || insertCalled() || deleteCalled();
   }
 
   public void reset() {
@@ -75,5 +86,6 @@ class QueryExecutorSpy implements QueryExecutor {
     _select = null;
     _update = null;
     _insert = null;
+    _delete = null;
   }
 }
