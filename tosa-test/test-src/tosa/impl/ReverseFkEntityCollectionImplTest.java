@@ -3,6 +3,7 @@ package tosa.impl;
 import gw.lang.reflect.TypeSystem;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import sun.java2d.pipe.SpanShapeRenderer;
 import test.TestEnv;
 import tosa.CachedDBObject;
 import tosa.api.IDBObject;
@@ -492,7 +493,12 @@ public class ReverseFkEntityCollectionImplTest {
   // ----------------------------- Helper Methods/Classes
 
   private int countMatchesInDB(IDBObject foo, IDBObject bar) {
-    String sql = SimpleSqlBuilder.select("count(*) as count").from(foo.getDBTable()).where("\"id\" = " + foo.getId() + " AND \"Bar_id\" = " + bar.getId()).toString();
+    String sql = SimpleSqlBuilder.substitute("SELECT count(*) as count FROM ${fooTable} WHERE ${idColumn} = ${fooId} AND ${barColumn} = ${barId}",
+        "fooTable", foo.getDBTable(),
+        "idColumn", "\"id\"",
+        "fooId", foo.getId(),
+        "barColumn", "\"Bar_id\"",
+        "barId", bar.getId());
     return new QueryExecutorImpl(getDB()).count("", sql);
   }
 }
