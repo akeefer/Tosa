@@ -33,7 +33,9 @@ public class ReverseFkEntityCollectionImpl<T extends IDBObject> extends EntityCo
 
   @Override
   protected int issueCountQuery() {
-    String text = SimpleSqlBuilder.select("count(*) as count").from(_fkType).where(_fkColumn, "=", "?").toString();
+    String text = SimpleSqlBuilder.substitute("SELECT count(*) as count FROM ${fkTable} WHERE ${fkColumn} = ?",
+        "fkTable", _fkType.getTable(),
+        "fkColumn", _fkColumn);
     IPreparedStatementParameter param = _fkColumn.wrapParameterValue(_owner.getColumnValue(DBTypeInfo.ID_COLUMN));
     return _queryExecutor.count("ReverseFkEntityCollectionImpl.size()", text, param);
   }
@@ -41,7 +43,10 @@ public class ReverseFkEntityCollectionImpl<T extends IDBObject> extends EntityCo
   @Override
   protected List<T> loadResults() {
     IDBColumn idColumn = _fkColumn.getTable().getColumn(DBTypeInfo.ID_COLUMN);
-    String sql = SimpleSqlBuilder.select("*").from(_fkColumn.getTable()).where(_fkColumn, "=", "?").order_by(idColumn).toString();
+    String sql = SimpleSqlBuilder.substitute("SELECT * FROM ${fkTable} WHERE ${fkColumn} = ? ORDER BY ${idColumn}",
+        "fkTable", _fkColumn.getTable(),
+        "fkColumn", _fkColumn,
+        "idColumn", idColumn);
     IPreparedStatementParameter param = _fkColumn.wrapParameterValue(_owner.getColumnValue(DBTypeInfo.ID_COLUMN));
     return (List<T>) _queryExecutor.selectEntity("ReverseFkEntityCollectionImpl.loadResultsIfNecessary()", _fkType, sql, param);
   }
@@ -62,7 +67,10 @@ public class ReverseFkEntityCollectionImpl<T extends IDBObject> extends EntityCo
       } else {
         // For entities already in the database, we issue the update statement in the database directly
         IDBColumn idColumn = _fkColumn.getTable().getColumn(DBTypeInfo.ID_COLUMN);
-        String updateSql = SimpleSqlBuilder.update(_fkColumn.getTable()).set(_fkColumn, "?").where(idColumn, "=", "?").toString();
+        String updateSql = SimpleSqlBuilder.substitute("UPDATE ${fkTable} SET ${fkColumn} = ? WHERE ${idColumn} = ?",
+            "fkTable", _fkColumn.getTable(),
+            "fkColumn", _fkColumn,
+            "idColumn", idColumn);
         IPreparedStatementParameter fkParam = idColumn.wrapParameterValue(_owner.getColumnValue(DBTypeInfo.ID_COLUMN));
         IPreparedStatementParameter idParam = idColumn.wrapParameterValue(element.getColumnValue(DBTypeInfo.ID_COLUMN));
         _queryExecutor.update("ReverseFkEntityCollectionImpl.add()", updateSql, fkParam, idParam);
@@ -88,7 +96,10 @@ public class ReverseFkEntityCollectionImpl<T extends IDBObject> extends EntityCo
 
     element.setFkValue(_fkColumn.getName(), null);
     IDBColumn idColumn = _fkColumn.getTable().getColumn(DBTypeInfo.ID_COLUMN);
-    String updateSql = SimpleSqlBuilder.update(_fkColumn.getTable()).set(_fkColumn, "NULL").where(idColumn, "=", "?").toString();
+    String updateSql = SimpleSqlBuilder.substitute("UPDATE ${fkTable} SET ${fkColumn} = NULL WHERE ${idColumn} = ?",
+        "fkTable", _fkColumn.getTable(),
+        "fkColumn", _fkColumn,
+        "idColumn", idColumn);
     IPreparedStatementParameter idParam = idColumn.wrapParameterValue(element.getColumnValue(DBTypeInfo.ID_COLUMN));
     _queryExecutor.update("ReverseFkEntityCollectionImpl.remove()", updateSql, idParam);
 

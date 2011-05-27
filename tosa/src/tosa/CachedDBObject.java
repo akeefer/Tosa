@@ -286,7 +286,9 @@ public class CachedDBObject implements IDBObject {
     IDBColumn idColumn = table.getColumn(DBTypeInfo.ID_COLUMN);
     // TODO - AHK - Need some better way to convert between the two
     IDBType resultType = (IDBType) TypeSystem.getByFullName(table.getDatabase().getNamespace() + "." + table.getName());
-    String sql = SimpleSqlBuilder.select("*").from(table).where(idColumn, "=", "?").toString();
+    String sql = SimpleSqlBuilder.substitute("SELECT * FROM ${table} WHERE ${idColumn} = ?",
+        "table", table,
+        "idColumn", idColumn);
     IPreparedStatementParameter param = idColumn.wrapParameterValue(id);
     // TODO - AHK - Fetch this from somewhere?
     List<IDBObject> results = new QueryExecutorImpl(table.getDatabase()).selectEntity("CachedDBObject.loadEntity()", resultType, sql, param);
