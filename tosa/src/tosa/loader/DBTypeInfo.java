@@ -6,12 +6,11 @@ import gw.lang.reflect.features.PropertyReference;
 import gw.lang.reflect.java.IJavaType;
 import gw.util.concurrent.LazyVar;
 import tosa.CachedDBObject;
-import tosa.Join;
+import tosa.api.IDBArray;
 import tosa.api.IDBColumn;
 import tosa.api.IPreparedStatementParameter;
 import tosa.db.execution.QueryExecutor;
 import tosa.dbmd.DBColumnImpl;
-import tosa.dbmd.DBTableImpl;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -380,15 +379,9 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
 
   private Map<String, IPropertyInfo> makeArrayProperties() {
     Map<String, IPropertyInfo> arrayProps = new HashMap<String, IPropertyInfo>();
-    for (IDBColumn fkColumn : getOwnersType().getTable().getIncomingFKs()) {
-      // TODO - AHK - Deal with multiple incoming fks
-      IPropertyInfo arrayProp = makeArrayProperty(fkColumn);
+    for (IDBArray dbArray : getOwnersType().getTable().getArrays()) {
+      IPropertyInfo arrayProp = makeArrayProperty(dbArray);
       arrayProps.put(arrayProp.getName(), arrayProp);
-    }
-    // TODO - AHK - Ideally this cast wouldn't be necessary
-    for (Join joinTable : ((DBTableImpl) getOwnersType().getTable()).getJoins()) {
-      IPropertyInfo joinProp = makeJoinProperty(joinTable);
-      arrayProps.put(joinProp.getName(), joinProp);
     }
     return arrayProps;
   }
@@ -397,12 +390,8 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
     return new DBPropertyInfo(this, column);
   }
 
-  private IPropertyInfo makeArrayProperty(IDBColumn fkColumn) {
-    return new DBArrayPropertyInfo(this, fkColumn);
-  }
-
-  private IPropertyInfo makeJoinProperty(final Join join) {
-    return new DBJoinPropertyInfo(this, join);
+  private IPropertyInfo makeArrayProperty(IDBArray dbArray) {
+    return new DBArrayPropertyInfo(this, dbArray);
   }
 
   @Override

@@ -1,6 +1,6 @@
 package tosa.dbmd;
 
-import tosa.Join;
+import tosa.api.IDBArray;
 import tosa.api.IDBColumn;
 import tosa.api.IDBTable;
 import tosa.api.IDatabase;
@@ -8,6 +8,7 @@ import tosa.loader.data.ColumnData;
 import tosa.loader.data.TableData;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -24,16 +25,14 @@ public class DBTableImpl implements IDBTable {
   private final TableData _tableData;
   private final boolean _hasId;
   private final List<DBColumnImpl> _columns;
-
-  // All the tables that this table is joined with
-  private final List<Join> _joins;
+  private final List<IDBArray> _arrays;
   // Tables that have FKs to this table
   private final List<IDBColumn> _incomingFKs;
 
   public DBTableImpl(DatabaseImpl database, TableData tableData) {
     _database = database;
     _tableData = tableData;
-    _joins = new ArrayList<Join>();
+    _arrays = new ArrayList<IDBArray>();
     _incomingFKs = new ArrayList<IDBColumn>();
 
     // It might be best to do this in a separate method, but that gets annoying with Java rules
@@ -78,22 +77,34 @@ public class DBTableImpl implements IDBTable {
     return _columns;
   }
 
+  @Override
+  public IDBArray getArray(String propertyName) {
+    // TODO - AHK - Use a hash table if it matters
+    for (IDBArray array : _arrays) {
+      if (propertyName.equals(array.getPropertyName())) {
+        return array;
+      }
+    }
+
+    return null;
+  }
+
+  @Override
+  public Collection<? extends IDBArray> getArrays() {
+    return _arrays;
+  }
+
   public boolean hasId() {
     return _hasId;
   }
 
-  // TODO - AHK - Kill this if possible
-  void addJoin(Join join) {
-    _joins.add(join);
+  void addArray(IDBArray array) {
+    _arrays.add(array);
   }
 
   // TODO - AHK - Kill this if possible
   void addIncomingFK(IDBColumn fkColumn) {
     _incomingFKs.add(fkColumn);
-  }
-
-  public List<Join> getJoins() {
-    return _joins;
   }
 
   public List<? extends IDBColumn> getIncomingFKs() {

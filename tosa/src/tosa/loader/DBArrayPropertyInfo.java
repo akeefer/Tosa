@@ -17,6 +17,7 @@ import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.java.IJavaType;
 import tosa.CachedDBObject;
 import tosa.api.EntityCollection;
+import tosa.api.IDBArray;
 import tosa.api.IDBColumn;
 import tosa.api.IDBTable;
 import tosa.db.execution.QueryExecutor;
@@ -33,19 +34,15 @@ import java.util.List;
  */
 public class DBArrayPropertyInfo extends PropertyInfoBase {
 
-  private IType _type;
-  private IDBColumn _fkColumn;
-  private IType _fkType;
-  private String _name;
+  private final IType _type;
+  private final IDBArray _dbArray;
 
-  DBArrayPropertyInfo(ITypeInfo container, IDBColumn fkColumn) {
+  DBArrayPropertyInfo(ITypeInfo container, IDBArray dbArray) {
     super(container);
-    _fkColumn = fkColumn;
-    // TODO - AHK - This algorithm probably needs to be a bit more complicated . . .
-    _name = fkColumn.getTable().getName() + "s";
+    _dbArray = dbArray;
     String namespace = getOwnersType().getNamespace();
-    _fkType = TypeSystem.getByFullName(namespace + "." + _fkColumn.getTable().getName());
-    _type = TypeSystem.get(EntityCollection.class).getGenericType().getParameterizedType(_fkType);
+    IType fkType = TypeSystem.getByFullName(namespace + "." + dbArray.getTargetTable().getName());
+    _type = TypeSystem.get(EntityCollection.class).getGenericType().getParameterizedType(fkType);
   }
 
   @Override
@@ -70,7 +67,7 @@ public class DBArrayPropertyInfo extends PropertyInfoBase {
 
   @Override
   public String getName() {
-    return _name;
+    return _dbArray.getPropertyName();
   }
 
   @Override
@@ -82,7 +79,7 @@ public class DBArrayPropertyInfo extends PropertyInfoBase {
     @Override
     public Object getValue(Object ctx) {
       CachedDBObject dbObject = (CachedDBObject) ctx;
-      return dbObject.getArray(_name);
+      return dbObject.getArray(_dbArray);
     }
 
     @Override

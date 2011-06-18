@@ -3,6 +3,7 @@ package tosa;
 import gw.lang.reflect.TypeSystem;
 import org.slf4j.profiler.Profiler;
 import tosa.api.*;
+import tosa.impl.JoinArrayEntityCollectionImpl;
 import tosa.impl.ReverseFkEntityCollectionImpl;
 import tosa.impl.QueryExecutorImpl;
 import tosa.impl.SimpleSqlBuilder;
@@ -26,7 +27,6 @@ import java.util.Map;
  */
 public class CachedDBObject implements IDBObject {
   private Map<String, Object> _columns;
-  private Map<String, Object> _cachedValues;
   private Map<String, IDBObject> _cachedFks;
   private Map<String, EntityCollection> _cachedArrays;
   private IDBType _type;
@@ -37,7 +37,6 @@ public class CachedDBObject implements IDBObject {
     _type = (IDBType) TypeSystem.getOrCreateTypeReference(type);
     _new = isNew;
     _columns = new HashMap<String, Object>();
-    _cachedValues = new HashMap<String, Object>(); // TODO - AHK - Remove this
     _cachedFks = new HashMap<String, IDBObject>();
     _cachedArrays = new HashMap<String, EntityCollection>();
     // TODO - AHK - There's room for perf improvements here
@@ -121,28 +120,27 @@ public class CachedDBObject implements IDBObject {
     return column;
   }
 
-  // TODO - AHK - Move this to the interface, once I figure out what the API really is
-
   public EntityCollection getArray(String arrayName) {
     // TODO - AHK - Validate it
-    EntityCollection result = _cachedArrays.get(arrayName);
-    if (result == null) {
-      IDBColumn fkColumn = findFkColumnForArray(arrayName);
-      IDBType fkType = (IDBType) TypeSystem.getByFullName(fkColumn.getTable().getDatabase().getNamespace() + "." + fkColumn.getTable().getName());
-      result = new ReverseFkEntityCollectionImpl(this, fkType, fkColumn, new QueryExecutorImpl(fkColumn.getTable().getDatabase()));
-      _cachedArrays.put(arrayName, result);
-    }
-    return result;
+    return getArray(_type.getTable().getArray(arrayName));
   }
 
-  private IDBColumn findFkColumnForArray(String arrayName) {
-    for (IDBColumn incomingFk : getDBTable().getIncomingFKs()) {
-      if (arrayName.equals(incomingFk.getTable().getName() + "s")) {
-        return incomingFk;
+  @Override
+  public EntityCollection getArray(IDBArray dbArray) {
+    EntityCollection result = _cachedArrays.get(dbArray.getPropertyName());
+    if (result == null) {
+      if (dbArray instanceof IDBFkArray) {
+        IDBColumn fkColumn = ((IDBFkArray) dbArray).getFkColumn();
+        IDBType fkType = (IDBType) TypeSystem.getByFullName(fkColumn.getTable().getDatabase().getNamespace() + "." + fkColumn.getTable().getName());
+        result = new ReverseFkEntityCollectionImpl(this, fkType, fkColumn, new QueryExecutorImpl(fkColumn.getTable().getDatabase()));
+      } else if (dbArray instanceof IDBJoinArray) {
+        IDBJoinArray joinArray = (IDBJoinArray) dbArray;
+        IDBType targetType = (IDBType) TypeSystem.getByFullName(getDBTable().getDatabase().getNamespace() + "." + joinArray.getTargetTable().getName());
+        result = new JoinArrayEntityCollectionImpl(this, targetType, joinArray.getSrcColumn(), joinArray.getTargetColumn(), new QueryExecutorImpl(getDBTable().getDatabase()));
       }
+      _cachedArrays.put(dbArray.getPropertyName(), result);
     }
-
-    return null;
+    return result;
   }
 
   @Override
@@ -154,13 +152,6 @@ public class CachedDBObject implements IDBObject {
   public Map<String, Object> getColumns() {
     return _columns;
   }
-
-   // TODO - AHK - Kill this
-  public Map<String, Object> getCachedValues() {
-    return _cachedValues;
-  }
-
-
 
   @Override
   public void update() throws SQLException {

@@ -147,7 +147,7 @@ class DBTypeInfoTest {
 
       var joinProp = typeInfo.getProperty("Bazs")
       Assert.assertNotNull(joinProp)
-      Assert.assertEquals(List<test.testdb.Baz>, joinProp.FeatureType)
+      Assert.assertEquals(EntityCollection<test.testdb.Baz>, joinProp.FeatureType)
 
       typeinfo = test.testdb.Bar.Type.TypeInfo
       Assert.assertEquals(6, typeinfo.Properties.Count)
@@ -171,7 +171,7 @@ class DBTypeInfoTest {
 
       joinProp = typeInfo.getProperty("Relatives")
       Assert.assertNotNull(joinProp)
-      Assert.assertEquals(List<test.testdb.Baz>, joinProp.FeatureType)
+      Assert.assertEquals(EntityCollection<test.testdb.Baz>, joinProp.FeatureType)
   }
 
   @Test
@@ -442,9 +442,11 @@ class DBTypeInfoTest {
       newBaz.update()
       var foo = test.testdb.Foo.fromID(_fooId)
       foo.Bazs.add(newBaz)
-      Assert.assertTrue(foo.Bazs.contains(newBaz))
+      Assert.assertTrue(foo.Bazs.toList().contains(newBaz))
   }
 
+// TODO - AHK - addAll() doesn't exist on EntityCollection anymore
+/*
   @Test
   function testAddAllJoin() {
       var foo = test.testdb.Foo.fromID(_fooId)
@@ -462,11 +464,12 @@ class DBTypeInfoTest {
       }
 
   }
+  */
 
   @Test
   function testRemoveJoin() {
       var foo = test.testdb.Foo.fromID(_fooId)
-      Assert.assertTrue(foo.Bazs.remove(test.testdb.Baz.fromID(_bazId)))
+      foo.Bazs.remove(test.testdb.Baz.fromID(_bazId))
       Assert.assertEquals(0, foo.Bazs.Count)
   }
 
@@ -476,13 +479,13 @@ class DBTypeInfoTest {
       newBaz.update()
       var bar = test.testdb.Bar.fromID(_barId)
       bar.Relatives.add(newBaz)
-      Assert.assertTrue(bar.Relatives.contains(newBaz))
+      Assert.assertTrue(bar.Relatives.toList().contains(newBaz))
   }
 
   @Test
   function testRemoveNamedJoin() {
       var bar = test.testdb.Bar.fromID(_barId)
-      Assert.assertTrue(bar.Relatives.remove(test.testdb.Baz.fromID(_bazId)))
+      bar.Relatives.remove(test.testdb.Baz.fromID(_bazId))
       Assert.assertEquals(0, bar.Relatives.Count)
   }
 
@@ -495,11 +498,11 @@ class DBTypeInfoTest {
     baz2.update()
     baz2 = test.testdb.Baz.fromId(baz2.id)
     baz1.SelfJoins.add(baz2)
-    Assert.assertTrue(baz1.SelfJoins.contains(baz2))
-    Assert.assertTrue(baz2.SelfJoins.Empty)
-    Assert.assertTrue(baz1.SelfJoins.remove(baz2))
-    Assert.assertTrue(baz1.SelfJoins.Empty)
-    Assert.assertTrue(baz2.SelfJoins.Empty)
+    Assert.assertTrue(baz1.SelfJoins.toList().contains(baz2))
+    Assert.assertTrue(baz2.SelfJoins.Count == 0)
+    baz1.SelfJoins.remove(baz2)
+    Assert.assertTrue(baz1.SelfJoins.Count == 0)
+    Assert.assertTrue(baz2.SelfJoins.Count == 0)
   }
 
   @Test

@@ -53,5 +53,9 @@ public interface IDBTable {
    */
   boolean hasId();
 
+  IDBArray getArray(String propertyName);
+
+  Collection<? extends IDBArray> getArrays();
+
   // TODO - AHK - Some attribute to indicate it's a join table?
 }

@@ -2,10 +2,11 @@ package tosa.dbmd;
 
 import gw.fs.IFile;
 import tosa.DBConnection;
-import tosa.Join;
 import tosa.api.*;
 import tosa.db.execution.DBExecutionKernelImpl;
 import tosa.db.execution.DBUpgraderImpl;
+import tosa.impl.md.DBFkArrayImpl;
+import tosa.impl.md.DBJoinArrayImpl;
 import tosa.loader.DBTypeLoader;
 import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
@@ -100,11 +101,26 @@ public class DatabaseImpl implements IDatabase {
         }
         int lastUnderscore = tableName.lastIndexOf('_');
         int nextToLastUnderscore = tableName.lastIndexOf('_', lastUnderscore - 1);
-        String firstTable = tableName.substring(nextToLastUnderscore + 1, lastUnderscore);
-        String secondTable = tableName.substring(lastUnderscore + 1);
-        tables.get(firstTable).addJoin(new Join(joinName == null ? secondTable + "s" : joinName, tables.get(secondTable), table));
+        String firstTableName = tableName.substring(nextToLastUnderscore + 1, lastUnderscore);
+        String secondTableName = tableName.substring(lastUnderscore + 1);
+        DBTableImpl firstTable = tables.get(firstTableName);
+        DBTableImpl secondTable = tables.get(secondTableName);
+
+        IDBColumn firstFkColumn;
+        IDBColumn secondFkColumn;
+        // TODO - AHK - Validate that the columns aren't null
+        if (firstTable.equals(secondTable)) {
+          firstFkColumn = table.getColumn(firstTableName + "_src_id");
+          secondFkColumn = table.getColumn(firstTableName + "_dest_id");
+        } else {
+          firstFkColumn = table.getColumn(firstTableName + "_id");
+          secondFkColumn = table.getColumn(secondTableName + "_id");
+        }
+        // TODO - AHK - Handle the case where the tables are null
+        // TODO - AHK - Put join name computation in a method
+        firstTable.addArray(new DBJoinArrayImpl(joinName == null ? secondTableName + "s" : joinName, firstTable, secondTable, table, firstFkColumn, secondFkColumn));
         if (!firstTable.equals(secondTable)) {
-          tables.get(secondTable).addJoin(new Join(joinName == null ? firstTable + "s" : joinName, tables.get(firstTable), table));
+          secondTable.addArray(new DBJoinArrayImpl(joinName == null ? firstTableName + "s" : joinName, secondTable, firstTable, table, secondFkColumn, firstFkColumn));
         }
       } else {
         for (DBColumnImpl column : table.getColumns()) {
@@ -112,6 +128,7 @@ public class DatabaseImpl implements IDatabase {
             String fkTargetName = column.getFKTargetName();
             DBTableImpl dbTable = tables.get(fkTargetName);
             if (dbTable != null) {
+              dbTable.addArray(new DBFkArrayImpl(computeFkArrayPropertyName(column), dbTable, table, column));
               dbTable.addIncomingFK(column);
             } else {
               // TODO cgross - how to handle this situation?
@@ -129,5 +146,9 @@ public class DatabaseImpl implements IDatabase {
     return new PreparedStatementParameterImpl(value, column.getColumnType().getJdbcType());
   }
 
+  private String computeFkArrayPropertyName(IDBColumn fkColumn) {
+    // TODO - AHK - This algorithm probably needs to be a bit more complicated . . .
+    return fkColumn.getTable().getName() + "s";
+  }
 
 }

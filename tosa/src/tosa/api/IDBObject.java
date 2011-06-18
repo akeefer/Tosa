@@ -24,6 +24,8 @@ public interface IDBObject extends IGosuObject {
 
   EntityCollection getArray(String arrayName);
 
+  EntityCollection getArray(IDBArray dbArray);
+
   Long getId();
 
   boolean isNew();
