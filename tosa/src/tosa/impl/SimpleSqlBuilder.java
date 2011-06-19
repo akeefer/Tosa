@@ -4,6 +4,7 @@ import tosa.api.IDBColumn;
 import tosa.api.IDBTable;
 import tosa.loader.IDBType;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -89,7 +90,19 @@ public class SimpleSqlBuilder {
   }
 
   private static String maybeQuote(Object value) {
-    if (value instanceof IDBColumn) {
+    if (value instanceof Iterable) {
+      StringBuilder values = new StringBuilder();
+      boolean first = true;
+      for (Object v : ((Collection) value)) {
+        if (first) {
+          first = false;
+        } else {
+          values.append(", ");
+        }
+        values.append(maybeQuote(v));
+      }
+      return values.toString();
+    } else if (value instanceof IDBColumn) {
       return "\"" + ((IDBColumn) value).getName() + "\"";
     } else if (value instanceof IDBTable) {
       return "\"" + ((IDBTable) value).getName() + "\"";

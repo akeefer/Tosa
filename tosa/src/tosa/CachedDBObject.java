@@ -1,12 +1,11 @@
 package tosa;
 
+import com.sun.deploy.panel.DeleteFilesDialog;
+import com.sun.org.apache.xerces.internal.impl.xs.identity.ValueStore;
 import gw.lang.reflect.TypeSystem;
 import org.slf4j.profiler.Profiler;
 import tosa.api.*;
-import tosa.impl.JoinArrayEntityCollectionImpl;
-import tosa.impl.ReverseFkEntityCollectionImpl;
-import tosa.impl.QueryExecutorImpl;
-import tosa.impl.SimpleSqlBuilder;
+import tosa.impl.*;
 import tosa.loader.DBTypeInfo;
 import tosa.loader.IDBType;
 import tosa.loader.Util;
@@ -31,6 +30,7 @@ public class CachedDBObject implements IDBObject {
   private Map<String, EntityCollection> _cachedArrays;
   private IDBType _type;
   private boolean _new;
+  private QueryExecutor _queryExecutor;
 
   public CachedDBObject(IDBType type, boolean isNew) {
     // TODO - AHK
@@ -39,6 +39,7 @@ public class CachedDBObject implements IDBObject {
     _columns = new HashMap<String, Object>();
     _cachedFks = new HashMap<String, IDBObject>();
     _cachedArrays = new HashMap<String, EntityCollection>();
+    _queryExecutor = new QueryExecutorImpl(_type.getTable().getDatabase());
     // TODO - AHK - There's room for perf improvements here
   }
 
@@ -155,77 +156,82 @@ public class CachedDBObject implements IDBObject {
 
   @Override
   public void update() throws SQLException {
-    Profiler profiler = Util.newProfiler(_type.getName() + ".update()");
-    IDatabase database = _type.getTable().getDatabase();
-    List<String> attrs = new ArrayList<String>();
-    List<IPreparedStatementParameter> values = new ArrayList<IPreparedStatementParameter>();
-    for (Map.Entry<String, Object> entry : _columns.entrySet()) {
-      if (entry.getKey().equals(DBTypeInfo.ID_COLUMN)) {
-        continue;
+    List<ColumnValuePair> columnValues = gatherChangedValues();
+    if (_new) {
+      List<IDBColumn> columns = new ArrayList<IDBColumn>();
+      List<String> values = new ArrayList<String>();
+      IPreparedStatementParameter[] parameters = new IPreparedStatementParameter[columnValues.size()];
+      for (int i = 0; i < columnValues.size(); i++) {
+        columns.add(columnValues.get(i)._column);
+        values.add("?");
+        parameters[i] = columnValues.get(i)._parameter;
       }
-      IDBColumn column = _type.getTable().getColumn(entry.getKey());
-      if (column != null) {
-        attrs.add("\"" + entry.getKey() + "\"");
-        Object value = entry.getValue();
-        values.add(column.wrapParameterValue(value));
+      String query = SimpleSqlBuilder.substitute(
+          "INSERT INTO ${table} (${columns}) VALUES (${values})",
+          "table", getDBTable(),
+          "columns", columns,
+          "values", values);
+      Object id = _queryExecutor.insert(_type.getName() + ".update()", query, parameters);
+      if (id != null) {
+        _columns.put(DBTypeInfo.ID_COLUMN, id);
+        _new = false;
+      }
+    } else {
+      StringBuilder values = new StringBuilder();
+      List<IPreparedStatementParameter> params = new ArrayList<IPreparedStatementParameter>();
+      for (int i = 0; i < columnValues.size(); i++) {
+        if (i > 0) {
+          values.append(", ");
+        }
+        values.append(SimpleSqlBuilder.substitute("${column} = ?", "column", columnValues.get(i)._column));
+        params.add(columnValues.get(i)._parameter);
+      }
+      IDBColumn idColumn = getDBTable().getColumn(DBTypeInfo.ID_COLUMN);
+      params.add(idColumn.wrapParameterValue(getId()));
+      String query = SimpleSqlBuilder.substitute(
+          "UPDATE ${table} SET ${values} WHERE ${idColumn} = ?",
+          "table", getDBTable(),
+          "values", values.toString(),
+          "idColumn", idColumn
+      );
+      _queryExecutor.update(_type.getName() + ".update()", query, params.toArray(new IPreparedStatementParameter[params.size()]));
+    }
+  }
+
+  private List<ColumnValuePair> gatherChangedValues() {
+    // TODO - AHK - Actually compare to some stored-off map of the original values
+    List<ColumnValuePair> columnValues = new ArrayList<ColumnValuePair>();
+    // Note:  We iterate over the columns, in order, so that the query is always the same for a given set
+    // of columns.  Iterating over the map keys might be more efficient, but could lead to different
+    // orderings within the query, which would be less optimal on the database side
+    for (IDBColumn column : getDBTable().getColumns()) {
+      if (_columns.containsKey(column.getName())) {
+        columnValues.add(new ColumnValuePair(column, column.wrapParameterValue(_columns.get(column.getName()))));
       }
     }
-    try {
-      if (_new) {
-        StringBuilder query = new StringBuilder("insert into \"");
-        query.append(getTableName()).append("\" (");
-        for (String key : attrs) {
-          query.append(key);
-          if (key != attrs.get(attrs.size() - 1)) {
-            query.append(", ");
-          }
-        }
-        query.append(") values (");
-        for (int i = 0; i < attrs.size(); i++) {
-          if (i > 0) {
-            query.append(", ");
-          }
-          query.append("?");
-        }
-        query.append(")");
-        profiler.start(query.toString() + " (" + values + ")");
-        Object id = database.getDBExecutionKernel().executeInsert(query.toString(), values.toArray(new IPreparedStatementParameter[values.size()]));
-        if (id != null) {
-          _columns.put(DBTypeInfo.ID_COLUMN, id);
-          _new = false;
-        }
-      } else {
-        StringBuilder query = new StringBuilder("update \"");
-        query.append(getTableName()).append("\" set ");
-        for (String attr : attrs) {
-          query.append(attr).append(" = ?");
-          if (attr != attrs.get(attrs.size() - 1)) {
-            query.append(", ");
-          }
-        }
-        query.append(" where \"id\" = ?");
-        values.add(_type.getTable().getColumn(DBTypeInfo.ID_COLUMN).wrapParameterValue(_columns.get(DBTypeInfo.ID_COLUMN)));
-        profiler.start(query.toString() + " (" + values + ")");
-        database.getDBExecutionKernel().executeUpdate(query.toString(), values.toArray(new IPreparedStatementParameter[values.size()]));
-      }
-    } finally {
-      profiler.stop();
+    return columnValues;
+  }
+
+  private static class ColumnValuePair {
+    private IDBColumn _column;
+    private IPreparedStatementParameter _parameter;
+
+    private ColumnValuePair(IDBColumn column, IPreparedStatementParameter parameter) {
+      _column = column;
+      _parameter = parameter;
     }
   }
 
   @Override
   public void delete() throws SQLException {
     // TODO - AHK - Determine if we need to quote the table name or column names or not
-    String query = "delete from \"" + getTableName() + "\" where \"id\" = ?";
-    IDatabase database = _type.getTable().getDatabase();
-    IPreparedStatementParameter parameter = _type.getTable().getColumn(DBTypeInfo.ID_COLUMN).wrapParameterValue(_columns.get(DBTypeInfo.ID_COLUMN));
-    Profiler profiler = Util.newProfiler(_type.getName() + ".delete()");
-    profiler.start(query + " (" + parameter + ")");
-    try {
-      database.getDBExecutionKernel().executeDelete(query, parameter);
-    } finally {
-      profiler.stop();
-    }
+    // TODO - AHK - What do we do if the table doesn't have an id?
+    IDBColumn idColumn = getDBTable().getColumn(DBTypeInfo.ID_COLUMN);
+    String query = SimpleSqlBuilder.substitute(
+        "DELETE FROM ${table} WHERE ${idColumn} = ?",
+        "table", getDBTable(),
+        "idColumn", idColumn);
+    _queryExecutor.delete(_type.getName() + ".delete()", query, idColumn.wrapParameterValue(getId()));
   }
 
   @Override

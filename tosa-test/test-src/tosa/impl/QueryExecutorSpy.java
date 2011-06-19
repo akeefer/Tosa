@@ -46,9 +46,9 @@ class QueryExecutorSpy implements QueryExecutor {
   }
 
   @Override
-  public void insert(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
+  public Object insert(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
     _insert = sqlStatement;
-    _delegate.insert(profilerTag, sqlStatement, parameters);
+    return _delegate.insert(profilerTag, sqlStatement, parameters);
   }
 
   @Override

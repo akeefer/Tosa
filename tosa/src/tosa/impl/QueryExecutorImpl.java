@@ -62,7 +62,7 @@ public class QueryExecutorImpl implements QueryExecutor {
     // TODO - AHK - Ensure that it starts with SELECT * ?
     // TODO - AHK - Verify that the db type is from the database we have?
     Profiler profiler = Util.newProfiler(profilerTag);
-    profiler.start(sqlStatement + " (" + Arrays.asList(sqlStatement) + ")");
+    profiler.start(sqlStatement + " (" + Arrays.asList(parameters) + ")");
     try {
       return _db.getDBExecutionKernel().executeSelect(sqlStatement,
           new CachedDBQueryResultProcessor(type),
@@ -76,7 +76,7 @@ public class QueryExecutorImpl implements QueryExecutor {
   public void update(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
     // TODO - AHK - Verify it starts with UPDATE ?
     Profiler profiler = Util.newProfiler(profilerTag);
-    profiler.start(sqlStatement + " (" + Arrays.asList(sqlStatement) + ")");
+    profiler.start(sqlStatement + " (" + Arrays.asList(parameters) + ")");
     try {
       _db.getDBExecutionKernel().executeUpdate(sqlStatement,
           parameters);
@@ -86,12 +86,12 @@ public class QueryExecutorImpl implements QueryExecutor {
   }
 
   @Override
-  public void insert(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
+  public Object insert(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
     // TODO - AHK - Verify it starts with INSERT ?
     Profiler profiler = Util.newProfiler(profilerTag);
-    profiler.start(sqlStatement + " (" + Arrays.asList(sqlStatement) + ")");
+    profiler.start(sqlStatement + " (" + Arrays.asList(parameters) + ")");
     try {
-      _db.getDBExecutionKernel().executeInsert(sqlStatement,
+      return _db.getDBExecutionKernel().executeInsert(sqlStatement,
           parameters);
     } finally {
       profiler.stop();
@@ -102,7 +102,7 @@ public class QueryExecutorImpl implements QueryExecutor {
   public void delete(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
     // TODO - AHK - Verify it starts with DELETE ?
     Profiler profiler = Util.newProfiler(profilerTag);
-    profiler.start(sqlStatement + " (" + Arrays.asList(sqlStatement) + ")");
+    profiler.start(sqlStatement + " (" + Arrays.asList(parameters) + ")");
     try {
       _db.getDBExecutionKernel().executeDelete(sqlStatement,
           parameters);

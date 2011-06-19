@@ -40,9 +40,9 @@ public class JoinArrayEntityCollectionImplTest {
   }
 
   private IDBObject createAndCommitFoo() {
-    IDBObject bar = new CachedDBObject((IDBType) TypeSystem.getByFullName("test.testdb.Foo"), true);
-    update(bar);
-    return bar;
+    IDBObject foo = new CachedDBObject((IDBType) TypeSystem.getByFullName("test.testdb.Foo"), true);
+    update(foo);
+    return foo;
   }
 
   private IDBObject createAndCommitBaz(IDBObject foo) {

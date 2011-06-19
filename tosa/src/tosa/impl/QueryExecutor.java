@@ -23,7 +23,7 @@ public interface QueryExecutor {
 
   void update(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters);
 
-  void insert(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters);
+  Object insert(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters);
 
   void delete(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters);
 }
