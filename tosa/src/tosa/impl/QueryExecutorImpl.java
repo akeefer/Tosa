@@ -29,6 +29,7 @@ public class QueryExecutorImpl implements QueryExecutor {
   // TODO - AHK - Clean up the query execution API for reals . . .
 
   @Override
+  // TODO - AHK - Should this be a long instead?
   public int count(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
     // TODO - AHK - Verify that it starts with "SELECT count(*) as count"
     Profiler profiler = Util.newProfiler(profilerTag);
