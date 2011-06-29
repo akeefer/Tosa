@@ -6,11 +6,10 @@ import gw.lang.reflect.features.PropertyReference;
 import gw.lang.reflect.java.IJavaType;
 import gw.util.concurrent.LazyVar;
 import tosa.CachedDBObject;
-import tosa.api.IDBArray;
-import tosa.api.IDBColumn;
-import tosa.api.IPreparedStatementParameter;
-import tosa.db.execution.QueryExecutor;
+import tosa.api.*;
+import tosa.api.query.CoreFinder;
 import tosa.dbmd.DBColumnImpl;
+import tosa.impl.query.CoreFinderImpl;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -52,11 +51,12 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
   private IMethodInfo _findWithSqlMethod;
   private IPropertyInfo _newProperty;
   private IConstructorInfo _ctor;
-  private QueryExecutor _queryExecutor; // TODO - AHK - I'm not sure if we really want to hold onto this here
+  private CoreFinder<IDBObject> _finder;
 
   public DBTypeInfo(IDBType dbType) {
     super(dbType);
-    _queryExecutor = new QueryExecutor();
+    // TODO - AHK - Type reference?
+    _finder = new CoreFinderImpl<IDBObject>(dbType);
 
     _getMethod = new MethodInfoBuilder().withName("fromID").withStatic()
         .withParameters(new ParameterInfoBuilder().withName(ID_COLUMN).withType(IJavaType.pLONG))
@@ -64,11 +64,7 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
         .withCallHandler(new IMethodCallHandler() {
           @Override
           public Object handleCall(Object ctx, Object... args) {
-            try {
-              return _queryExecutor.selectById(getOwnersType().getName() + ".fromID()", getOwnersType(), args[0]);
-            } catch (SQLException e) {
-              throw new RuntimeException(e);
-            }
+            return _finder.fromId((Long) args[0]);
           }
         }).build(this);
     _idMethod = new MethodInfoBuilder().withName("toID")
@@ -109,15 +105,7 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
         .withCallHandler(new IMethodCallHandler() {
           @Override
           public Object handleCall(Object ctx, Object... args) {
-            try {
-              return _queryExecutor.countFromSql(
-                  getOwnersType().getName() + ".countWithSql()",
-                  getOwnersType(),
-                  (String) args[0],
-                  Collections.<IPreparedStatementParameter>emptyList());
-            } catch (SQLException e) {
-              throw new RuntimeException(e);
-            }
+            return _finder.countWithSql((String) args[0]);
           }
         }).build(this);
     _countMethod = new MethodInfoBuilder().withName("count").withStatic()
@@ -126,14 +114,7 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
         .withCallHandler(new IMethodCallHandler() {
           @Override
           public Object handleCall(Object ctx, Object... args) {
-            try {
-              return _queryExecutor.countFromTemplate(
-                  getOwnersType().getName() + ".count()",
-                  getOwnersType(),
-                  (CachedDBObject) args[0]);
-            } catch (SQLException e) {
-              throw new RuntimeException(e);
-            }
+            return _finder.count((IDBObject) args[0]);
           }
         }).build(this);
     _findWithSqlMethod = new MethodInfoBuilder().withName("findWithSql").withStatic()
@@ -142,15 +123,7 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
         .withCallHandler(new IMethodCallHandler() {
           @Override
           public Object handleCall(Object ctx, Object... args) {
-            try {
-              return _queryExecutor.findFromSql(
-                  getOwnersType().getName() + ".findWithSql()",
-                  getOwnersType(),
-                  (String) args[0],
-                  Collections.<IPreparedStatementParameter>emptyList());
-            } catch (SQLException e) {
-              throw new RuntimeException(e);
-            }
+            return _finder.findWithSql((String) args[0]);
           }
         }).build(this);
     _findMethod = new MethodInfoBuilder().withName("find").withStatic()
@@ -159,18 +132,7 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
         .withCallHandler(new IMethodCallHandler() {
           @Override
           public Object handleCall(Object ctx, Object... args) {
-            try {
-              return _queryExecutor.findFromTemplate(
-                  getOwnersType().getName() + ".find()",
-                  getOwnersType(),
-                  (CachedDBObject) args[0],
-                  null,
-                  false,
-                  -1,
-                  -1);
-            } catch (SQLException e) {
-              throw new RuntimeException(e);
-            }
+            return _finder.find((IDBObject) args[0]);
           }
         }).build(this);
     _findSortedMethod = new MethodInfoBuilder().withName("findSorted").withStatic()
@@ -181,18 +143,7 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
         .withCallHandler(new IMethodCallHandler() {
           @Override
           public Object handleCall(Object ctx, Object... args) {
-            try {
-              return _queryExecutor.findFromTemplate(
-                  getOwnersType().getName() + ".findSorted()",
-                  getOwnersType(),
-                  (CachedDBObject) args[0],
-                  (PropertyReference) args[1],
-                  (Boolean) args[2],
-                  -1,
-                  -1);
-            } catch (SQLException e) {
-              throw new RuntimeException(e);
-            }
+            return _finder.findSorted((IDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2]);
           }
         }).build(this);
     _findPagedMethod = new MethodInfoBuilder().withName("findPaged").withStatic()
@@ -203,18 +154,7 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
         .withCallHandler(new IMethodCallHandler() {
           @Override
           public Object handleCall(Object ctx, Object... args) {
-            try {
-              return _queryExecutor.findFromTemplate(
-                  getOwnersType().getName() + ".findPaged()",
-                  getOwnersType(),
-                  (CachedDBObject) args[0],
-                  null,
-                  false,
-                  (Integer) args[1],
-                  (Integer) args[2]);
-            } catch (SQLException e) {
-              throw new RuntimeException(e);
-            }
+            return _finder.findPaged((IDBObject) args[0], (Integer) args[1], (Integer) args[2]);
           }
         }).build(this);
     _findSortedPagedMethod = new MethodInfoBuilder().withName("findSortedPaged").withStatic()
@@ -227,18 +167,7 @@ public class DBTypeInfo extends BaseTypeInfo implements ITypeInfo {
         .withCallHandler(new IMethodCallHandler() {
           @Override
           public Object handleCall(Object ctx, Object... args) {
-            try {
-              return _queryExecutor.findFromTemplate(
-                  getOwnersType().getName() + ".findSortedPaged()",
-                  getOwnersType(),
-                  (CachedDBObject) args[0],
-                  (PropertyReference) args[1],
-                  (Boolean) args[2],
-                  (Integer) args[3],
-                  (Integer) args[4]);
-            } catch (SQLException e) {
-              throw new RuntimeException(e);
-            }
+            return _finder.findSortedPaged((IDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2], (Integer) args[3], (Integer) args[4]);
           }
         }).build(this);
 
