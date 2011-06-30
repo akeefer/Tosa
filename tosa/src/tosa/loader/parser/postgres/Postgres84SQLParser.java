@@ -92,7 +92,7 @@ index_parameters in UNIQUE and PRIMARY KEY constraints are:
     // TODO - AHK - Other Create calls?  Other stuff?  Closing semi-colon?
     TableData table = parseCreate();
     tables.add(table);
-    return new DBData(tables, null, null);
+    return new DBData(null, tables, null, null);
   }
 
   private TableData parseCreate() {

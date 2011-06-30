@@ -1,6 +1,7 @@
 package tosa.dbmd;
 
 import gw.fs.IFile;
+import gw.lang.reflect.module.IModule;
 import tosa.DBConnection;
 import tosa.api.*;
 import tosa.db.execution.DBExecutionKernelImpl;
@@ -28,7 +29,7 @@ public class DatabaseImpl implements IDatabase {
   private final DBConnection _connection;
   private final DBExecutionKernelImpl _executionKernel;
 
-  public DatabaseImpl(String namespace, DBData dbData, DBTypeLoader typeLoader) {
+  public DatabaseImpl(String namespace, DBData dbData, IModule module) {
     _namespace = namespace;
     _dbData = dbData;
     Map<String, DBTableImpl> tables = new HashMap<String, DBTableImpl>();
@@ -37,7 +38,7 @@ public class DatabaseImpl implements IDatabase {
 
     _tables = Collections.unmodifiableMap(tables);
     if (dbData.getConnectionString() != null) {
-      _connection = new DBConnection(dbData.getConnectionString(), typeLoader);
+      _connection = new DBConnection(dbData.getConnectionString(), module);
     } else {
       _connection = null;
     }

@@ -173,7 +173,7 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     Map<String, DBData> dbDataMap = dataSource.getDBData(_module);
     Map<String, DatabaseImpl> dbTypeDataMap = new HashMap<String, DatabaseImpl>();
     for (Map.Entry<String, DBData> dbDataEntry : dbDataMap.entrySet()) {
-      dbTypeDataMap.put(dbDataEntry.getKey(), new DatabaseImpl(dbDataEntry.getKey(), dbDataEntry.getValue(), this));
+      dbTypeDataMap.put(dbDataEntry.getKey(), new DatabaseImpl(dbDataEntry.getKey(), dbDataEntry.getValue(), _module));
     }
     return dbTypeDataMap;
   }

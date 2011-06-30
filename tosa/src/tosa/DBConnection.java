@@ -1,5 +1,6 @@
 package tosa;
 
+import gw.lang.reflect.module.IModule;
 import gw.util.GosuExceptionUtil;
 import org.apache.commons.dbcp.ConnectionFactory;
 import org.apache.commons.dbcp.DriverManagerConnectionFactory;
@@ -31,15 +32,13 @@ public class DBConnection implements IDBConnection {
   private String _connectURL;
   private ThreadLocal<Connection> _transaction;
 
-  private DBTypeLoader _typeLoader;
   private DataSource _dataSource;
 
 
-  public DBConnection(String connUrl, DBTypeLoader typeLoader) {
+  public DBConnection(String connUrl, IModule module) {
     _connectURL = connUrl;
     _transaction = new ThreadLocal<Connection>();
-    _typeLoader = typeLoader;
-    _dataSource = setupDataSource(connUrl);
+    _dataSource = setupDataSource(connUrl, module);
   }
 
   @Override
@@ -103,10 +102,11 @@ public class DBConnection implements IDBConnection {
     return System.getProperty("db.driver." + dbType);
   }
 
-  private DataSource setupDataSource(String connectURI) {
+  private DataSource setupDataSource(String connectURI, IModule module) {
     // Ensure the JDBC driver class is loaded
     try {
-      Class.forName(getDriverName(connectURI), true, _typeLoader.getModule().getClassLoader());
+      // TODO - AHK
+      Class.forName(getDriverName(connectURI), true, module.getClassLoader());
     } catch (ClassNotFoundException e) {
       throw GosuExceptionUtil.forceThrow(e);
     }

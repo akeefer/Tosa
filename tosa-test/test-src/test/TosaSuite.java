@@ -27,6 +27,7 @@ public class TosaSuite extends Suite {
     return classesFor(
       "tosa.impl.JoinArrayEntityCollectionImplTest",
       "tosa.impl.ReverseFkEntityCollectionImplTest",
+      "tosa.impl.parser.data.DBDataValidatorTest",
       "tosa.loader.DBTypeInfoTest",
       "tosa.loader.SQLTypeInfoTest",
       "tosa.loader.parser.SelectParsingBootstrapTest",
