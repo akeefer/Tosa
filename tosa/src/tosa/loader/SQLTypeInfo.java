@@ -39,26 +39,6 @@ public class SQLTypeInfo extends BaseTypeInfo {
           return invokeQuery(selectReturnType, args);
         }
       }).build(this));
-
-    if (addSelectAsStructMethod()) {
-
-      final IType structReturnType = getStructResultType();
-
-      _methods.add(new MethodInfoBuilder().withName("selectAsStruct")
-        .withStatic()
-        .withParameters(queryParameters)
-        .withReturnType(IJavaType.ITERABLE.getParameterizedType(structReturnType))
-        .withCallHandler(new IMethodCallHandler() {
-          @Override
-          public Object handleCall(Object ctx, Object... args) {
-            return invokeQuery(structReturnType, args);
-          }
-        }).build(this));
-    }
-  }
-
-  private boolean addSelectAsStructMethod() {
-    return _sqlType.getData().getSelect().hasMultipleTableTargets();
   }
 
   public Object invokeQuery(IType returnType, Object... args) {

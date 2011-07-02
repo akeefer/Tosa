@@ -664,6 +664,7 @@ public class QueryParser implements SQLParserConstants {
 
   private SQLParsedElement parseTablePrimary() {
     //TODO cgross - shouldn't allow keywords, should support AS and derived column lists
+    //TODO cgross verify valid table
     return new SimpleTableReference(takeToken());
   }
 
@@ -679,16 +680,14 @@ public class QueryParser implements SQLParserConstants {
     ArrayList<SQLParsedElement> cols = new ArrayList<SQLParsedElement>();
     do {
       SQLParsedElement value = parseValueExpression();
-      if (!(value instanceof ColumnReference)) {
-        if (match(AS)) {
-          Token colName = takeToken();
-          if (!colName.isSymbol()) {
-            colName.addTemporaryError(new SQLParseError(colName, "Expected a column name!"));
-          }
-          value = new DerivedColumn(value, colName);
-        } else {
-          value.addParseError(new SQLParseError(value.firstToken(), value.lastToken(), "Only column references are supported right now."));
+      if (match(AS)) {
+        Token colName = takeToken();
+        if (!colName.isSymbol()) {
+          colName.addTemporaryError(new SQLParseError(colName, "Expected a column name!"));
         }
+        value = new DerivedColumn(value, colName);
+      } else {
+        value.addParseError(new SQLParseError(value.firstToken(), value.lastToken(), "Only column references are supported right now."));
       }
       cols.add(value);
     } while (match(COMMA));
