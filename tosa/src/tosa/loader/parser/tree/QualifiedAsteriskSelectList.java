@@ -1,6 +1,5 @@
 package tosa.loader.parser.tree;
 
-import sun.tools.tree.ReturnStatement;
 import tosa.loader.parser.Token;
 
 import java.util.Map;

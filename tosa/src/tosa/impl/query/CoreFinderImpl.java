@@ -1,24 +1,17 @@
 package tosa.impl.query;
 
-import com.sun.org.apache.xpath.internal.operations.NotEquals;
 import gw.lang.reflect.features.PropertyReference;
 import gw.util.GosuStringUtil;
-import org.slf4j.profiler.Profiler;
-import tosa.CachedDBObject;
 import tosa.api.*;
 import tosa.impl.QueryExecutor;
 import tosa.impl.QueryExecutorImpl;
 import tosa.impl.SimpleSqlBuilder;
 import tosa.loader.DBTypeInfo;
 import tosa.loader.IDBType;
-import tosa.loader.Util;
-import tosa.loader.parser.tree.WhereClause;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
