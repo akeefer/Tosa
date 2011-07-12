@@ -679,19 +679,39 @@ public class QueryParser implements SQLParserConstants {
   private SQLParsedElement parseSelectSubList() {
     ArrayList<SQLParsedElement> cols = new ArrayList<SQLParsedElement>();
     do {
-      SQLParsedElement value = parseValueExpression();
-      if (match(AS)) {
-        Token colName = takeToken();
-        if (!colName.isSymbol()) {
-          colName.addTemporaryError(new SQLParseError(colName, "Expected a column name!"));
-        }
-        value = new DerivedColumn(value, colName);
-      } else {
-        value.addParseError(new SQLParseError(value.firstToken(), value.lastToken(), "Only column references are supported right now."));
+      SQLParsedElement value = parseQualifiedAsterisk();
+      if (value == null) {
+        value = parseDerivedValue();
       }
       cols.add(value);
     } while (match(COMMA));
     return new ColumnSelectList(cols);
+  }
+
+  private SQLParsedElement parseDerivedValue() {
+    SQLParsedElement value;
+    value = parseValueExpression();
+    if (match(AS)) {
+      Token colName = takeToken();
+      if (!colName.isSymbol()) {
+        colName.addTemporaryError(new SQLParseError(colName, "Expected a column name!"));
+      }
+      value = new DerivedColumn(value, colName);
+    }
+    return value;
+  }
+
+  private SQLParsedElement parseQualifiedAsterisk() {
+    if (_currentToken.isSymbol() &&
+      _currentToken.nextToken().match(DOT_OP) &&
+      _currentToken.nextToken().nextToken().match(ASTERISK)) {
+      Token start = takeToken();
+      takeToken();
+      Token end = takeToken();
+      return new QualifiedAsteriskSelectList(start, end);
+    } else {
+      return null;
+    }
   }
 
   private SQLParsedElement parseSetQuantifers() {

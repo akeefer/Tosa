@@ -15,7 +15,6 @@ uses test.query.*
 uses gw.lang.reflect.TypeSystem
 
 class SQLTypeInfoTest {
-
   @BeforeClass
   static function beforeTestClass() {
     print("*** Before class")
@@ -551,4 +550,14 @@ class SQLTypeInfoTest {
     result = test.query.SampleOptionalAndQuery.select(:misc1="blah", :misc2="blah", :misc3="blah")
     Assert.assertEquals(0, result.Count)
   }
+
+  @Test
+  function testJoinWithQualifiedAsteriskWorks() {
+    var result = test.query.SampleJoinQueryWithQualifiedAsterisk.select("First")
+    Assert.assertTrue(result.first() typeis Bar)
+    Assert.assertEquals(1, result.Count)
+    Assert.assertEquals(sqlDate("4/22/2009"), result.first().Date)
+    Assert.assertEquals("misc", result.first().Misc)
+  }
+
 }

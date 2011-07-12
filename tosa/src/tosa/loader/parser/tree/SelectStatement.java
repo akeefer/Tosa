@@ -82,7 +82,8 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
   }
 
   public boolean hasSingleTableTarget() {
-    return _selectList instanceof AsteriskSelectList && getPrimaryTable() != null;
+    return (_selectList instanceof AsteriskSelectList && getPrimaryTable() != null) ||
+           _selectList instanceof ColumnSelectList && ((ColumnSelectList)_selectList).hasSingleTableTarget();
   }
 
   public boolean hasMultipleTableTargets() {
@@ -92,16 +93,24 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
   }
 
   public boolean hasSpecificColumns() {
-    return _selectList instanceof ColumnSelectList;
+    return _selectList instanceof ColumnSelectList && !((ColumnSelectList) _selectList).hasSingleTableTarget();
   }
 
   private SimpleTableReference getPrimaryTable() {
-    List<SimpleTableReference> simpleRefs = getOrderedSimpleTableRefs();
-    if (simpleRefs.size() > 0) {
-      return simpleRefs.get(0);
+    if (_selectList instanceof ColumnSelectList && ((ColumnSelectList) _selectList).hasSingleTableTarget()) {
+      String tableName = ((ColumnSelectList) _selectList).getSingleTableTargetName();
+      for (SimpleTableReference reference : getOrderedSimpleTableRefs()) {
+        if (reference.getName().match(tableName)) {
+          return reference;
+        }
+      }
     } else {
-      return null;
+      List<SimpleTableReference> simpleRefs = getOrderedSimpleTableRefs();
+      if (simpleRefs.size() > 0) {
+        return simpleRefs.get(0);
+      }
     }
+    return null;
   }
 
   private List<SimpleTableReference> getOrderedSimpleTableRefs() {

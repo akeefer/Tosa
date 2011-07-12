@@ -22,4 +22,13 @@ public class ColumnSelectList extends SQLParsedElement {
       sqlParsedElement.toSQL(prettyPrint, indent, sb, values);
     }
   }
+
+  public boolean hasSingleTableTarget() {
+    return getChildren().size() == 1 &&
+      getChildren().get(0) instanceof QualifiedAsteriskSelectList;
+  }
+
+  public String getSingleTableTargetName() {
+    return ((QualifiedAsteriskSelectList) getChildren().get(0)).getTableName();
+  }
 }
