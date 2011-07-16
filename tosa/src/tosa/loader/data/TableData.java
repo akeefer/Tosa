@@ -1,5 +1,7 @@
 package tosa.loader.data;
 
+import tosa.loader.parser.tree.CreateTableStatement;
+
 import java.util.List;
 
 /**
@@ -12,10 +14,12 @@ import java.util.List;
 public class TableData {
   private final String _name;
   private final List<ColumnData> _columns;
+  private final CreateTableStatement _originalDefinition;
 
-  public TableData(String name, List<ColumnData> columns) {
+  public TableData(String name, List<ColumnData> columns, CreateTableStatement originalDefinition) {
     _name = name;
     _columns = columns;
+    _originalDefinition = originalDefinition;
   }
 
   public String getName() {
@@ -33,5 +37,9 @@ public class TableData {
       }
     }
     return null;
+  }
+
+  public CreateTableStatement getOriginalDefinition() {
+    return _originalDefinition;
   }
 }

@@ -153,7 +153,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
 
         expect(SEMI_COLON);
 
-        return new TableData(tableName, columns);
+        return new TableData(tableName, columns, null);
       } else {
         eatStatement();
         return null;
@@ -351,7 +351,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       // Keep looping to consume all the options
     }
     // TODO - AHK
-    return new ColumnData(name, columnType);
+    return new ColumnData(name, columnType, null);
   }
 
   /*

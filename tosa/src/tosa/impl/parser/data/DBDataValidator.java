@@ -19,11 +19,15 @@ import java.util.*;
  */
 public class DBDataValidator {
 
-  // TODO - AHK - If perf here is ever an issue, there's plenty of room to combine validations into a single pass
-
   // TODO - AHK - Fill out the list here
   private static final Set<String> GOSU_RESERVED_WORDS = new HashSet<String>(Arrays.asList(
       "new"
+  ));
+
+  // Names of built-in Tosa properties.  Stored as lower-case, since we'll compare the lower case
+  // column name to this set
+  private static final Set<String> SPECIAL_PROPERTY_NAMES = new HashSet<String>(Arrays.asList(
+      "dbtable", "new", "_new", "Type"
   ));
 
   private static class Context {
@@ -101,6 +105,7 @@ public class DBDataValidator {
       checkForValidTypeNameAsTableName(table, context);
       checkForGosuReservedWordAsTableName(table, context);
       checkForSpecialTypeNameAsTableName(table, context);
+      checkTableNameIsQuoted(table, context);
 
       boolean hasIdColumn = false;
       Map<String, String> columnNames = new HashMap<String, String>();
@@ -114,23 +119,18 @@ public class DBDataValidator {
 
         validate(column, context);
 
-        if (column.getName().equals("id")) {
+        if (column.getName().equalsIgnoreCase("id")) {
+          // Note that if the case is wrong, it will be caught by the column validation
           hasIdColumn = true;
         }
       }
 
       if (!hasIdColumn) {
-        // TODO - AHK - Is this always an error?
+        context.error("No id column was found on the table " + table.getName() + ".  Every table in Tosa should have a table named \"id\" of type BIGINT.");
       }
     } finally {
       context.popTable();
     }
-
-    // TODO - AHK - Duplicate columns
-    // TODO - AHK - id column with proper type
-    // TODO - AHK - Table names have to be valid type names
-    // TODO - AHK - Conflicts of table names with reserved words
-    // TODO - AHK - Quoting of table names
   }
 
   private void checkForValidTypeNameAsTableName(TableData table, Context context) {
@@ -159,21 +159,75 @@ public class DBDataValidator {
     }
   }
 
+  private void checkTableNameIsQuoted(TableData table, Context context) {
+    if (table.getOriginalDefinition().getTableName().getValue().charAt(0) != '"') {
+      context.warn("The table name was not quoted in the DDL file.  Tosa quotes table names in all SQL it generates, so we recommend that you quote the table names in the DDL files as well.");
+    }
+  }
+
   private void validate(ColumnData column, Context context) {
     context.pushColumn(column);
     try {
-
+      // TODO - AHK
+      checkForValidPropertyName(column, context);
+//      checkForGosuReservedWordAsColumnName(column, context);
+//      checkForDatabaseReservedNameAsColumnName(column, context);
+      checkForBuiltInPropertyName(column, context);
+      checkForUnhandledDataType(column, context);
+      checkColumnNameIsQuoted(column, context);
+      checkForValidIdColumn(column, context);
     } finally {
       context.popColumn();
     }
-    // TODO - AHK - Column/fk naming conventions
-    // TODO - AHK - Column names need to be valid property names
-    // TODO - AHK - Conflicts with reserved words in Gosu
-    // TODO - AHK - Conflicts with reserved words in other databases
-    // TODO - AHK - Conflicts with built-in property names
-    // TODO - AHK - Types that aren't handled properly yet
-    // TODO - AHK - Quoting of column names
-    // TODO - AHK - Validate the various properties of id columns
+  }
+
+  private void checkForValidPropertyName(ColumnData columnData, Context context) {
+    if (!Character.isJavaIdentifierStart(columnData.getName().charAt(0))) {
+      context.error("The column name " + columnData.getName() + " is not a valid property name.  The first character " + columnData.getName().charAt(0) + " is not a valid start to a property name.");
+      return;
+    }
+
+    for (int i = 1; i < columnData.getName().length(); i++) {
+      if (!Character.isJavaIdentifierPart(columnData.getName().charAt(i))) {
+        context.error("The column name " + columnData.getName() + " is not a valid property name.  The character " + columnData.getName().charAt(i) + " is not a valid character in a property name.");
+        return;
+      }
+    }
+  }
+
+  // TODO - AHK - Kill the _New property?
+
+  private void checkForBuiltInPropertyName(ColumnData columnData, Context context) {
+    if (SPECIAL_PROPERTY_NAMES.contains(columnData.getName().toLowerCase())) {
+      context.error("The column name \"" + columnData.getName() + "\" conflicts with a built-in Tosa property or property inherited from the IDBObject interface");
+    }
+  }
+
+  private void checkForUnhandledDataType(ColumnData columnData, Context context) {
+    // TODO - AHK - Some more reliable way to detect this besides just matching the String "PlaceHolder"
+    if (columnData.getColumnType().getName().equals("PlaceHolder")) {
+      context.warn("The data type for this column is not currently handled.  It will appear in Tosa as a String, but it may not function correctly.");
+    }
+  }
+
+  private void checkColumnNameIsQuoted(ColumnData columnData, Context context) {
+    if (columnData.getOriginalDefinition().getName().toString().charAt(0) != '"') {
+      context.warn("The column name was not quoted in the DDL file.  Tosa will generate quoted column names in all SQL it generates, so column names should be specified quoted in the DDL as well.");
+    }
+  }
+
+  private void checkForValidIdColumn(ColumnData columnData, Context context) {
+    if (columnData.getName().equalsIgnoreCase("id")) {
+      if (!columnData.getName().equals("id")) {
+        context.error("The id column should always be named \"id\" but in this case it was named \"" + columnData.getName() + "\"");
+      }
+
+      if (!columnData.getColumnType().getGosuTypeName().equals("java.lang.Long")) {
+        context.error("The id column should always be a BIGINT, since it will be represented as a Long in Tosa.  The id column was found to be of type " + columnData.getColumnType().getName());
+      }
+
+      // TODO - AHK - Check for auto-increment
+    }
   }
 
 }

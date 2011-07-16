@@ -104,7 +104,7 @@ index_parameters in UNIQUE and PRIMARY KEY constraints are:
     List<ColumnData> columns = parseColumns();
     expect(CLOSE_PAREN);
 
-    return new TableData(name, columns);
+    return new TableData(name, columns, null);
   }
 
   private void parseTableModifiers() {
@@ -156,7 +156,7 @@ index_parameters in UNIQUE and PRIMARY KEY constraints are:
     parseDefault();
     parseColumnConstraint();
 
-    return new ColumnData(name, type);
+    return new ColumnData(name, type, null);
   }
 
   private String parseColumnName() {

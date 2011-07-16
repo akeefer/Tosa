@@ -12,6 +12,7 @@ import java.sql.SQLException;
  */
 public interface IDBObject extends IGosuObject {
 
+  // TODO - AHK - Rename to get_DBTable?
   IDBTable getDBTable();
 
   Object getColumnValue(String columnName);
@@ -28,6 +29,7 @@ public interface IDBObject extends IGosuObject {
 
   Long getId();
 
+  // TODO - AHK - Rename to is_New?
   boolean isNew();
 
   void update() throws SQLException;

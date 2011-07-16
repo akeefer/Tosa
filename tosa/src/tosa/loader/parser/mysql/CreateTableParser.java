@@ -1,5 +1,6 @@
 package tosa.loader.parser.mysql;
 
+import org.slf4j.LoggerFactory;
 import tosa.loader.parser.SQLParserConstants;
 import tosa.loader.parser.Token;
 import tosa.loader.parser.tree.*;
@@ -559,13 +560,13 @@ public class CreateTableParser implements SQLParserConstants {
       // TODO - AHK
 //      List<String> values = parseEnumOrSetValueList();
 //      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
-//      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + ENUM);
+      LoggerFactory.getLogger("Tosa").warn("***Unhandled column type " + ENUM);
       return null;
     } else if (accept(SET)) {
       // TODO - AHK
 //      List<String> values = parseEnumOrSetValueList();
 //      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
-//      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + SET);
+      LoggerFactory.getLogger("Tosa").warn("***Unhandled column type " + SET);
       return null;
     } else {
       return null;
