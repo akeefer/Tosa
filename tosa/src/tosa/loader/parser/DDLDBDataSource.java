@@ -3,6 +3,9 @@ package tosa.loader.parser;
 import gw.fs.IFile;
 import gw.lang.reflect.module.IModule;
 import gw.util.Pair;
+import org.slf4j.LoggerFactory;
+import tosa.impl.md.ValidationResult;
+import tosa.impl.parser.data.DBDataValidator;
 import tosa.loader.data.DBData;
 import tosa.loader.data.IDBDataSource;
 import tosa.loader.data.TableData;
@@ -36,7 +39,9 @@ public class DDLDBDataSource implements IDBDataSource {
       List<TableData> tables = new NewMySQL51Parser().parseDDLFile(readFile(ddlFile.getSecond()));
       String fileName = ddlFile.getFirst();
       String namespace = fileName.substring(0, fileName.length() - ".ddl".length()).replace("/", ".");
-      results.put(namespace,  new DBData(namespace, tables, connectionString, ddlFile.getSecond()));
+      DBData dbData = new DBData(namespace, tables, connectionString, ddlFile.getSecond());
+      validateAndLogResults(dbData);
+      results.put(namespace, dbData);
     }
     return results;
   }
@@ -70,5 +75,15 @@ public class DDLDBDataSource implements IDBDataSource {
     }
     // TODO - AHK - Verify the charset somehow?
     return new String(result);
+  }
+
+  private void validateAndLogResults(DBData dbData) {
+    ValidationResult validationResult = DBDataValidator.validate(dbData);
+    for (String error : validationResult.getErrors()) {
+      LoggerFactory.getLogger("Tosa").error(error);
+    }
+    for (String warning : validationResult.getWarnings()) {
+      LoggerFactory.getLogger("Tosa").warn(warning);
+    }
   }
 }
