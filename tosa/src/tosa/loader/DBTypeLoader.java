@@ -15,6 +15,7 @@ import tosa.api.IDBTable;
 import tosa.api.IDatabase;
 import tosa.dbmd.DBTableImpl;
 import tosa.dbmd.DatabaseImpl;
+import tosa.impl.md.DatabaseImplSource;
 import tosa.loader.data.DBData;
 import tosa.loader.data.IDBDataSource;
 import tosa.loader.parser.DDLDBDataSource;
@@ -169,11 +170,9 @@ public class DBTypeLoader implements IExtendedTypeLoader {
   }
 
   private Map<String, DatabaseImpl> initializeDBTypeData() {
-    IDBDataSource dataSource = new DDLDBDataSource();
-    Map<String, DBData> dbDataMap = dataSource.getDBData(_module);
     Map<String, DatabaseImpl> dbTypeDataMap = new HashMap<String, DatabaseImpl>();
-    for (Map.Entry<String, DBData> dbDataEntry : dbDataMap.entrySet()) {
-      dbTypeDataMap.put(dbDataEntry.getKey(), new DatabaseImpl(dbDataEntry.getKey(), dbDataEntry.getValue(), _module));
+    for (IDatabase dbImpl : DatabaseImplSource.getInstance().getAllDatabasesForModule(_module)) {
+      dbTypeDataMap.put(dbImpl.getNamespace(), (DatabaseImpl) dbImpl);
     }
     return dbTypeDataMap;
   }
@@ -235,14 +234,5 @@ public class DBTypeLoader implements IExtendedTypeLoader {
       typeNames.add(sqlFileInfo.getTypeName());
     }
     return typeNames;
-  }
-
-  // TODO - AHK - This doesn't really belong here, but for now . . .
-  public DatabaseImpl getTypeDataForNamespace(String namespace) {
-    return _typeDataByNamespace.get().get(namespace);
-  }
-
-  public Collection<? extends IDatabase> getAllDatabases() {
-    return _typeDataByNamespace.get().values();
   }
 }

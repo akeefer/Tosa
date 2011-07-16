@@ -9,6 +9,7 @@ import tosa.CachedDBObject;
 import tosa.api.IDBObject;
 import tosa.api.IPreparedStatementParameter;
 import tosa.dbmd.DatabaseImpl;
+import tosa.impl.md.DatabaseImplSource;
 import tosa.loader.DBTypeInfo;
 import tosa.loader.DBTypeLoader;
 import tosa.loader.IDBType;
@@ -35,8 +36,7 @@ public class ReverseFkEntityCollectionImplTest {
   }
 
   private static DatabaseImpl getDB() {
-    DBTypeLoader dbTypeLoader = TypeSystem.getTypeLoader(DBTypeLoader.class);
-    return dbTypeLoader.getTypeDataForNamespace("test.testdb");
+    return (DatabaseImpl) DatabaseImplSource.getInstance().getDatabase("test.testdb");
   }
 
   private IDBObject createAndCommitBar() {

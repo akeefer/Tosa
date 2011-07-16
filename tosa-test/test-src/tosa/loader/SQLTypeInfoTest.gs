@@ -13,6 +13,7 @@ uses org.junit.Ignore
 uses test.testdb.*
 uses test.query.*
 uses gw.lang.reflect.TypeSystem
+uses tosa.impl.md.DatabaseImplSource
 
 class SQLTypeInfoTest {
 
@@ -32,8 +33,7 @@ class SQLTypeInfoTest {
 
   private function clearTable(tableName : String) {
     print("Clearing table ${tableName}")
-    var dbTypeLoader = TypeSystem.getTypeLoader(DBTypeLoader)
-    var dbTypeData = dbTypeLoader.getTypeDataForNamespace( "test.testdb" )
+    var dbTypeData = DatabaseImplSource.getInstance().getDatabase( "test.testdb" )
     var connection = dbTypeData.Connection.connect()
     connection.createStatement().executeUpdate( "DELETE FROM \"${tableName}\"" )
     connection.close()

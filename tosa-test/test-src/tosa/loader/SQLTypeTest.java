@@ -13,6 +13,7 @@ import test.TestEnv;
 import tosa.api.IDBConnection;
 import tosa.api.IDBObject;
 import tosa.dbmd.DatabaseImpl;
+import tosa.impl.md.DatabaseImplSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -153,9 +154,7 @@ public class SQLTypeTest {
   }
 
   private static DatabaseImpl getDB() {
-    DBTypeLoader dbTypeLoader = TypeSystem.getTypeLoader(DBTypeLoader.class);
-    DatabaseImpl database = dbTypeLoader.getTypeDataForNamespace("test.testdb");
-    return database;
+    return (DatabaseImpl) DatabaseImplSource.getInstance().getDatabase("test.testdb");
   }
 
 

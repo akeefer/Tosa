@@ -9,6 +9,7 @@ import tosa.api.IDBColumn;
 import tosa.api.IDBObject;
 import tosa.api.IDBTable;
 import tosa.dbmd.DatabaseImpl;
+import tosa.impl.md.DatabaseImplSource;
 import tosa.loader.DBTypeLoader;
 import tosa.loader.IDBType;
 
@@ -35,8 +36,7 @@ public class JoinArrayEntityCollectionImplTest {
   }
 
   private static DatabaseImpl getDB() {
-    DBTypeLoader dbTypeLoader = TypeSystem.getTypeLoader(DBTypeLoader.class);
-    return dbTypeLoader.getTypeDataForNamespace("test.testdb");
+    return (DatabaseImpl) DatabaseImplSource.getInstance().getDatabase("test.testdb");
   }
 
   private IDBObject createAndCommitFoo() {

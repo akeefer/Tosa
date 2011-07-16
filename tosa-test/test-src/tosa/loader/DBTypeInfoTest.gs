@@ -14,6 +14,7 @@ uses test.testdb.Foo
 uses test.testdb.Baz
 uses gw.lang.reflect.TypeSystem
 uses tosa.api.EntityCollection
+uses tosa.impl.md.DatabaseImplSource
 
 class DBTypeInfoTest {
 
@@ -42,8 +43,7 @@ class DBTypeInfoTest {
   }
 
   private function clearTable(tableName : String) {
-    var dbTypeLoader = TypeSystem.getTypeLoader(DBTypeLoader)
-    var database = dbTypeLoader.getTypeDataForNamespace( "test.testdb" )
+    var database = DatabaseImplSource.getInstance().getDatabase( "test.testdb" )
     var connection = database.Connection.connect()
     connection.createStatement().executeUpdate( "DELETE FROM \"${tableName}\"" )
     connection.close()
