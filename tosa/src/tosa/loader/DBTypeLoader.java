@@ -97,8 +97,11 @@ public class DBTypeLoader implements IExtendedTypeLoader {
       }
     }
 
-    if ("Transaction".equals(relativeName)) {
+    if (TransactionType.TYPE_NAME.equals(relativeName)) {
+      // TODO - AHK - Turn that into a type reference
       return new TransactionType(databaseImpl, this);
+    } else if (DatabaseAccessType.TYPE_NAME.equals(relativeName)) {
+      return new DatabaseAccessType(databaseImpl, this);
     } else {
       IDBTable dbTable = databaseImpl.getTable(relativeName);
       if (dbTable == null) {
@@ -223,6 +226,7 @@ public class DBTypeLoader implements IExtendedTypeLoader {
 
     for (IDatabase database : _typeDataByNamespace.get().values()) {
       typeNames.add(database.getNamespace() + "." + TransactionType.TYPE_NAME);
+      typeNames.add(database.getNamespace() + "." + DatabaseAccessType.TYPE_NAME);
       for (IDBTable table : database.getAllTables()) {
         if (!table.getName().contains("join_")) {
           // TODO - AHK - Should there be a utility method for converting from table to entity name?

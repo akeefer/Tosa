@@ -26,18 +26,22 @@ public class DatabaseImpl implements IDatabase {
   private final String _namespace;
   private final DBData _dbData;
   private final Map<String, DBTableImpl> _tables;
-  private final DBConnection _connection;
+  private DBConnection _connection;
   private final DBExecutionKernelImpl _executionKernel;
+  private String _jdbcUrl;
+  private IModule _module;
 
   public DatabaseImpl(String namespace, DBData dbData, IModule module) {
     _namespace = namespace;
     _dbData = dbData;
+    _module = module;
     Map<String, DBTableImpl> tables = new HashMap<String, DBTableImpl>();
 
     processDBData(tables);
 
     _tables = Collections.unmodifiableMap(tables);
     if (dbData.getConnectionString() != null) {
+      _jdbcUrl = dbData.getConnectionString();
       _connection = new DBConnection(dbData.getConnectionString(), module);
     } else {
       _connection = null;
@@ -63,6 +67,8 @@ public class DatabaseImpl implements IDatabase {
   public DBData getDBData() {
     return _dbData;
   }
+
+  // TODO - AHK - Synchronization, since this thing is modifiable
 
   @Override
   public IDBConnection getConnection() {
@@ -152,4 +158,20 @@ public class DatabaseImpl implements IDatabase {
     return fkColumn.getTable().getName() + "s";
   }
 
+  @Override
+  public String getUrl() {
+    return _jdbcUrl;
+  }
+
+  @Override
+  public void setUrl(String url) {
+    if (url == null) {
+      throw new IllegalArgumentException("The jdbc url for a Tosa database cannot be nulled out");
+    }
+    // TODO - AHK - Other sorts of validation?
+    // TODO - AHK - Check for MySql ANSI_QUOTES string?
+    _jdbcUrl = url;
+    // TODO - AHK - Synchronization
+    _connection = new DBConnection(url, _module);
+  }
 }

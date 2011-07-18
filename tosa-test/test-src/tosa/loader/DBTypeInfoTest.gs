@@ -114,6 +114,7 @@ class DBTypeInfoTest {
       Assert.assertTrue(types.contains("test.testdb.Bar"))
       Assert.assertTrue(types.contains("test.testdb.Baz"))
       Assert.assertTrue(types.contains("test.testdb.Transaction"))
+      Assert.assertTrue(types.contains("test.testdb.Database"))
   }
 
   @Test

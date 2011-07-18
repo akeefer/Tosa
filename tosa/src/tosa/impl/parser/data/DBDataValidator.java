@@ -156,6 +156,8 @@ public class DBDataValidator {
   private void checkForSpecialTypeNameAsTableName(TableData table, Context context) {
     if (table.getName().toLowerCase().equals("transaction")) {
       context.error("Tosa tables cannot be named Transaction (in any case), as a built-in type named Transaction is automatically created for every ddl namespace.");
+    } else if (table.getName().toLowerCase().equals("database")) {
+      context.error("Tosa tables cannot be named Database (in any case), as a built-in type named Database is automatically created for every ddl namespace.");
     }
   }
 

@@ -1,1 +1,1 @@
-jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;TRACE_LEVEL_SYSTEM_OUT=2
+jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1

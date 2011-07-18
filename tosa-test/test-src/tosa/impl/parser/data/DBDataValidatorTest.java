@@ -84,6 +84,19 @@ public class DBDataValidatorTest {
   }
 
   @Test
+  public void testValidateReportsErrorForTableNameThatMimicsDatabaseTypeName() {
+    ValidationResult validationResult = validate(
+        "CREATE TABLE \"Database\"(\n" +
+        "    \"id\" BIGINT PRIMARY KEY AUTO_INCREMENT,\n" +
+        "    \"Date\" DATE,\n" +
+        "    \"Something\" VARCHAR(50)\n" +
+        ");");
+
+    assertEquals(1, validationResult.getErrors().size());
+    assertEquals("Table test.testdb.Database: Tosa tables cannot be named Database (in any case), as a built-in type named Database is automatically created for every ddl namespace.", validationResult.getErrors().get(0));
+  }
+
+  @Test
   public void testValidateReportsErrorForTableNameThatConflictsWithGosuReservedWord() {
     ValidationResult validationResult = validate(
         "CREATE TABLE \"New\"(\n" +

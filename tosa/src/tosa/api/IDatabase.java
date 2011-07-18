@@ -68,6 +68,12 @@ public interface IDatabase {
   // TODO - AHK - Remove this from IDatabase and move it to IDBColumn or IDBColumnType
   IPreparedStatementParameter wrapParameter(Object value, IDBColumn column);
 
+  // TODO - AHK - Javadoc these
+  // TODO - AHK - getUrl, or getJdbcUrl?
+  String getUrl();
+
+  void setUrl(String url);
+
   // TODO - AHK - Get CREATE TABLE statements
 
 }
