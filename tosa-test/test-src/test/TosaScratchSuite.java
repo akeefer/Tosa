@@ -19,7 +19,7 @@ public class TosaScratchSuite extends Suite {
 
   private static Class init(Class clazz) {
     Gosu.init();
-    TypeSystem.pushGlobalTypeLoader(new DBTypeLoader());
+    TypeSystem.pushTypeLoader(new DBTypeLoader());
     return clazz;
   }
 

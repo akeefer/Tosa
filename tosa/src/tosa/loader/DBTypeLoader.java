@@ -68,16 +68,6 @@ public class DBTypeLoader implements IExtendedTypeLoader {
   }
 
   @Override
-  public IType getIntrinsicType(Class javaClass) {
-    return null;
-  }
-
-  @Override
-  public IType getIntrinsicType(IJavaClassInfo javaClassInfo) {
-    return null;
-  }
-
-  @Override
   public IType getType(String fullyQualifiedName) {
     int lastDot = fullyQualifiedName.lastIndexOf('.');
     if (lastDot == -1) {
@@ -157,11 +147,6 @@ public class DBTypeLoader implements IExtendedTypeLoader {
   }
 
   @Override
-  public List<Throwable> getInitializationErrors() {
-    return Collections.emptyList();
-  }
-
-  @Override
   public IType getIntrinsicTypeFromObject(Object object) {
     // TODO - AHK - This probably needs to work for the Transaction object as well
     if (object instanceof CachedDBObject) {
@@ -238,5 +223,26 @@ public class DBTypeLoader implements IExtendedTypeLoader {
       typeNames.add(sqlFileInfo.getTypeName());
     }
     return typeNames;
+  }
+
+  @Override
+  public boolean handlesNonPrefixLoads() {
+    return true;
+  }
+
+  @Override
+  public boolean isInited() {
+    // TODO - AHK
+    return true;
+  }
+
+  @Override
+  public void init() {
+    // TODO - AHK
+  }
+
+  @Override
+  public void uninit() {
+    // TODO - AHK
   }
 }

@@ -9,7 +9,7 @@ public class TestEnv {
   public static synchronized void maybeInit() {
     if (!_inited) {
       Gosu.init();
-      TypeSystem.pushGlobalTypeLoader(new DBTypeLoader());
+      TypeSystem.pushTypeLoader(new DBTypeLoader());
       _inited = true;
     }
   }

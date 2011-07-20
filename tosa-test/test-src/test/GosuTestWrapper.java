@@ -1,9 +1,12 @@
 package test;
 
 import gw.lang.init.GosuInitialization;
+import gw.lang.init.GosuPathEntry;
 import junit.framework.TestCase;
 import org.junit.runner.RunWith;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -21,6 +24,6 @@ public abstract class GosuTestWrapper implements ITestWrapper {
 
   @Override
   public void initializeGosu() {
-    GosuInitialization.initializeRuntime(GosuInitHelper.constructPathEntriesFromSystemClasspath("tosa.loader.DBTypeLoader"));
+    GosuInitialization.initializeRuntime((List<GosuPathEntry>) GosuInitHelper.constructPathEntriesFromSystemClasspath("tosa.loader.DBTypeLoader"));
   }
 }
