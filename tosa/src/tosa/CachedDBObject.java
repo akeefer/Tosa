@@ -1,21 +1,13 @@
 package tosa;
 
-import com.sun.deploy.panel.DeleteFilesDialog;
-import com.sun.org.apache.xerces.internal.impl.xs.identity.ValueStore;
 import gw.lang.reflect.TypeSystem;
-import org.slf4j.profiler.Profiler;
 import tosa.api.*;
 import tosa.impl.*;
 import tosa.loader.DBTypeInfo;
 import tosa.loader.IDBType;
-import tosa.loader.Util;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
