@@ -1,8 +1,54 @@
 package tosa.loader.parser;
 
-import gw.internal.gosu.parser.ParenthesizedExpression;
 import tosa.loader.data.DBData;
-import tosa.loader.parser.tree.*;
+import tosa.loader.parser.tree.AbsExpression;
+import tosa.loader.parser.tree.AsteriskSelectList;
+import tosa.loader.parser.tree.BetweenPredicate;
+import tosa.loader.parser.tree.BooleanIsNotExpression;
+import tosa.loader.parser.tree.ColumnReference;
+import tosa.loader.parser.tree.ColumnSelectList;
+import tosa.loader.parser.tree.ComparisonPredicate;
+import tosa.loader.parser.tree.ConcatenationExpression;
+import tosa.loader.parser.tree.CountAllExpression;
+import tosa.loader.parser.tree.DerivedColumn;
+import tosa.loader.parser.tree.ExistsPredicate;
+import tosa.loader.parser.tree.GenericFunctionCall;
+import tosa.loader.parser.tree.GroupByClause;
+import tosa.loader.parser.tree.InListExpression;
+import tosa.loader.parser.tree.InPredicate;
+import tosa.loader.parser.tree.IsNotNullPredicate;
+import tosa.loader.parser.tree.JoinCondition;
+import tosa.loader.parser.tree.LikePredicate;
+import tosa.loader.parser.tree.ModExpression;
+import tosa.loader.parser.tree.OrderByClause;
+import tosa.loader.parser.tree.QualifiedAsteriskSelectList;
+import tosa.loader.parser.tree.QualifiedJoin;
+import tosa.loader.parser.tree.QuantifiedComparison;
+import tosa.loader.parser.tree.QuantifierModifier;
+import tosa.loader.parser.tree.SQLAdditiveExpression;
+import tosa.loader.parser.tree.SQLAndExpression;
+import tosa.loader.parser.tree.SQLMultiplicitiveExpression;
+import tosa.loader.parser.tree.SQLNotExpression;
+import tosa.loader.parser.tree.SQLNumericLiteral;
+import tosa.loader.parser.tree.SQLOptionalExpression;
+import tosa.loader.parser.tree.SQLOrExpression;
+import tosa.loader.parser.tree.SQLParenthesizedExpression;
+import tosa.loader.parser.tree.SQLParseError;
+import tosa.loader.parser.tree.SQLParsedElement;
+import tosa.loader.parser.tree.SQLSignedExpression;
+import tosa.loader.parser.tree.SelectStatement;
+import tosa.loader.parser.tree.SetFunctionExpression;
+import tosa.loader.parser.tree.SimpleTableReference;
+import tosa.loader.parser.tree.SortSpecification;
+import tosa.loader.parser.tree.StringCaseChangeExpression;
+import tosa.loader.parser.tree.StringLiteralExpression;
+import tosa.loader.parser.tree.SubSelectExpression;
+import tosa.loader.parser.tree.TableExpression;
+import tosa.loader.parser.tree.TableFromClause;
+import tosa.loader.parser.tree.UnexpectedTokenExpression;
+import tosa.loader.parser.tree.UniquePredicate;
+import tosa.loader.parser.tree.VariableExpression;
+import tosa.loader.parser.tree.WhereClause;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -15,7 +61,7 @@ public class QueryParser implements SQLParserConstants {
   private DBData _data;
 
   public QueryParser(Token token, DBData dbData) {
-    _currentToken = token;
+    _currentToken = token.removeTokens( TokenType.COMMENT );
     _data = dbData;
   }
 

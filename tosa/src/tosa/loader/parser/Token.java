@@ -79,13 +79,32 @@ public class Token {
     return first;
   }
 
+  public Token removeTokens( TokenType... typesToRemove )
+  {
+    if( this == EOF )
+    {
+      return this;
+    }
+    for( TokenType tokenType : typesToRemove )
+    {
+      if( this._type == tokenType )
+      {
+        return nextToken().removeTokens( typesToRemove );
+      }
+    }
+    Token copy = new Token( _type, _value, _line, _col, _start, _end );
+    copy.setNext( nextToken().removeTokens( typesToRemove ) );
+    return copy;
+  }
+
+
   @Override
   public String toString() {
     return getValue();
   }
 
   public String toStringForDebug() {
-    return first().toStringForDebug(this);
+    return first().toStringForDebug( this );
   }
 
   private Token first() {
@@ -142,6 +161,11 @@ public class Token {
 
   public boolean isString() {
     return _type == TokenType.STRING;
+  }
+
+  public boolean isComment()
+  {
+    return _type == TokenType.COMMENT;
   }
 
   public void addTemporaryError(SQLParseError error) {
