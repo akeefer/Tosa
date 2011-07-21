@@ -159,12 +159,12 @@ public class DatabaseImpl implements IDatabase {
   }
 
   @Override
-  public String getUrl() {
+  public String getJdbcUrl() {
     return _jdbcUrl;
   }
 
   @Override
-  public void setUrl(String url) {
+  public void setJdbcUrl(String url) {
     if (url == null) {
       throw new IllegalArgumentException("The jdbc url for a Tosa database cannot be nulled out");
     }
@@ -173,5 +173,15 @@ public class DatabaseImpl implements IDatabase {
     _jdbcUrl = url;
     // TODO - AHK - Synchronization
     _connection = new DBConnection(url, _module);
+  }
+
+  @Override
+  public void createTables() {
+    getDBUpgrader().createTables();
+  }
+
+  @Override
+  public void dropTables() {
+    getDBUpgrader().dropTables();
   }
 }

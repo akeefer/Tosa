@@ -30,19 +30,17 @@ public class TransactionTypeInfo extends BaseTypeInfo {
 
   private IMethodInfo _commitMethod;
   private IPropertyInfo _lockProperty;
-  private IDBConnection _connInfo;
   private ThreadLocal<Lock> _lock = new ThreadLocal<Lock>();
 
   public TransactionTypeInfo(TransactionType type) {
     super(type);
-    _connInfo = type.getDatabaseImpl().getConnection();
     _commitMethod = new MethodInfoBuilder().withName("commit").withStatic()
         .withCallHandler(new IMethodCallHandler() {
           @Override
           public Object handleCall(Object ctx, Object... args) {
             // TODO - AHK - I'm not sure we want to swallow exceptions here
             try {
-              _connInfo.commitTransaction();
+              getConnection().commitTransaction();
             } catch (SQLException e) {
               e.printStackTrace();
             }
@@ -108,7 +106,7 @@ public class TransactionTypeInfo extends BaseTypeInfo {
     public void lock() {
       // TODO - AHK - I'm not sure we want to swallow exceptions here
       try {
-        _connInfo.startTransaction();
+        getConnection().startTransaction();
       } catch (SQLException e) {
         e.printStackTrace();
       }
@@ -117,11 +115,15 @@ public class TransactionTypeInfo extends BaseTypeInfo {
     public void unlock() {
       // TODO - AHK - I'm not sure we want to swallow exceptions here
       try {
-        _connInfo.endTransaction();
+        getConnection().endTransaction();
       } catch (SQLException e) {
         e.printStackTrace();
       }
     }
+  }
+
+  private IDBConnection getConnection() {
+    return ((TransactionType) getOwnersType()).getDatabaseImpl().getConnection();
   }
 
 }

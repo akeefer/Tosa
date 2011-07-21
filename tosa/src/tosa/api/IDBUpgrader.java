@@ -10,7 +10,10 @@ package tosa.api;
 // TODO - AHK - There's probably a more appropriate name for this interface
 public interface IDBUpgrader {
 
+  // TODO - AHK- Kill this interface, fold it all into just Database
   void recreateTables();
 
   void createTables();
+
+  void dropTables();
 }

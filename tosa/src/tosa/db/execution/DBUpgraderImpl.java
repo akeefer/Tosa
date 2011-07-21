@@ -27,11 +27,11 @@ public class DBUpgraderImpl implements IDBUpgrader {
 
   @Override
   public void recreateTables() {
-    dropAllTables();
+    dropTables();
     createTables();
   }
 
-  private void dropAllTables() {
+  public void dropTables() {
     try {
       // TODO cgross - this should be specialized per database.  Yuck.
       Connection connection = _database.getConnection().connect();

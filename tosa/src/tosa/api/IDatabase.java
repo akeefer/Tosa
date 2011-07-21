@@ -69,10 +69,13 @@ public interface IDatabase {
   IPreparedStatementParameter wrapParameter(Object value, IDBColumn column);
 
   // TODO - AHK - Javadoc these
-  // TODO - AHK - getUrl, or getJdbcUrl?
-  String getUrl();
+  String getJdbcUrl();
 
-  void setUrl(String url);
+  void setJdbcUrl(String url);
+
+  void createTables();
+
+  void dropTables();
 
   // TODO - AHK - Get CREATE TABLE statements
 
