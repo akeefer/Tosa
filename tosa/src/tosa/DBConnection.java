@@ -2,6 +2,7 @@ package tosa;
 
 import gw.lang.reflect.module.IModule;
 import gw.util.GosuExceptionUtil;
+import gw.util.concurrent.LazyVar;
 import org.apache.commons.dbcp.ConnectionFactory;
 import org.apache.commons.dbcp.DriverManagerConnectionFactory;
 import org.apache.commons.dbcp.PoolableConnectionFactory;
@@ -30,22 +31,28 @@ import java.util.Set;
  */
 public class DBConnection implements IDBConnection {
   private String _connectURL;
+  private IModule _module;
   private ThreadLocal<Connection> _transaction;
 
-  private DataSource _dataSource;
+  private LazyVar<DataSource> _dataSource = new LazyVar() {
+    @Override
+    protected Object init() {
+      return setupDataSource(_connectURL, _module);
+    }
+  };
 
 
   public DBConnection(String connUrl, IModule module) {
     _connectURL = connUrl;
     _transaction = new ThreadLocal<Connection>();
-    _dataSource = setupDataSource(connUrl, module);
+    _module = module;
   }
 
   @Override
   public Connection connect() throws SQLException {
     Connection trans = _transaction.get();
     if (trans == null) {
-      return _dataSource.getConnection();
+      return _dataSource.get().getConnection();
     } else {
       return trans;
     }
@@ -110,6 +117,8 @@ public class DBConnection implements IDBConnection {
     } catch (ClassNotFoundException e) {
       throw GosuExceptionUtil.forceThrow(e);
     }
+
+    // TODO - AHK - Figure out the implications of the connection pooling when the jdbc url changes
 
     GenericObjectPool connectionPool = new GenericObjectPool(null);
     connectionPool.setMinIdle( 1 );
