@@ -10,10 +10,8 @@ import tosa.api.IDBObject;
 import tosa.api.IDBTable;
 import tosa.dbmd.DatabaseImpl;
 import tosa.impl.md.DatabaseImplSource;
-import tosa.loader.DBTypeLoader;
 import tosa.loader.IDBType;
 
-import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -64,11 +62,7 @@ public class JoinArrayEntityCollectionImplTest {
   }
 
   private void update(IDBObject obj) {
-    try {
-      obj.update();
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
+    obj.update();
   }
 
   private JoinArrayEntityCollectionImpl<IDBObject> createList(IDBObject foo) {

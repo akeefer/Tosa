@@ -1,6 +1,7 @@
 package tosa.loader;
 
 import gw.lang.reflect.IType;
+import tosa.api.IDatabase;
 
 /**
  * Created by IntelliJ IDEA.
@@ -10,5 +11,7 @@ import gw.lang.reflect.IType;
  * To change this template use File | Settings | File Templates.
  */
 public interface ITransactionType extends IType {
+
+  IDatabase getDatabase();
 
 }

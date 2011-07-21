@@ -3,20 +3,15 @@ package tosa.impl;
 import gw.lang.reflect.TypeSystem;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import sun.java2d.pipe.SpanShapeRenderer;
 import test.TestEnv;
 import tosa.CachedDBObject;
 import tosa.api.IDBObject;
-import tosa.api.IPreparedStatementParameter;
 import tosa.dbmd.DatabaseImpl;
 import tosa.impl.md.DatabaseImplSource;
 import tosa.loader.DBTypeInfo;
-import tosa.loader.DBTypeLoader;
 import tosa.loader.IDBType;
 
-import java.sql.SQLException;
 import java.util.Iterator;
-import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -61,11 +56,7 @@ public class ReverseFkEntityCollectionImplTest {
   }
 
   private void update(IDBObject obj) {
-    try {
-      obj.update();
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
+    obj.update();
   }
 
   private ReverseFkEntityCollectionImpl createList(IDBObject bar) {

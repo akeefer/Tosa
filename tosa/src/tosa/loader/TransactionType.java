@@ -4,6 +4,7 @@ import gw.lang.reflect.IType;
 import gw.lang.reflect.ITypeInfo;
 import gw.lang.reflect.ITypeLoader;
 import gw.lang.reflect.TypeBase;
+import tosa.api.IDatabase;
 import tosa.dbmd.DatabaseImpl;
 
 import java.util.Collections;
@@ -65,7 +66,8 @@ public class TransactionType extends TypeBase implements ITransactionType {
     return _typeInfo;
   }
 
-  public DatabaseImpl getDatabaseImpl() {
+  @Override
+  public IDatabase getDatabase() {
     return _databaseImpl;
   }
 }

@@ -3,6 +3,7 @@ package tosa.loader;
 import gw.lang.reflect.*;
 import gw.lang.reflect.java.IJavaArrayType;
 import gw.lang.reflect.java.IJavaType;
+import tosa.api.IDatabase;
 import tosa.dbmd.DatabaseImpl;
 
 import java.util.*;
@@ -61,8 +62,8 @@ public class DatabaseAccessTypeInfo extends TosaBaseTypeInfo {
     lockDataStructures();
   }
 
-  private DatabaseImpl getDb() {
-    return ((DatabaseAccessType) getOwnersType()).getDatabaseImpl();
+  private IDatabase getDb() {
+    return ((IDatabaseAccessType) getOwnersType()).getDatabase();
   }
 
 }

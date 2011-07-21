@@ -4,6 +4,7 @@ import gw.lang.reflect.IType;
 import gw.lang.reflect.ITypeInfo;
 import gw.lang.reflect.ITypeLoader;
 import gw.lang.reflect.TypeBase;
+import tosa.api.IDatabase;
 import tosa.dbmd.DatabaseImpl;
 
 import java.util.Collections;
@@ -16,7 +17,7 @@ import java.util.List;
  * Time: 10:37 PM
  * To change this template use File | Settings | File Templates.
  */
-public class DatabaseAccessType extends TypeBase implements ITransactionType {
+public class DatabaseAccessType extends TypeBase implements IDatabaseAccessType {
 
   public static final String TYPE_NAME = "Database";
 
@@ -65,7 +66,8 @@ public class DatabaseAccessType extends TypeBase implements ITransactionType {
     return _typeInfo;
   }
 
-  public DatabaseImpl getDatabaseImpl() {
+  @Override
+  public IDatabase getDatabase() {
     return _databaseImpl;
   }
 }

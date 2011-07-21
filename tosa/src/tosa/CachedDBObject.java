@@ -141,13 +141,18 @@ public class CachedDBObject implements IDBObject {
     return (Long) getColumnValue(DBTypeInfo.ID_COLUMN);
   }
 
+  @Override
+  public Long toID() {
+    return getId();
+  }
+
   // TODO - AHK - Kill this
   public Map<String, Object> getColumns() {
     return _columns;
   }
 
   @Override
-  public void update() throws SQLException {
+  public void update() {
     List<ColumnValuePair> columnValues = gatherChangedValues();
     if (_new) {
       List<IDBColumn> columns = new ArrayList<IDBColumn>();
@@ -215,7 +220,7 @@ public class CachedDBObject implements IDBObject {
   }
 
   @Override
-  public void delete() throws SQLException {
+  public void delete() {
     // TODO - AHK - Determine if we need to quote the table name or column names or not
     // TODO - AHK - What do we do if the table doesn't have an id?
     IDBColumn idColumn = getDBTable().getColumn(DBTypeInfo.ID_COLUMN);

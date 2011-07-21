@@ -1,12 +1,8 @@
 package tosa.impl;
 
-import gw.util.GosuExceptionUtil;
 import tosa.api.*;
 import tosa.loader.IDBType;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -61,11 +57,7 @@ public class JoinArrayEntityCollectionImpl<T extends IDBObject> extends EntityCo
 
       // If the element hasn't yet been persisted, we have to persist it so that it has an id we can insert into the join table
       if (element.isNew()) {
-        try {
-          element.update();
-        } catch (SQLException e) {
-          GosuExceptionUtil.forceThrow(e);
-        }
+        element.update();
       }
 
       String sql = SimpleSqlBuilder.substitute("INSERT INTO ${joinTable} (${srcFk}, ${targetFk}) VALUES (?, ?)",

@@ -1,16 +1,11 @@
 package tosa.impl;
 
-import gw.util.GosuExceptionUtil;
-import tosa.api.EntityCollection;
 import tosa.api.IDBColumn;
 import tosa.api.IDBObject;
 import tosa.api.IPreparedStatementParameter;
 import tosa.loader.DBTypeInfo;
 import tosa.loader.IDBType;
-import tosa.loader.data.DBColumnTypeImpl;
 
-import java.sql.SQLException;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -59,11 +54,7 @@ public class ReverseFkEntityCollectionImpl<T extends IDBObject> extends EntityCo
       element.setFkValue(_fkColumn.getName(), _owner);
       if (element.isNew()) {
         // For newly-created elements, we insert them immediately
-        try {
-          element.update();
-        } catch (SQLException e) {
-          GosuExceptionUtil.forceThrow(e);
-        }
+        element.update();
       } else {
         // For entities already in the database, we issue the update statement in the database directly
         IDBColumn idColumn = _fkColumn.getTable().getColumn(DBTypeInfo.ID_COLUMN);

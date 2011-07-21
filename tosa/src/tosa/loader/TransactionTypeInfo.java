@@ -58,6 +58,8 @@ public class TransactionTypeInfo extends TosaBaseTypeInfo {
             return getLock();
           }
         });
+
+    lockDataStructures();
   }
 
   private void commitTransaction() {
@@ -97,7 +99,7 @@ public class TransactionTypeInfo extends TosaBaseTypeInfo {
   }
 
   private IDBConnection getConnection() {
-    return ((TransactionType) getOwnersType()).getDatabaseImpl().getConnection();
+    return ((ITransactionType) getOwnersType()).getDatabase().getConnection();
   }
 
 }

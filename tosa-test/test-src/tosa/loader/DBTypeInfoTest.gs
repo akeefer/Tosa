@@ -120,7 +120,7 @@ class DBTypeInfoTest {
   @Test
   function testPropertiesCreated() {
       var typeinfo = test.testdb.Foo.Type.TypeInfo
-      Assert.assertEquals(8, typeinfo.Properties.Count)
+      Assert.assertEquals(11, typeinfo.Properties.Count)
 
       var idProp = typeinfo.getProperty("id")
       Assert.assertNotNull(idProp)
@@ -151,7 +151,7 @@ class DBTypeInfoTest {
       Assert.assertEquals(EntityCollection<test.testdb.Baz>, joinProp.FeatureType)
 
       typeinfo = test.testdb.Bar.Type.TypeInfo
-      Assert.assertEquals(6, typeinfo.Properties.Count)
+      Assert.assertEquals(9, typeinfo.Properties.Count)
 
       idProp = typeinfo.getProperty("id")
       Assert.assertNotNull(idProp)
@@ -210,7 +210,7 @@ class DBTypeInfoTest {
       Assert.assertTrue(countMethod.Static)
       Assert.assertEquals(int, countMethod.ReturnType)
 
-      var findSortedMethod = typeinfo.getMethod("findSorted", {test.testdb.Foo, PropertyReference, boolean})
+      var findSortedMethod = typeinfo.getMethod("findSorted", {test.testdb.Foo, PropertyReference<Foo, Object>, boolean})
       Assert.assertNotNull(findSortedMethod)
       Assert.assertTrue(findSortedMethod.Static)
       Assert.assertEquals(List<test.testdb.Foo>, findSortedMethod.ReturnType)
@@ -220,7 +220,7 @@ class DBTypeInfoTest {
       Assert.assertTrue(findPagedMethod.Static)
       Assert.assertEquals(List<test.testdb.Foo>, findPagedMethod.ReturnType)
 
-      var findSortedPagedMethod = typeinfo.getMethod("findSortedPaged", {test.testdb.Foo, PropertyReference, boolean, int, int})
+      var findSortedPagedMethod = typeinfo.getMethod("findSortedPaged", {test.testdb.Foo, PropertyReference<Foo, Object>, boolean, int, int})
       Assert.assertNotNull(findSortedPagedMethod)
       Assert.assertTrue(findSortedPagedMethod.Static)
       Assert.assertEquals(List<test.testdb.Foo>, findSortedPagedMethod.ReturnType)
@@ -515,10 +515,10 @@ class DBTypeInfoTest {
   @Test
   function testNewProperty() {
       var newFoo = new test.testdb.Foo()
-      Assert.assertTrue(newFoo._New)
+      Assert.assertTrue(newFoo.New)
 
       var oldFoo = test.testdb.Foo.fromID(_fooId)
-      Assert.assertFalse(oldFoo._New)
+      Assert.assertFalse(oldFoo.New)
   }
 
   @Test

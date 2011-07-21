@@ -1,5 +1,6 @@
 package tosa.loader;
 
+import gw.config.CommonServices;
 import gw.lang.reflect.*;
 import tosa.dbmd.DatabaseImpl;
 
@@ -13,24 +14,23 @@ import java.util.*;
  * Time: 10:37 PM
  * To change this template use File | Settings | File Templates.
  */
-public abstract class TosaBaseTypeInfo extends BaseTypeInfo {
+public abstract class TosaBaseTypeInfo extends FeatureManagerTypeInfoBase {
 
-  private Map<CharSequence, IPropertyInfo> _propertyMap;
   private List<IPropertyInfo> _propertyList;
   private List<IMethodInfo> _methodList;
-
+  private List<IConstructorInfo> _constructorList;
 
   public TosaBaseTypeInfo(IType type) {
     super(type);
     _propertyList = new ArrayList<IPropertyInfo>();
-    _propertyMap = new HashMap<CharSequence, IPropertyInfo>();
     _methodList = new ArrayList<IMethodInfo>();
+    _constructorList = new ArrayList<IConstructorInfo>();
   }
 
   protected void lockDataStructures() {
     _propertyList = Collections.unmodifiableList(_propertyList);
-    _propertyMap = Collections.unmodifiableMap(_propertyMap);
     _methodList = Collections.unmodifiableList(_methodList);
+    _constructorList = Collections.unmodifiableList(_constructorList);
   }
 
   protected static enum Writeable {
@@ -83,44 +83,37 @@ public abstract class TosaBaseTypeInfo extends BaseTypeInfo {
     return params;
   }
 
+  protected ParameterInfoBuilder param(String name, IType type, String description) {
+    return new ParameterInfoBuilder().withName(name)
+        .withType(type)
+        .withDescription(description);
+  }
+
   protected void addProperty(IPropertyInfo property) {
     _propertyList.add(property);
-    _propertyMap.put(property.getName(), property);
   }
 
   protected void addMethod(IMethodInfo method) {
     _methodList.add(method);
   }
 
-  @Override
-  public List<? extends IMethodInfo> getMethods() {
-    return _methodList;
+  protected void addConstructor(IConstructorInfo constructor) {
+    _constructorList.add(constructor);
   }
 
   @Override
-  public IMethodInfo getMethod(CharSequence methodName, IType... params) {
-    return ITypeInfo.FIND.method(_methodList, methodName, params);
-  }
-
-  @Override
-  public IMethodInfo getCallableMethod(CharSequence method, IType... params) {
-    return ITypeInfo.FIND.callableMethod(_methodList, method, params);
-  }
-
-  @Override
-  public List<? extends IPropertyInfo> getProperties() {
+  public List<? extends IPropertyInfo> getDeclaredProperties() {
     return _propertyList;
   }
 
   @Override
-  public IPropertyInfo getProperty(CharSequence propName) {
-    return _propertyMap.get(propName);
+  public List<? extends IMethodInfo> getDeclaredMethods() {
+    return _methodList;
   }
 
   @Override
-  public CharSequence getRealPropertyName(CharSequence propName) {
-    return propName;
+  public List<? extends IConstructorInfo> getDeclaredConstructors() {
+    return _constructorList;
   }
-
 }
 
