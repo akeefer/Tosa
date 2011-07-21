@@ -20,7 +20,7 @@ public abstract class TosaBaseTypeInfo extends BaseTypeInfo {
   private List<IMethodInfo> _methodList;
 
 
-  public TosaBaseTypeInfo(DatabaseAccessType type) {
+  public TosaBaseTypeInfo(IType type) {
     super(type);
     _propertyList = new ArrayList<IPropertyInfo>();
     _propertyMap = new HashMap<CharSequence, IPropertyInfo>();

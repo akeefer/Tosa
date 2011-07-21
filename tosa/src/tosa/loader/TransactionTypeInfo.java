@@ -9,6 +9,7 @@ import gw.lang.reflect.IType;
 import gw.lang.reflect.MethodInfoBuilder;
 import gw.lang.reflect.PropertyInfoBuilder;
 import gw.lang.reflect.TypeSystem;
+import gw.lang.reflect.java.IJavaType;
 import tosa.ConnectionWrapper;
 import tosa.DBConnection;
 import tosa.api.IDBConnection;
@@ -26,7 +27,7 @@ import java.util.List;
  * Time: 10:37 PM
  * To change this template use File | Settings | File Templates.
  */
-public class TransactionTypeInfo extends BaseTypeInfo {
+public class TransactionTypeInfo extends TosaBaseTypeInfo {
 
   private IMethodInfo _commitMethod;
   private IPropertyInfo _lockProperty;
@@ -34,72 +35,45 @@ public class TransactionTypeInfo extends BaseTypeInfo {
 
   public TransactionTypeInfo(TransactionType type) {
     super(type);
-    _commitMethod = new MethodInfoBuilder().withName("commit").withStatic()
-        .withCallHandler(new IMethodCallHandler() {
+
+    createMethod("commit", params(), IJavaType.pVOID, Modifiers.PublicStatic,
+        "Commits the underlying transaction.",
+        new IMethodCallHandler() {
           @Override
           public Object handleCall(Object ctx, Object... args) {
-            // TODO - AHK - I'm not sure we want to swallow exceptions here
-            try {
-              getConnection().commitTransaction();
-            } catch (SQLException e) {
-              e.printStackTrace();
-            }
+            commitTransaction();
             return null;
           }
-        }).build(this);
-    _lockProperty = new PropertyInfoBuilder().withName("Lock").withStatic()
-        .withWritable(false).withType(TypeSystem.get(Lock.class))
-        .withAccessor(new IPropertyAccessor() {
+        });
+
+    createProperty("Lock", TypeSystem.get(Lock.class), Modifiers.PublicStatic, Writeable.ReadOnly,
+        "The thread-local Lock for this Transaction, suitable for use as the argument to a using statement.",
+        new IPropertyAccessor() {
           @Override
           public void setValue(Object ctx, Object value) {
           }
 
           @Override
           public Object getValue(Object ctx) {
-            if (_lock.get() == null) {
-              _lock.set(new Lock());
-            }
-            return _lock.get();
+            return getLock();
           }
-        }).build(this);
+        });
   }
 
-  @Override
-  public List<? extends IMethodInfo> getMethods() {
-    return Arrays.asList(_commitMethod);
-  }
-
-  @Override
-  public IMethodInfo getMethod(CharSequence methodName, IType... params) {
-    if (params == null || params.length == 0) {
-      if ("commit".equals(methodName)) {
-        return _commitMethod;
-      }
+  private void commitTransaction() {
+    // TODO - AHK - I'm not sure we want to swallow exceptions here
+    try {
+      getConnection().commitTransaction();
+    } catch (SQLException e) {
+      e.printStackTrace();
     }
-    return null;
   }
 
-  @Override
-  public IMethodInfo getCallableMethod(CharSequence method, IType... params) {
-    return getMethod(method, params);
-  }
-
-  @Override
-  public List<? extends IPropertyInfo> getProperties() {
-    return Collections.singletonList(_lockProperty);
-  }
-
-  @Override
-  public IPropertyInfo getProperty(CharSequence propName) {
-    if (propName.equals("Lock")) {
-      return _lockProperty;
+  private Lock getLock() {
+    if (_lock.get() == null) {
+      _lock.set(new Lock());
     }
-    return null;
-  }
-
-  @Override
-  public CharSequence getRealPropertyName(CharSequence propName) {
-    return propName;
+    return _lock.get();
   }
 
   public class Lock {
