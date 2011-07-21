@@ -99,41 +99,12 @@ public abstract class TosaBaseTypeInfo extends BaseTypeInfo {
 
   @Override
   public IMethodInfo getMethod(CharSequence methodName, IType... params) {
-    for (IMethodInfo method : _methodList) {
-      if (methodMatches(method, methodName, params)) {
-        return method;
-      }
-    }
-    return null;
-  }
-
-  private boolean methodMatches(IMethodInfo potentialMatch, CharSequence methodName, IType[] paramTypes) {
-    return potentialMatch.getDisplayName().equals(methodName) && parametersMatch(potentialMatch.getParameters(), paramTypes);
-  }
-
-  private boolean parametersMatch(IParameterInfo[] parameters, IType[] paramTypes) {
-    if (parameters.length == 0 && paramTypes == null) {
-      return true;
-    }
-
-    if (parameters.length == paramTypes.length) {
-      for (int i = 0; i < parameters.length; i++) {
-        // TODO - AHK - Assignability, or equality?
-        if (!parameters[i].getFeatureType().equals(paramTypes[i])) {
-          return false;
-        }
-      }
-    } else {
-      return false;
-    }
-
-    return true;
+    return ITypeInfo.FIND.method(_methodList, methodName, params);
   }
 
   @Override
   public IMethodInfo getCallableMethod(CharSequence method, IType... params) {
-    // Accessibility or exact match?
-    return getMethod(method, params);
+    return ITypeInfo.FIND.callableMethod(_methodList, method, params);
   }
 
   @Override
@@ -149,14 +120,6 @@ public abstract class TosaBaseTypeInfo extends BaseTypeInfo {
   @Override
   public CharSequence getRealPropertyName(CharSequence propName) {
     return propName;
-  }
-
-  private String getJdbcUrl() {
-    return ((DatabaseAccessType) getOwnersType()).getDatabaseImpl().getJdbcUrl();
-  }
-
-  private void setJdbcUrl(String url) {
-    ((DatabaseAccessType) getOwnersType()).getDatabaseImpl().setJdbcUrl(url);
   }
 
 }
