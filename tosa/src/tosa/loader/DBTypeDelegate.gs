@@ -1,5 +1,8 @@
 package tosa.loader
 
+uses tosa.loader.IDBType
+uses tosa.api.IDBObject
+
 /**
  * This class effectively serves as a static mix-in for the DBType types.  Each function in here
  * needs to have its first argument be an IDBType object.  In addition, parameters that are
@@ -14,5 +17,22 @@ package tosa.loader
  */
 class DBTypeDelegate {
 
+  /**
+   * Loads the entity with the given id.  Returns null if no entity exists with that id.
+   *
+   * @param dbType the implicit dbType initial argument
+   * @param id the id to load
+   */
+  static function fromId(dbType : IDBType, id : long) : IDBObject {
+    return dbType.Finder.fromId(id)
+  }
 
+  /**
+   * Executes a count query in the database.
+   *
+   * @param sql the sql to execute
+   */
+  static function countWithSql(dbType : IDBType, sql : String) : int {
+    return dbType.Finder.countWithSql(sql)
+  }
 }

@@ -31,35 +31,16 @@ public class DBTypeInfo extends TosaBaseTypeInfo implements ITypeInfo {
 
   public static final String ID_COLUMN = "id";
 
-  private CoreFinder<IDBObject> _finder;
-
   public DBTypeInfo(IDBType dbType) {
     super(dbType);
-    // TODO - AHK - Type reference?
-    _finder = new CoreFinderImpl<IDBObject>(dbType);
 
-    createMethod("fromId", params(param(ID_COLUMN, IJavaType.pLONG, "The id to load")), dbType, Modifiers.PublicStatic,
-        "Loads the entity with the given id.  Returns null if no entity exists with that id.",
-        new IMethodCallHandler() {
-          @Override
-          public Object handleCall(Object ctx, Object... args) {
-            return _finder.fromId((Long) args[0]);
-          }
-        });
-
-    createMethod("countWithSql", params(param("sql", IJavaType.STRING, null)), IJavaType.pINT, Modifiers.PublicStatic, "",
-        new IMethodCallHandler() {
-          @Override
-          public Object handleCall(Object ctx, Object... args) {
-            return _finder.countWithSql((String) args[0]);
-          }
-        });
+    delegateStaticMethods(TypeSystem.getByFullName("tosa.loader.DBTypeDelegate"));
 
     createMethod("count", params(param("template", dbType, null)), IJavaType.pINT, Modifiers.PublicStatic, "",
         new IMethodCallHandler() {
           @Override
           public Object handleCall(Object ctx, Object... args) {
-            return _finder.count((IDBObject) args[0]);
+            return getDBType().getFinder().count((IDBObject) args[0]);
           }
         });
 
@@ -67,7 +48,7 @@ public class DBTypeInfo extends TosaBaseTypeInfo implements ITypeInfo {
         new IMethodCallHandler() {
           @Override
           public Object handleCall(Object ctx, Object... args) {
-            return _finder.findWithSql((String) args[0]);
+            return getDBType().getFinder().findWithSql((String) args[0]);
           }
         });
 
@@ -75,7 +56,7 @@ public class DBTypeInfo extends TosaBaseTypeInfo implements ITypeInfo {
         new IMethodCallHandler() {
           @Override
           public Object handleCall(Object ctx, Object... args) {
-            return _finder.find((IDBObject) args[0]);
+            return getDBType().getFinder().find((IDBObject) args[0]);
           }
         });
 
@@ -89,7 +70,7 @@ public class DBTypeInfo extends TosaBaseTypeInfo implements ITypeInfo {
         new IMethodCallHandler() {
           @Override
           public Object handleCall(Object ctx, Object... args) {
-            return _finder.findSorted((IDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2]);
+            return getDBType().getFinder().findSorted((IDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2]);
           }
         });
 
@@ -103,7 +84,7 @@ public class DBTypeInfo extends TosaBaseTypeInfo implements ITypeInfo {
         new IMethodCallHandler() {
           @Override
           public Object handleCall(Object ctx, Object... args) {
-            return _finder.findPaged((IDBObject) args[0], (Integer) args[1], (Integer) args[2]);
+            return getDBType().getFinder().findPaged((IDBObject) args[0], (Integer) args[1], (Integer) args[2]);
           }
         }
     );
@@ -120,7 +101,7 @@ public class DBTypeInfo extends TosaBaseTypeInfo implements ITypeInfo {
         new IMethodCallHandler() {
           @Override
           public Object handleCall(Object ctx, Object... args) {
-            return _finder.findSortedPaged((IDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2], (Integer) args[3], (Integer) args[4]);
+            return getDBType().getFinder().findSortedPaged((IDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2], (Integer) args[3], (Integer) args[4]);
           }
         }
     );
@@ -155,5 +136,28 @@ public class DBTypeInfo extends TosaBaseTypeInfo implements ITypeInfo {
 
   private IDBType getDBType() {
     return ((IDBType) getOwnersType());
+  }
+
+  @Override
+  protected IType substituteDelegatedParameterType(IType paramType) {
+    if (paramType.getName().equals("tosa.api.IDBObject")) {
+      return getDBType();
+    } else {
+      return paramType;
+    }
+  }
+
+  @Override
+  protected IType substituteDelegatedReturnType(IType returnType) {
+    if (returnType.getName().equals("tosa.api.IDBObject")) {
+      return getDBType();
+    } else {
+      return returnType;
+    }
+  }
+
+  @Override
+  protected Object getFirstArgForDelegatedMethods() {
+    return getDBType();
   }
 }

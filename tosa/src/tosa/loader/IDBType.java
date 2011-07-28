@@ -2,6 +2,7 @@ package tosa.loader;
 
 import gw.lang.reflect.IEnhanceableType;
 import tosa.api.IDBTable;
+import tosa.api.query.CoreFinder;
 
 /**
  * Created by IntelliJ IDEA.
@@ -11,5 +12,6 @@ import tosa.api.IDBTable;
  * To change this template use File | Settings | File Templates.
  */
 public interface IDBType extends IEnhanceableType {
-  public IDBTable getTable();
+  IDBTable getTable();
+  CoreFinder getFinder();
 }
