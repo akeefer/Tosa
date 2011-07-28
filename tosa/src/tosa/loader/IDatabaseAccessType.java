@@ -1,5 +1,8 @@
 package tosa.loader;
 
+import tosa.api.IDatabase;
+import tosa.dbmd.DatabaseImpl;
+
 /**
  * Created by IntelliJ IDEA.
  * User: Alan
@@ -8,4 +11,5 @@ package tosa.loader;
  * To change this template use File | Settings | File Templates.
  */
 public interface IDatabaseAccessType {
+  IDatabase getDatabaseInstance();
 }

@@ -3,6 +3,7 @@ package tosa.loader;
 import gw.lang.reflect.*;
 import gw.lang.reflect.java.IJavaArrayType;
 import gw.lang.reflect.java.IJavaType;
+import tosa.api.IDatabase;
 import tosa.dbmd.DatabaseImpl;
 
 import java.util.*;
@@ -58,11 +59,25 @@ public class DatabaseAccessTypeInfo extends TosaBaseTypeInfo {
           }
         });
 
+    createProperty("DBInstance", TypeSystem.get(IDatabase.class), Modifiers.PublicStatic, Writeable.ReadOnly,
+            "The underlying Database instance object that this type wraps as a convenience",
+            new IPropertyAccessor() {
+                @Override
+                public Object getValue(Object o) {
+                  return getDb();
+                }
+
+                @Override
+                public void setValue(Object o, Object o1) {
+                    //To change body of implemented methods use File | Settings | File Templates.
+                }
+            });
+
     lockDataStructures();
   }
 
-  private DatabaseImpl getDb() {
-    return ((DatabaseAccessType) getOwnersType()).getDatabaseImpl();
+  private IDatabase getDb() {
+    return ((IDatabaseAccessType) getOwnersType()).getDatabaseInstance();
   }
 
 }

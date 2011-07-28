@@ -151,13 +151,5 @@ public abstract class TosaBaseTypeInfo extends BaseTypeInfo {
     return propName;
   }
 
-  private String getJdbcUrl() {
-    return ((DatabaseAccessType) getOwnersType()).getDatabaseImpl().getJdbcUrl();
-  }
-
-  private void setJdbcUrl(String url) {
-    ((DatabaseAccessType) getOwnersType()).getDatabaseImpl().setJdbcUrl(url);
-  }
-
 }
 
