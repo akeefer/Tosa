@@ -30,7 +30,11 @@ public class DatabaseAccessType extends TypeBase implements IDatabaseAccessType 
   public DatabaseAccessType(DatabaseImpl databaseImpl, DBTypeLoader dbTypeLoader) {
     _databaseImpl = databaseImpl;
     _typeLoader = dbTypeLoader;
-    _typeInfo = new DatabaseAccessTypeInfo(this);
+    _typeInfo = new DatabaseAccessTypeInfo(getTypeReference());
+  }
+
+  public IDatabaseAccessType getTypeReference() {
+    return (IDatabaseAccessType) TypeSystem.getOrCreateTypeReference(this);
   }
 
   @Override
@@ -60,7 +64,7 @@ public class DatabaseAccessType extends TypeBase implements IDatabaseAccessType 
 
   @Override
   public List<? extends IType> getInterfaces() {
-    return Collections.singletonList(TypeSystem.get(DatabaseAccessTypeMarker.class));
+    return Collections.emptyList();
   }
 
   @Override

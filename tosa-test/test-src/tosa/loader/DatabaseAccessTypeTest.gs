@@ -24,7 +24,6 @@ class DatabaseAccessTypeTest {
   @Test
   function testJdbcUrlPropertyGetter() {
     Assert.assertEquals("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1", test.testdb.Database.JdbcUrl)
-    // test.testdb.Database.printStuff()
   }
 
   @Test

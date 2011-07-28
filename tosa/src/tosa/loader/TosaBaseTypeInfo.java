@@ -17,18 +17,23 @@ import java.util.*;
 public abstract class TosaBaseTypeInfo extends FeatureManagerTypeInfoBase {
 
   private List<IPropertyInfo> _propertyList;
+  private Map<CharSequence, IPropertyInfo> _propertyMap;
   private List<IMethodInfo> _methodList;
   private List<IConstructorInfo> _constructorList;
 
   public TosaBaseTypeInfo(IType type) {
     super(type);
-    _propertyList = new ArrayList<IPropertyInfo>();
+    _propertyMap = new HashMap<CharSequence, IPropertyInfo>();
     _methodList = new ArrayList<IMethodInfo>();
     _constructorList = new ArrayList<IConstructorInfo>();
   }
 
   protected void lockDataStructures() {
-    _propertyList = Collections.unmodifiableList(_propertyList);
+    CommonServices.getEntityAccess().addEnhancementMethods(getOwnersType(), _methodList);
+    CommonServices.getEntityAccess().addEnhancementProperties(getOwnersType(), _propertyMap, true);
+
+    _propertyMap = Collections.unmodifiableMap(_propertyMap);
+    _propertyList = Collections.unmodifiableList(new ArrayList<IPropertyInfo>(_propertyMap.values()));
     _methodList = Collections.unmodifiableList(_methodList);
     _constructorList = Collections.unmodifiableList(_constructorList);
   }
@@ -90,7 +95,7 @@ public abstract class TosaBaseTypeInfo extends FeatureManagerTypeInfoBase {
   }
 
   protected void addProperty(IPropertyInfo property) {
-    _propertyList.add(property);
+    _propertyMap.put(property.getName(), property);
   }
 
   protected void addMethod(IMethodInfo method) {
