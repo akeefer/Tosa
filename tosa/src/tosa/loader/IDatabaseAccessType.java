@@ -1,7 +1,6 @@
 package tosa.loader;
 
 import tosa.api.IDatabase;
-import tosa.dbmd.DatabaseImpl;
 
 /**
  * Created by IntelliJ IDEA.

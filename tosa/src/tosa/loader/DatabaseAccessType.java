@@ -1,10 +1,16 @@
 package tosa.loader;
 
-import gw.lang.reflect.*;
+import gw.lang.reflect.IType;
+import gw.lang.reflect.ITypeInfo;
+import gw.lang.reflect.ITypeLoader;
+import gw.lang.reflect.TypeBase;
+import gw.lang.reflect.TypeSystem;
+import tosa.api.IDatabase;
 import tosa.dbmd.DatabaseImpl;
 
 import java.util.Collections;
 import java.util.List;
+
 
 /**
  * Created by IntelliJ IDEA.
@@ -62,7 +68,7 @@ public class DatabaseAccessType extends TypeBase implements IDatabaseAccessType 
     return _typeInfo;
   }
 
-  public DatabaseImpl getDatabaseInstance() {
+  public IDatabase getDatabaseInstance() {
     return _databaseImpl;
   }
 }

@@ -29,10 +29,12 @@ public interface IDBObject extends IGosuObject {
 
   Long getId();
 
-  // TODO - AHK - Rename to is_New?
+  // TODO - AHK - Rename this?
+  Long toID();
+
   boolean isNew();
 
-  void update() throws SQLException;
+  void update();
 
-  void delete() throws SQLException;
+  void delete();
 }
