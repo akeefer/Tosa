@@ -1,20 +1,14 @@
 package tosa.db.execution;
 
-import gw.lang.reflect.IPropertyInfo;
 import gw.lang.reflect.features.PropertyReference;
-import gw.lang.reflect.java.IJavaType;
 import gw.util.GosuStringUtil;
 import org.slf4j.profiler.Profiler;
 import tosa.CachedDBObject;
 import tosa.api.*;
-import tosa.loader.DBPropertyInfo;
 import tosa.loader.DBTypeInfo;
 import tosa.loader.IDBType;
 import tosa.loader.Util;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.sql.Clob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -74,12 +68,17 @@ public class QueryExecutor {
   }
 
   public List<IDBObject> findFromSql(String feature, IDBType type, String query, List<IPreparedStatementParameter> queryParameters) throws SQLException {
+    CachedDBQueryResultProcessor processor = new CachedDBQueryResultProcessor(type);
+    return findFromSql(type.getTable().getDatabase(), feature, query, queryParameters, processor);
+  }
+
+  public <T> List<T> findFromSql(IDatabase database, String feature, String query, List<IPreparedStatementParameter> queryParameters, IQueryResultProcessor<T> processor) {
     Profiler profiler = Util.newProfiler(feature);
     profiler.start(query + " (" + queryParameters + ")");
     try {
-      return type.getTable().getDatabase().getDBExecutionKernel().executeSelect(query,
-          new CachedDBQueryResultProcessor(type),
-          queryParameters.toArray(new IPreparedStatementParameter[queryParameters.size()]));
+      return database.getDBExecutionKernel().executeSelect(query,
+        processor,
+        queryParameters.toArray(new IPreparedStatementParameter[queryParameters.size()]));
     } finally {
       profiler.stop();
     }

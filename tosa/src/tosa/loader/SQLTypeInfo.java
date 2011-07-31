@@ -4,14 +4,15 @@ import gw.lang.parser.ISymbol;
 import gw.lang.reflect.*;
 import gw.lang.reflect.java.IJavaType;
 import gw.util.GosuExceptionUtil;
+import tosa.api.IPreparedStatementParameter;
+import tosa.api.IQueryResultProcessor;
 import tosa.db.execution.QueryExecutor;
+import tosa.dbmd.DatabaseImpl;
+import tosa.dbmd.PreparedStatementParameterImpl;
 import tosa.loader.parser.SQLParseException;
 import tosa.loader.parser.tree.*;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 
 public class SQLTypeInfo extends BaseTypeInfo {
@@ -19,6 +20,8 @@ public class SQLTypeInfo extends BaseTypeInfo {
   private List<IMethodInfo> _methods;
   private ISQLType _sqlType;
   private SQLParseException _sqlpe;
+  QueryExecutor _queryExecutor = new QueryExecutor();
+  private IMethodInfo _selectMethod;
 
   public SQLTypeInfo(ISQLType sqlType) {
     super(sqlType);
@@ -29,7 +32,7 @@ public class SQLTypeInfo extends BaseTypeInfo {
 
     final IType selectReturnType = getResultsType();
 
-    _methods.add(new MethodInfoBuilder().withName("select")
+    _selectMethod = new MethodInfoBuilder().withName("select")
       .withStatic()
       .withParameters(queryParameters)
       .withReturnType(IJavaType.ITERABLE.getParameterizedType(selectReturnType))
@@ -38,56 +41,38 @@ public class SQLTypeInfo extends BaseTypeInfo {
         public Object handleCall(Object ctx, Object... args) {
           return invokeQuery(selectReturnType, args);
         }
-      }).build(this));
+      }).build(this);
+    _methods.add(_selectMethod);
   }
 
   public Object invokeQuery(IType returnType, Object... args) {
     verifySql();
-    Connection c = null;
-    try {
-      HashMap<String, Object> values = makeArgMap(args);
+    HashMap<String, Object> values = makeArgMap(args);
 
-      c = _sqlType.getData().getDatabase().getConnection().connect();
-      String sql = _sqlType.getData().getSQL(values);
-      PreparedStatement stmt = c.prepareStatement(sql);
+    DatabaseImpl database = _sqlType.getData().getDatabase();
+    String sql = _sqlType.getData().getSQL(values);
+    List<VariableExpression> vars = _sqlType.getData().getVariables();
+    List<IPreparedStatementParameter> params = new ArrayList<IPreparedStatementParameter>();
 
-      List<VariableExpression> vars = _sqlType.getData().getVariables();
-      int position = 1;
-      for (VariableExpression var : vars) {
-        if (var.shouldApply(values)) {
-          Object value = values.get(var.getName());
-          if (var.isList()) {
-            if (value != null) {
-              List valueList = (List) value;
-              for (Object listValue : valueList) {
-                stmt.setObject(position, listValue);
-                position++;
-              }
+    for (VariableExpression var : vars) {
+      if (var.shouldApply(values)) {
+        Object value = values.get(var.getName());
+        if (var.isList()) {
+          if (value != null) {
+            List valueList = (List) value;
+            for (Object listValue : valueList) {
+              params.add(new PreparedStatementParameterImpl(listValue, PreparedStatementParameterImpl.UNKNOWN));
             }
-          } else {
-            stmt.setObject(position, value);
-            position++;
           }
-        }
-      }
-
-      ResultSet resultSet = stmt.executeQuery();
-      List lst = new LinkedList();
-      while (resultSet.next()) {
-        lst.add(constructResultElement(resultSet, returnType));
-      }
-      return lst;
-    } catch (SQLException e) {
-      throw GosuExceptionUtil.forceThrow(e);
-    } finally {
-      if(c != null){
-        try {
-          c.close();
-        } catch (SQLException e) {
-          throw GosuExceptionUtil.forceThrow(e);
+        } else {
+          params.add(new PreparedStatementParameterImpl(value, PreparedStatementParameterImpl.UNKNOWN));
         }
       }
     }
+
+    String featureName = _selectMethod == null ? "select" : _selectMethod.getName();
+    return _queryExecutor.findFromSql(database,
+      featureName, sql, params, new SQLTypeInfoQueryProcessor(returnType));
   }
 
   private void verifySql() {
@@ -178,5 +163,18 @@ public class SQLTypeInfo extends BaseTypeInfo {
   @Override
   public IMethodInfo getCallableMethod(CharSequence method, IType... params) {
     return getMethod(method, params);
+  }
+
+  private class SQLTypeInfoQueryProcessor implements IQueryResultProcessor<Object> {
+    private IType _returnType;
+
+    public SQLTypeInfoQueryProcessor(IType type) {
+      _returnType = type;
+    }
+
+    @Override
+    public Object processResult(ResultSet result) throws SQLException {
+      return constructResultElement(result, _returnType);
+    }
   }
 }
