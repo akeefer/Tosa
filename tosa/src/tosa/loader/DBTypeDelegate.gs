@@ -2,6 +2,7 @@ package tosa.loader
 
 uses tosa.loader.IDBType
 uses tosa.api.IDBObject
+uses gw.lang.reflect.features.PropertyReference
 
 /**
  * This class effectively serves as a static mix-in for the DBType types.  Each function in here
@@ -34,5 +35,34 @@ class DBTypeDelegate {
    */
   static function countWithSql(dbType : IDBType, sql : String) : int {
     return dbType.Finder.countWithSql(sql)
+  }
+
+  /**
+   * Executes a count query in the database using the given object as a template.
+   *
+   * @param template the template object to form the query from
+   */
+  static function count(dbType : IDBType, template : IDBObject) : int {
+    return dbType.Finder.count(template)
+  }
+
+  static function findWithSql(dbType : IDBType, sql : String) : List<IDBObject> {
+    return dbType.Finder.findWithSql(sql)
+  }
+
+  static function find(dbType : IDBType, template : IDBObject) : List<IDBObject> {
+    return dbType.Finder.find(template)
+  }
+
+  static function findSorted(dbType : IDBType, template : IDBObject, sortProperty : PropertyReference<IDBObject, Object>, ascending : boolean) : List<IDBObject> {
+    return dbType.Finder.findSorted(template, sortProperty, ascending)
+  }
+
+  static function findPaged(dbType : IDBType, template : IDBObject, pageSize : int, offset : int) : List<IDBObject> {
+    return dbType.Finder.findPaged(template, pageSize, offset)
+  }
+
+  static function findSortedPaged(dbType : IDBType, template : IDBObject, sortProperty : PropertyReference<IDBObject, Object>, ascending : boolean, pageSize : int, offset : int) : List<IDBObject> {
+    return dbType.Finder.findSortedPaged(template, sortProperty, ascending, pageSize, offset)
   }
 }

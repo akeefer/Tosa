@@ -36,75 +36,7 @@ public class DBTypeInfo extends TosaBaseTypeInfo implements ITypeInfo {
 
     delegateStaticMethods(TypeSystem.getByFullName("tosa.loader.DBTypeDelegate"));
 
-    createMethod("count", params(param("template", dbType, null)), IJavaType.pINT, Modifiers.PublicStatic, "",
-        new IMethodCallHandler() {
-          @Override
-          public Object handleCall(Object ctx, Object... args) {
-            return getDBType().getFinder().count((IDBObject) args[0]);
-          }
-        });
 
-    createMethod("findWithSql", params(param("sql", IJavaType.STRING, null)), IJavaType.LIST.getGenericType().getParameterizedType(dbType), Modifiers.PublicStatic, "",
-        new IMethodCallHandler() {
-          @Override
-          public Object handleCall(Object ctx, Object... args) {
-            return getDBType().getFinder().findWithSql((String) args[0]);
-          }
-        });
-
-    createMethod("find", params(param("template", dbType, null)), IJavaType.LIST.getGenericType().getParameterizedType(dbType), Modifiers.PublicStatic, "",
-        new IMethodCallHandler() {
-          @Override
-          public Object handleCall(Object ctx, Object... args) {
-            return getDBType().getFinder().find((IDBObject) args[0]);
-          }
-        });
-
-    createMethod("findSorted",
-        params(param("template", dbType, null),
-            param("sortProperty", TypeSystem.get(PropertyReference.class).getParameterizedType(dbType, IJavaType.OBJECT), null),
-            param("ascending", IJavaType.pBOOLEAN, null)),
-        IJavaType.LIST.getGenericType().getParameterizedType(dbType),
-        Modifiers.PublicStatic,
-        "",
-        new IMethodCallHandler() {
-          @Override
-          public Object handleCall(Object ctx, Object... args) {
-            return getDBType().getFinder().findSorted((IDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2]);
-          }
-        });
-
-    createMethod("findPaged",
-        params(param("template", dbType, null),
-            param("pageSize", IJavaType.pINT, null),
-            param("offset", IJavaType.pINT, null)),
-        IJavaType.LIST.getGenericType().getParameterizedType(dbType),
-        Modifiers.PublicStatic,
-        "",
-        new IMethodCallHandler() {
-          @Override
-          public Object handleCall(Object ctx, Object... args) {
-            return getDBType().getFinder().findPaged((IDBObject) args[0], (Integer) args[1], (Integer) args[2]);
-          }
-        }
-    );
-
-    createMethod("findSortedPaged",
-        params(param("template", dbType, null),
-            param("sortProperty", TypeSystem.get(PropertyReference.class).getParameterizedType(dbType, IJavaType.OBJECT), null),
-            param("ascending", IJavaType.pBOOLEAN, null),
-            param("pageSize", IJavaType.pINT, null),
-            param("offset", IJavaType.pINT, null)),
-        IJavaType.LIST.getGenericType().getParameterizedType(dbType),
-        Modifiers.PublicStatic,
-        "",
-        new IMethodCallHandler() {
-          @Override
-          public Object handleCall(Object ctx, Object... args) {
-            return getDBType().getFinder().findSortedPaged((IDBObject) args[0], (PropertyReference) args[1], (Boolean) args[2], (Integer) args[3], (Integer) args[4]);
-          }
-        }
-    );
 
     for (IDBColumn column : dbType.getTable().getColumns()) {
       // TODO - AHK - Ideally this cast wouldn't be necessary
@@ -140,19 +72,27 @@ public class DBTypeInfo extends TosaBaseTypeInfo implements ITypeInfo {
 
   @Override
   protected IType substituteDelegatedParameterType(IType paramType) {
-    if (paramType.getName().equals("tosa.api.IDBObject")) {
-      return getDBType();
-    } else {
-      return paramType;
-    }
+    return substituteType(paramType);
   }
 
   @Override
   protected IType substituteDelegatedReturnType(IType returnType) {
-    if (returnType.getName().equals("tosa.api.IDBObject")) {
+    return substituteType(returnType);
+  }
+
+  private IType substituteType(IType type) {
+    IType dbObjectType = TypeSystem.get(IDBObject.class);
+    if (type.equals(dbObjectType)) {
       return getDBType();
+    } else if (type.isParameterizedType()) {
+      IType[] parameters = type.getTypeParameters();
+      IType[] substitutedParameters = new IType[parameters.length];
+      for (int i = 0; i < parameters.length; i++) {
+        substitutedParameters[i] = substituteType(parameters[i]);
+      }
+      return type.getGenericType().getParameterizedType(substitutedParameters);
     } else {
-      return returnType;
+      return type;
     }
   }
 
