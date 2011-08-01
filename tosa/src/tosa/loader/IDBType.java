@@ -3,6 +3,7 @@ package tosa.loader;
 import gw.lang.reflect.IEnhanceableType;
 import tosa.api.IDBTable;
 import tosa.api.query.CoreFinder;
+import tosa.impl.query.NewQueryExecutor;
 
 /**
  * Created by IntelliJ IDEA.
@@ -14,4 +15,5 @@ import tosa.api.query.CoreFinder;
 public interface IDBType extends IEnhanceableType {
   IDBTable getTable();
   CoreFinder getFinder();
+  NewQueryExecutor getNewQueryExecutor();
 }

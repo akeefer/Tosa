@@ -3,6 +3,11 @@ package tosa.loader
 uses tosa.loader.IDBType
 uses tosa.api.IDBObject
 uses gw.lang.reflect.features.PropertyReference
+uses tosa.impl.util.StringSubstituter
+uses tosa.impl.query.SqlStringSubstituter
+uses java.util.Map
+uses gw.util.Pair
+
 
 /**
  * This class effectively serves as a static mix-in for the DBType types.  Each function in here
@@ -25,7 +30,25 @@ class DBTypeDelegate {
    * @param id the id to load
    */
   static function fromId(dbType : IDBType, id : long) : IDBObject {
-    return dbType.Finder.fromId(id)
+    var table = dbType.Table
+    // TODO - AHK - Should this be a constant?  Or a getIdColumn method since I call it so often?
+    var idColumn = table.getColumn("id")
+    var query = sub("SELECT * FROM :table WHERE :id_column = :id",
+                    {"table" -> table, "id_column" -> idColumn, "id" -> id})
+
+    var results = dbType.NewQueryExecutor.selectEntity(dbType.Name + ".fromId()", dbType, query.First, query.Second)
+
+    if (results.Count == 0) {
+      return null
+    } else if (results.Count == 1) {
+      return results.get(0)
+    } else {
+      throw "More than one row in table ${table.Name} had id ${id}";
+    }
+  }
+
+  private static function sub(input : String, tokenValues : Map<String, Object>) : Pair<String, Object[]> {
+    return SqlStringSubstituter.substitute(input, tokenValues)
   }
 
   /**
