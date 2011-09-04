@@ -2,6 +2,7 @@ package tosa.loader
 
 uses java.io.*
 uses java.lang.*
+uses java.util.Map
 uses gw.lang.reflect.IPropertyInfo
 uses gw.lang.reflect.features.PropertyReference
 uses org.junit.Assert
@@ -14,6 +15,7 @@ uses test.testdb.Foo
 uses test.testdb.Baz
 uses gw.lang.reflect.TypeSystem
 uses tosa.api.EntityCollection
+uses tosa.api.QueryResult
 uses tosa.impl.md.DatabaseImplSource
 
 class DBTypeInfoTest {
@@ -225,6 +227,11 @@ class DBTypeInfoTest {
       Assert.assertTrue(findSortedPagedMethod.Static)
       Assert.assertEquals(List<test.testdb.Foo>, findSortedPagedMethod.ReturnType)
 
+      // select(dbType : IDBType, sql : String, params : Map<String, Object> = null) : QueryResult<IDBObject>
+      var selectMethod = typeinfo.getMethod("select", {String, Map<String, Object>})
+      Assert.assertNotNull(selectMethod)
+      Assert.assertTrue(selectMethod.Static)
+      Assert.assertEquals(QueryResult<test.testdb.Foo>, selectMethod.ReturnType)
   }
 
   @Test

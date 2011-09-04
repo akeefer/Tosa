@@ -7,6 +7,8 @@ uses tosa.impl.util.StringSubstituter
 uses tosa.impl.query.SqlStringSubstituter
 uses java.util.Map
 uses gw.util.Pair
+uses tosa.api.QueryResult
+uses java.lang.IllegalArgumentException
 
 
 /**
@@ -45,6 +47,26 @@ class DBTypeDelegate {
     } else {
       throw "More than one row in table ${table.Name} had id ${id}";
     }
+  }
+
+  static function select(dbType : IDBType, sql : String, params : Map<String, Object> = null) : QueryResult<IDBObject> {
+    // TODO - AHK - Is this the right thing to enforce?  Should we enforce SELECT * FROM <table>?
+    // Should we even bother enforcing it here, or let it be enforced in NewQueryExecutor?
+    if (!sql.toUpperCase().startsWith("SELECT * FROM")) {
+      throw new IllegalArgumentException("The select(String) method must always be called with 'SELECT * FROM' as the start of the statement.  The sql passed in was " + sql)
+    }
+
+    var queryString : String
+    var paramArray : Object[]
+    if (params != null) {
+      var query = sub(sql, params)
+      queryString = query.First
+      paramArray = query.Second
+    } else {
+      queryString = sql
+      paramArray = {}
+    }
+    return dbType.NewQueryExecutor.selectEntity(dbType.Name + ".select(String)", dbType, queryString, paramArray)
   }
 
   private static function sub(input : String, tokenValues : Map<String, Object>) : Pair<String, Object[]> {

@@ -68,6 +68,7 @@ public class NewQueryExecutorImpl implements NewQueryExecutor {
 
   @Override
   public QueryResult<IDBObject> selectEntity(String profilerTag, IDBType type, String sqlStatement, Object... parameters) {
+    // TODO - AHK - Validate the input string here?
     return new QueryResultImpl<IDBObject>(profilerTag, sqlStatement, wrapParameters(parameters), _db, new CachedDBQueryResultProcessor(type));
   }
 

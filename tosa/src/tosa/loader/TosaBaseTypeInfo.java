@@ -4,6 +4,7 @@ import gw.config.CommonServices;
 import gw.internal.gosu.runtime.GosuRuntimeMethods;
 import gw.lang.reflect.*;
 import gw.lang.reflect.java.IJavaType;
+import sun.plugin2.util.ParameterNames;
 import tosa.dbmd.DatabaseImpl;
 
 import java.security.PrivateKey;
@@ -222,7 +223,13 @@ public abstract class TosaBaseTypeInfo extends FeatureManagerTypeInfoBase {
     // TODO - AHK - Sanity check that the method has the right first argument
 
     IParameterInfo[] parameters = method.getParameters();
-    ParameterInfoBuilder[] params = createDelegatedMethodParameters(parameters);
+    Object[] defaultValues;
+    if (method instanceof IOptionalParamCapable) {
+      defaultValues = ((IOptionalParamCapable) method).getDefaultValues();
+    } else {
+      defaultValues = new Object[parameters.length];
+    }
+    ParameterInfoBuilder[] params = createDelegatedMethodParameters(parameters, defaultValues);
 
     final IType ownersType = method.getOwnersType();
     final String methodName = method.getDisplayName();
@@ -255,7 +262,7 @@ public abstract class TosaBaseTypeInfo extends FeatureManagerTypeInfoBase {
     return parameterTypes;
   }
 
-  private ParameterInfoBuilder[] createDelegatedMethodParameters(IParameterInfo[] parameters) {
+  private ParameterInfoBuilder[] createDelegatedMethodParameters(IParameterInfo[] parameters, Object[] defaultValues) {
     ParameterInfoBuilder[] params = new ParameterInfoBuilder[parameters.length - 1];
     for (int i = 1; i < parameters.length; i++) {
       IParameterInfo param = parameters[i];
@@ -263,6 +270,7 @@ public abstract class TosaBaseTypeInfo extends FeatureManagerTypeInfoBase {
       params[i - 1] = new ParameterInfoBuilder()
               .withName(param.getName())
               .withDescription(param.getDescription())
+              .withDefValue(defaultValues[i])
               .withType(substituteDelegatedParameterType(param.getFeatureType()));
     }
     return params;

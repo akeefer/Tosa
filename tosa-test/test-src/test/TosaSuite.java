@@ -30,6 +30,7 @@ public class TosaSuite extends Suite {
       "tosa.impl.parser.data.DBDataValidatorTest",
       "tosa.impl.util.StringSubstituterTest",
       "tosa.loader.DatabaseAccessTypeTest",
+      "tosa.loader.DBTypeInfoSelectTest",
       "tosa.loader.DBTypeInfoTest",
       "tosa.loader.SQLTypeInfoTest",
       "tosa.loader.parser.SelectParsingBootstrapTest",
