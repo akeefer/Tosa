@@ -17,6 +17,8 @@ uses gw.lang.reflect.TypeSystem
 uses tosa.api.EntityCollection
 uses tosa.api.QueryResult
 uses tosa.impl.md.DatabaseImplSource
+uses tosa.api.IDBObject
+uses gw.lang.reflect.IType
 
 class DBTypeInfoSelectTest {
 
@@ -47,14 +49,50 @@ class DBTypeInfoSelectTest {
     connection.close()
   }
 
+  private function createBar(date : String, misc : String) : Bar {
+    var bar = new Bar(){:Date = new java.util.Date(date), :Misc = misc}
+    bar.update()
+    return bar
+  }
+
+  private function createFoo(firstName : String, lastName : String) : Foo {
+    var foo = new Foo(){:FirstName = firstName, :LastName = lastName}
+    foo.update()
+    return foo
+  }
+
+  private function assertMatch<T extends IDBObject>(expected : T, actual : T) {
+    if (expected typeis Bar and actual typeis Bar) {
+      Assert.assertEquals(expected.Id, actual.Id)
+      Assert.assertEquals(expected.Date, actual.Date)
+      Assert.assertEquals(expected.Misc, actual.Misc)
+    } else if (expected typeis Foo and actual typeis Foo) {
+      Assert.assertEquals(expected.Id, actual.Id)
+      Assert.assertEquals(expected.FirstName, actual.FirstName)
+      Assert.assertEquals(expected.LastName, actual.LastName)
+    } else {
+      Assert.fail("Unexpected object of type " + typeof(expected))
+    }
+  }
+
+  private function assertException(callback : block(), exceptionType : IType, expectedMessage : String) {
+    try {
+      callback()
+    } catch (e : Exception) {
+      if (!exceptionType.isAssignableFrom(typeof(e))) {
+        Assert.fail("Expected an exception of type " + exceptionType + " but got one of type " + typeof(e))
+      }
+      Assert.assertEquals(expectedMessage, e.Message)
+    }
+  }
+
   // ----------------------------------------
   // Tests for the select(String, Map) method
   // ----------------------------------------
 
   @Test
   function testSelectAllBarsReturnsAllBars() {
-    var bar = new Bar(){:Date = new java.util.Date("4/22/2009"), :Misc = "misc"}
-    bar.update()
+    var bar = createBar("4/22/2009", "misc")
 
     var result = Bar.select("SELECT * FROM \"Bar\"")
     Assert.assertEquals(1, result.Count)
@@ -65,8 +103,7 @@ class DBTypeInfoSelectTest {
 
   @Test
   function testSelectThatMatchesNothingReturnsEmptyQueryResult() {
-    var bar = new Bar(){:Date = new java.util.Date("4/22/2009"), :Misc = "misc"}
-    bar.update()
+    var bar = createBar("4/22/2009", "misc")
 
     var result = Bar.select("SELECT * FROM \"Bar\" WHERE \"Misc\" = 'nosuchvalue'")
     Assert.assertEquals(0, result.Count)
@@ -74,65 +111,44 @@ class DBTypeInfoSelectTest {
 
   @Test
   function testSelectWithOneParam() {
-    var bar = new Bar(){:Date = new java.util.Date("4/22/2009"), :Misc = "misc"}
-    bar.update()
-    var bar2 = new Bar(){:Date = new java.util.Date("4/23/2009"), :Misc = "other"}
-    bar2.update()
+    var bar = createBar("4/22/2009", "misc")
+    var bar2 = createBar("4/23/2009", "other")
 
     var result = Bar.select("SELECT * FROM \"Bar\" WHERE \"Misc\" = :arg", {"arg" -> "misc"})
     Assert.assertEquals(1, result.Count)
-    Assert.assertEquals(bar.Id, result.get(0).Id)
-    Assert.assertEquals("misc", result.get(0).Misc)
-    Assert.assertEquals(new java.util.Date("4/22/2009"), result.get(0).Date)
+    assertMatch(bar, result.get(0))
   }
 
   @Test
   function testSelectWithTwoParams() {
-    var bar = new Bar(){:Date = new java.util.Date("4/22/2009"), :Misc = "misc"}
-    bar.update()
-    var bar2 = new Bar(){:Date = new java.util.Date("4/23/2009"), :Misc = "other"}
-    bar2.update()
+    var bar = createBar("4/22/2009", "misc")
+    var bar2 = createBar("4/23/2009", "other")
 
     var result = Bar.select("SELECT * FROM \"Bar\" WHERE \"Misc\" = :arg OR \"Misc\" = :arg2", {"arg" -> "nothing", "arg2" -> "misc"})
     Assert.assertEquals(1, result.Count)
-    Assert.assertEquals(bar.Id, result.get(0).Id)
-    Assert.assertEquals("misc", result.get(0).Misc)
-    Assert.assertEquals(new java.util.Date("4/22/2009"), result.get(0).Date)
+    assertMatch(bar, result.get(0))
   }
 
   @Test
   function testSelectWithTwoParamsReturningMultipleValues() {
-    var bar = new Bar(){:Date = new java.util.Date("4/22/2009"), :Misc = "misc"}
-    bar.update()
-    var bar2 = new Bar(){:Date = new java.util.Date("4/23/2009"), :Misc = "other"}
-    bar2.update()
+    var bar = createBar("4/22/2009", "misc")
+    var bar2 = createBar("4/23/2009", "other")
 
     var result = Bar.select("SELECT * FROM \"Bar\" WHERE \"Misc\" = :arg OR \"Misc\" = :arg2", {"arg" -> "other", "arg2" -> "misc"})
     Assert.assertEquals(2, result.Count)
     if (result.get(0).Id == bar.Id) {
-      Assert.assertEquals("misc", result.get(0).Misc)
-      Assert.assertEquals(new java.util.Date("4/22/2009"), result.get(0).Date)
-
-      Assert.assertEquals(bar2.Id, result.get(1).Id)
-      Assert.assertEquals("other", result.get(1).Misc)
-      Assert.assertEquals(new java.util.Date("4/23/2009"), result.get(1).Date)
+      assertMatch(bar, result.get(0))
+      assertMatch(bar2, result.get(1))
     } else {
-      Assert.assertEquals(bar2.Id, result.get(0).Id)
-      Assert.assertEquals("other", result.get(0).Misc)
-      Assert.assertEquals(new java.util.Date("4/23/2009"), result.get(1).Date)
-
-      Assert.assertEquals(bar.Id, result.get(1).Id)
-      Assert.assertEquals("misc", result.get(1).Misc)
-      Assert.assertEquals(new java.util.Date("4/22/2009"), result.get(1).Date)
+      assertMatch(bar2, result.get(0))
+      assertMatch(bar, result.get(1))
     }
   }
 
   @Test
   function testSelectWithJoin() {
-    var bar = new Bar(){:Date = new java.util.Date("4/22/2009"), :Misc = "misc"}
-    bar.update()
-    var bar2 = new Bar(){:Date = new java.util.Date("4/23/2009"), :Misc = "other"}
-    bar2.update()
+    var bar = createBar("4/22/2009", "misc")
+    var bar2 = createBar("4/23/2009", "other")
 
     var foo = new Foo(){:Bar = bar, :FirstName = "Bob"}
     foo.update()
@@ -141,45 +157,33 @@ class DBTypeInfoSelectTest {
 
     var result = Bar.select("SELECT * FROM \"Bar\" INNER JOIN \"Foo\" ON \"Foo\".\"Bar_id\" = \"Bar\".\"id\" WHERE \"Foo\".\"FirstName\" = :arg", {"arg" -> "Bob"})
     Assert.assertEquals(1, result.Count)
-    Assert.assertEquals(bar.Id, result.get(0).Id)
-    Assert.assertEquals("misc", result.get(0).Misc)
-    Assert.assertEquals(new java.util.Date("4/22/2009"), result.get(0).Date)
+    assertMatch(bar, result.get(0))
   }
 
   @Test
   function testSelectWithMultipleUsesOfSameParam() {
-    var foo = new Foo(){:FirstName = "Bob", :LastName = "Bob"}
-    foo.update()
-    var foo2 = new Foo(){:FirstName = "Bob", :LastName = "Other"}
-    foo2.update()
+    var foo = createFoo("Bob", "Bob")
+    var foo2 = createFoo("Bob", "Other")
 
     var result = Foo.select("SELECT * FROM \"Foo\" WHERE \"FirstName\" = :arg AND \"LastName\" = :arg", {"arg" -> "Bob"})
     Assert.assertEquals(1, result.Count)
-    Assert.assertEquals(foo.Id, result.get(0).Id)
-    Assert.assertEquals("Bob", result.get(0).FirstName)
-    Assert.assertEquals("Bob", result.get(0).LastName)
+    assertMatch(foo, result.get(0))
   }
 
   @Test
   function testSelectWithUnusedParametersIgnoresExtraParameters() {
-    var foo = new Foo(){:FirstName = "Bob", :LastName = "Bob"}
-    foo.update()
-    var foo2 = new Foo(){:FirstName = "Bob", :LastName = "Other"}
-    foo2.update()
+    var foo = createFoo("Bob", "Bob")
+    var foo2 = createFoo("Bob", "Other")
 
     var result = Foo.select("SELECT * FROM \"Foo\" WHERE \"FirstName\" = :arg AND \"LastName\" = :arg", {"arg" -> "Bob", "arg2" -> "Other", "arg3" -> "Hrm"})
     Assert.assertEquals(1, result.Count)
-    Assert.assertEquals(foo.Id, result.get(0).Id)
-    Assert.assertEquals("Bob", result.get(0).FirstName)
-    Assert.assertEquals("Bob", result.get(0).LastName)
+    assertMatch(foo, result.get(0))
   }
 
   @Test
   function testSelectWithMissingParametersDoesntSubstituteIfNoParamArgIsSpecified() {
-    var foo = new Foo(){:FirstName = "Bob", :LastName = "Bob"}
-    foo.update()
-    var foo2 = new Foo(){:FirstName = "Bob", :LastName = "Other"}
-    foo2.update()
+    var foo = createFoo("Bob", "Bob")
+    var foo2 = createFoo("Bob", "Other")
 
     var result = Foo.select("SELECT * FROM \"Foo\" WHERE \"FirstName\" = ':arg' AND \"LastName\" = ':arg'")
     Assert.assertEquals(0, result.Count)
@@ -187,10 +191,8 @@ class DBTypeInfoSelectTest {
 
   @Test
   function testSelectWithMissingParametersThrowsIfParamMapIsSpecified() {
-    var foo = new Foo(){:FirstName = "Bob", :LastName = "Bob"}
-    foo.update()
-    var foo2 = new Foo(){:FirstName = "Bob", :LastName = "Other"}
-    foo2.update()
+    var foo = createFoo("Bob", "Bob")
+    var foo2 = createFoo("Bob", "Other")
 
     try {
       var result = Foo.select("SELECT * FROM \"Foo\" WHERE \"FirstName\" = :arg AND \"LastName\" = :arg", {"arrg" -> "Bob"})
@@ -202,10 +204,8 @@ class DBTypeInfoSelectTest {
 
   @Test
   function testSelectWithEscapedParametersDoesntSubstituteForEscapedParams() {
-    var foo = new Foo(){:FirstName = "Bob", :LastName = "Bob"}
-    foo.update()
-    var foo2 = new Foo(){:FirstName = "Bob", :LastName = "Other"}
-    foo2.update()
+    var foo = createFoo("Bob", "Bob")
+    var foo2 = createFoo("Bob", "Other")
 
     var result = Foo.select("SELECT * FROM \"Foo\" WHERE \"FirstName\" = '\\:arg' AND \"LastName\" = :arg", {"arg" -> "Bob"})
     Assert.assertEquals(0, result.Count)
@@ -222,20 +222,163 @@ class DBTypeInfoSelectTest {
 
   @Test
   function testSelectWithStringStartingWithSelectStarFromInOtherCaseIsFine() {
-    var foo = new Foo(){:FirstName = "Bob", :LastName = "Bob"}
-    foo.update()
-    var foo2 = new Foo(){:FirstName = "Bob", :LastName = "Other"}
-    foo2.update()
+    var foo = createFoo("Bob", "Bob")
+    var foo2 = createFoo("Bob", "Other")
 
     var result = Foo.select("Select * From \"Foo\" WHERE \"FirstName\" = :arg AND \"LastName\" = :arg", {"arg" -> "Bob", "arg2" -> "Other", "arg3" -> "Hrm"})
-    Assert.assertEquals(1, result.Count)
-    Assert.assertEquals(foo.Id, result.get(0).Id)
-    Assert.assertEquals("Bob", result.get(0).FirstName)
-    Assert.assertEquals("Bob", result.get(0).LastName)
+    assertMatch(foo, result.get(0))
   }
 
-  // Select that doesn't start with SELECT * FROM
-  // Select that starts with Select * From
+  // TODO - AHK - Validate the SQL being spit out
   // Check that the query being issued contains a ?
+
+  // ---------------------------------------------
+  // Tests for the selectWhere(String, Map) method
+  // ---------------------------------------------
+
+  // Select that starts with "SELECT" throws an error
+
+  @Test
+  function testSelectWhereWithNullArgReturnsAllBars() {
+    var bar = createBar("4/22/2009", "misc")
+    var bar2 = createBar("4/23/2009", "other")
+
+    var result = Bar.selectWhere(null)
+    Assert.assertEquals(2, result.Count)
+    if (result.get(0).Id == bar.Id) {
+      assertMatch(bar, result.get(0))
+      assertMatch(bar2, result.get(1))
+    } else {
+      assertMatch(bar2, result.get(0))
+      assertMatch(bar, result.get(1))
+    }
+  }
+
+  @Test
+  function testSelectWhereWithEmptyArgReturnsAllBars() {
+    var bar = createBar("4/22/2009", "misc")
+    var bar2 = createBar("4/23/2009", "other")
+
+    var result = Bar.selectWhere("")
+    Assert.assertEquals(2, result.Count)
+    if (result.get(0).Id == bar.Id) {
+      assertMatch(bar, result.get(0))
+      assertMatch(bar2, result.get(1))
+    } else {
+      assertMatch(bar2, result.get(0))
+      assertMatch(bar, result.get(1))
+    }
+  }
+
+  @Test
+  function testSelectWhereThatMatchesNothingReturnsEmptyQueryResult() {
+    var bar = createBar("4/22/2009", "misc")
+
+    var result = Bar.selectWhere("\"Misc\" = 'nosuchvalue'")
+    Assert.assertEquals(0, result.Count)
+  }
+
+  @Test
+  function testSelectWhereWithOneParam() {
+    var bar = createBar("4/22/2009", "misc")
+    var bar2 = createBar("4/23/2009", "other")
+
+    var result = Bar.selectWhere("\"Misc\" = :arg", {"arg" -> "misc"})
+    Assert.assertEquals(1, result.Count)
+    assertMatch(bar, result.get(0))
+  }
+
+  @Test
+  function testSelectWhereWithTwoParams() {
+    var bar = createBar("4/22/2009", "misc")
+    var bar2 = createBar("4/23/2009", "other")
+
+    var result = Bar.selectWhere("\"Misc\" = :arg OR \"Misc\" = :arg2", {"arg" -> "nothing", "arg2" -> "misc"})
+    Assert.assertEquals(1, result.Count)
+    assertMatch(bar, result.get(0))
+  }
+
+  @Test
+  function testSelectWhereWithTwoParamsReturningMultipleValues() {
+    var bar = createBar("4/22/2009", "misc")
+    var bar2 = createBar("4/23/2009", "other")
+
+    var result = Bar.selectWhere("\"Misc\" = :arg OR \"Misc\" = :arg2", {"arg" -> "other", "arg2" -> "misc"})
+    Assert.assertEquals(2, result.Count)
+    if (result.get(0).Id == bar.Id) {
+      assertMatch(bar, result.get(0))
+      assertMatch(bar2, result.get(1))
+    } else {
+      assertMatch(bar2, result.get(0))
+      assertMatch(bar, result.get(1))
+    }
+  }
+
+  @Test
+  function testSelectWhereWithMultipleUsesOfSameParam() {
+    var foo = createFoo("Bob", "Bob")
+    var foo2 = createFoo("Bob", "Other")
+
+    var result = Foo.selectWhere("\"FirstName\" = :arg AND \"LastName\" = :arg", {"arg" -> "Bob"})
+    Assert.assertEquals(1, result.Count)
+    assertMatch(foo, result.get(0))
+  }
+
+  @Test
+  function testSelectWhereWithUnusedParametersIgnoresExtraParameters() {
+    var foo = createFoo("Bob", "Bob")
+    var foo2 = createFoo("Bob", "Other")
+
+    var result = Foo.selectWhere("\"FirstName\" = :arg AND \"LastName\" = :arg", {"arg" -> "Bob", "arg2" -> "Other", "arg3" -> "Hrm"})
+    Assert.assertEquals(1, result.Count)
+    assertMatch(foo, result.get(0))
+  }
+
+  @Test
+  function testSelectWhereWithMissingParametersDoesntSubstituteIfNoParamArgIsSpecified() {
+    var foo = createFoo("Bob", "Bob")
+    var foo2 = createFoo("Bob", "Other")
+
+    var result = Foo.selectWhere("\"FirstName\" = ':arg' AND \"LastName\" = ':arg'")
+    Assert.assertEquals(0, result.Count)
+  }
+
+  @Test
+  function testSelectWhereWithMissingParametersThrowsIfParamMapIsSpecified() {
+    var foo = createFoo("Bob", "Bob")
+    var foo2 = createFoo("Bob", "Other")
+
+    try {
+      var result = Foo.selectWhere("\"FirstName\" = :arg AND \"LastName\" = :arg", {"arrg" -> "Bob"})
+      Assert.fail("Expected an IllegalArgumentException")
+    } catch (e : IllegalArgumentException) {
+      Assert.assertEquals("No value for the token arg was found in the map", e.Message)
+    }
+  }
+
+  @Test
+  function testSelectWhereWithEscapedParametersDoesntSubstituteForEscapedParams() {
+    var foo = createFoo("Bob", "Bob")
+    var foo2 = createFoo("Bob", "Other")
+
+    var result = Foo.selectWhere("\"FirstName\" = '\\:arg' AND \"LastName\" = :arg", {"arg" -> "Bob"})
+    Assert.assertEquals(0, result.Count)
+  }
+
+  @Test
+  function testSelectWhereStartingWithSelectThrowsIllegalArgumentException() {
+    assertException(\ -> Foo.selectWhere("SELECT * FROM \"Foo\" WHERE \"FirstName\" = 'Bob'"),
+        IllegalArgumentException,
+        "The selectWhere(String, Map) method should only be caused with the WHERE clause of a query.  To specify the full SQL for the query, use the select(String, Map) method instead.")
+  }
+
+  @Test
+  function testSelectWhereStartingWithSelectInAlternateCaseThrowsIllegalArgumentException() {
+    assertException(\ -> Foo.selectWhere("Select * from \"Foo\" WHERE \"FirstName\" = 'Bob'"),
+        IllegalArgumentException,
+        "The selectWhere(String, Map) method should only be caused with the WHERE clause of a query.  To specify the full SQL for the query, use the select(String, Map) method instead.")
+  }
+  // TODO - AHK - Error cases
+
 
 }

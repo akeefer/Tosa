@@ -66,7 +66,30 @@ class DBTypeDelegate {
       queryString = sql
       paramArray = {}
     }
-    return dbType.NewQueryExecutor.selectEntity(dbType.Name + ".select(String)", dbType, queryString, paramArray)
+    return dbType.NewQueryExecutor.selectEntity(dbType.Name + ".select(String, Map)", dbType, queryString, paramArray)
+  }
+
+  static function selectWhere(dbType : IDBType, sql : String, params : Map<String, Object> = null) : QueryResult<IDBObject> {
+    // TODO - AHK - Is this the right thing to enforce?
+    if (sql != null && sql.toUpperCase().startsWith("SELECT")) {
+      throw new IllegalArgumentException("The selectWhere(String, Map) method should only be caused with the WHERE clause of a query.  To specify the full SQL for the query, use the select(String, Map) method instead.")
+    }
+
+    var queryPrefix = sub("SELECT * FROM :table", {"table" -> dbType.Table}).First
+    var queryString : String
+    var paramArray : Object[]
+    if (sql == null || sql.Empty) {
+      queryString = queryPrefix
+      paramArray = {}
+    } else if (params != null) {
+      var query = sub(sql, params)
+      queryString = queryPrefix + " WHERE " + query.First
+      paramArray = query.Second
+    } else {
+      queryString = queryPrefix + " WHERE " + sql
+      paramArray = {}
+    }
+    return dbType.NewQueryExecutor.selectEntity(dbType.Name + ".selectWhere(String, Map)", dbType, queryString, paramArray)
   }
 
   private static function sub(input : String, tokenValues : Map<String, Object>) : Pair<String, Object[]> {
