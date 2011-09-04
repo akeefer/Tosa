@@ -207,10 +207,10 @@ class DBTypeInfoTest {
       Assert.assertTrue(countBySqlMethod.Static)
       Assert.assertEquals(int, countBySqlMethod.ReturnType)
 
-      var countMethod = typeinfo.getMethod("count", {test.testdb.Foo})
-      Assert.assertNotNull(countMethod)
-      Assert.assertTrue(countMethod.Static)
-      Assert.assertEquals(int, countMethod.ReturnType)
+      var countLikeMethod = typeinfo.getMethod("countLike", {test.testdb.Foo})
+      Assert.assertNotNull(countLikeMethod)
+      Assert.assertTrue(countLikeMethod.Static)
+      Assert.assertEquals(int, countLikeMethod.ReturnType)
 
       var findSortedMethod = typeinfo.getMethod("findSorted", {test.testdb.Foo, PropertyReference<Foo, Object>, boolean})
       Assert.assertNotNull(findSortedMethod)
@@ -317,8 +317,8 @@ class DBTypeInfoTest {
 
   @Test
   function testCount() {
-      Assert.assertEquals(20, test.testdb.SortPage.count(null))
-      Assert.assertEquals(4, test.testdb.SortPage.count(new test.testdb.SortPage(){:Number = 1}))
+      Assert.assertEquals(20, test.testdb.SortPage.countLike(null))
+      Assert.assertEquals(4, test.testdb.SortPage.countLike(new test.testdb.SortPage(){:Number = 1}))
   }
 
   @Test

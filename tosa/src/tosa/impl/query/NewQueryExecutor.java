@@ -16,5 +16,7 @@ import java.util.List;
  */
 public interface NewQueryExecutor {
 
+  long count(String profilerTag, String sqlStatement, Object... parameters);
+
   QueryResult<IDBObject> selectEntity(String profilerTag, IDBType targetType, String sqlStatement, Object... parameters);
 }

@@ -34,37 +34,36 @@ public class NewQueryExecutorImpl implements NewQueryExecutor {
     _db = db;
   }
 
-//  // TODO - AHK - Clean up the query execution API for reals . . .
-//
-//  @Override
-//  // TODO - AHK - Should this be a long instead?
-//  public int count(String profilerTag, String sqlStatement, IPreparedStatementParameter... parameters) {
-//    // TODO - AHK - Verify that it starts with "SELECT count(*) as count"
-//    Profiler profiler = Util.newProfiler(profilerTag);
-//    profiler.start(sqlStatement + " (" + Arrays.asList(parameters) + ")");
-//    try {
-//      List<Integer> results = _db.getDBExecutionKernel().executeSelect(
-//          sqlStatement,
-//          new CountQueryResultProcessor(),
-//          parameters);
-//      if (results.size() == 0) {
-//        return 0;
-//      } else if (results.size() == 1) {
-//        return results.get(0);
-//      } else {
-//        throw new IllegalStateException("Expected count query " + sqlStatement + " to return 0 or 1 result, but got " + results.size());
-//      }
-//    } finally {
-//      profiler.stop();
-//    }
-//  }
-//
-//  private static class CountQueryResultProcessor implements IQueryResultProcessor<Integer> {
-//    @Override
-//    public Integer processResult(ResultSet result) throws SQLException {
-//      return result.getInt("count");
-//    }
-//  }
+  //  // TODO - AHK - Clean up the query execution API for reals . . .
+
+  @Override
+  public long count(String profilerTag, String sqlStatement, Object... parameters) {
+    // TODO - AHK - Verify that it starts with "SELECT count(*) as count"
+    Profiler profiler = Util.newProfiler(profilerTag);
+    profiler.start(sqlStatement + " (" + Arrays.asList(parameters) + ")");
+    try {
+      List<Integer> results = _db.getDBExecutionKernel().executeSelect(
+          sqlStatement,
+          new CountQueryResultProcessor(),
+          wrapParameters(parameters));
+      if (results.size() == 0) {
+        return 0;
+      } else if (results.size() == 1) {
+        return results.get(0);
+      } else {
+        throw new IllegalStateException("Expected count query " + sqlStatement + " to return 0 or 1 result, but got " + results.size());
+      }
+    } finally {
+      profiler.stop();
+    }
+  }
+
+  private static class CountQueryResultProcessor implements IQueryResultProcessor<Integer> {
+    @Override
+    public Integer processResult(ResultSet result) throws SQLException {
+      return result.getInt("count");
+    }
+  }
 
   @Override
   public QueryResult<IDBObject> selectEntity(String profilerTag, IDBType type, String sqlStatement, Object... parameters) {

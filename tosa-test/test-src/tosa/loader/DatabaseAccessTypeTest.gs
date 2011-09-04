@@ -39,12 +39,12 @@ class DatabaseAccessTypeTest {
       test.testdb.Database.createTables()
       var foo = new Foo(){:FirstName = "Charlie", :LastName="Brown", :Address="1234 Main St.\nCentreville, KS 12345"}
       foo.update()
-      Assert.assertEquals(1, Foo.count(new Foo(){:FirstName = "Charlie"}))
+      Assert.assertEquals(1, Foo.countLike(new Foo(){:FirstName = "Charlie"}))
 
       // Dropping the tables should cause the next query to throw an exception
       test.testdb.Database.dropTables()
       try {
-        Foo.count(new Foo(){:FirstName = "Charlie"})
+        Foo.countLike(new Foo(){:FirstName = "Charlie"})
         Assert.fail("Expected an exception")
       } catch (e : Exception) {
         // Expected
@@ -52,7 +52,7 @@ class DatabaseAccessTypeTest {
 
       // Now switch back to the original DB and verify that's not there
       test.testdb.Database.JdbcUrl = originalUrl
-      Assert.assertEquals(0, Foo.count(new Foo(){:FirstName = "Charlie"}))
+      Assert.assertEquals(0, Foo.countLike(new Foo(){:FirstName = "Charlie"}))
     } finally {
       test.testdb.Database.JdbcUrl = originalUrl
     }

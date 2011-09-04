@@ -49,11 +49,31 @@ class DBTypeDelegate {
     }
   }
 
+  static function count(dbType : IDBType, sql : String, params : Map<String, Object> = null) : long {
+    // TODO - AHK - Is this the right thing to enforce?  Should we enforce SELECT count(*) as count FROM <table>?
+    // Should we even bother enforcing it here, or let it be enforced in NewQueryExecutor?
+    if (!sql.startsWith("SELECT count(*) as count")) {
+      throw new IllegalArgumentException("The count(String, Map) method must always be called with 'SELECT count(*) as count FROM' as the start of the statement.  The sql passed in was " + sql)
+    }
+
+    var queryString : String
+    var paramArray : Object[]
+    if (params != null) {
+      var query = sub(sql, params)
+      queryString = query.First
+      paramArray = query.Second
+    } else {
+      queryString = sql
+      paramArray = {}
+    }
+    return dbType.NewQueryExecutor.count(dbType.Name + ".count(String, Map)", queryString, paramArray)
+  }
+
   static function select(dbType : IDBType, sql : String, params : Map<String, Object> = null) : QueryResult<IDBObject> {
     // TODO - AHK - Is this the right thing to enforce?  Should we enforce SELECT * FROM <table>?
     // Should we even bother enforcing it here, or let it be enforced in NewQueryExecutor?
     if (!sql.toUpperCase().startsWith("SELECT * FROM")) {
-      throw new IllegalArgumentException("The select(String) method must always be called with 'SELECT * FROM' as the start of the statement.  The sql passed in was " + sql)
+      throw new IllegalArgumentException("The select(String, Map) method must always be called with 'SELECT * FROM' as the start of the statement.  The sql passed in was " + sql)
     }
 
     var queryString : String
@@ -110,7 +130,7 @@ class DBTypeDelegate {
    *
    * @param template the template object to form the query from
    */
-  static function count(dbType : IDBType, template : IDBObject) : int {
+  static function countLike(dbType : IDBType, template : IDBObject) : int {
     return dbType.Finder.count(template)
   }
 
