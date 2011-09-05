@@ -369,14 +369,14 @@ class DBTypeInfoSelectTest {
   function testSelectWhereStartingWithSelectThrowsIllegalArgumentException() {
     assertException(\ -> Foo.selectWhere("SELECT * FROM \"Foo\" WHERE \"FirstName\" = 'Bob'"),
         IllegalArgumentException,
-        "The selectWhere(String, Map) method should only be caused with the WHERE clause of a query.  To specify the full SQL for the query, use the select(String, Map) method instead.")
+        "The selectWhere(String, Map) method should only be called with the WHERE clause of a query.  To specify the full SQL for the query, use the select(String, Map) method instead.")
   }
 
   @Test
   function testSelectWhereStartingWithSelectInAlternateCaseThrowsIllegalArgumentException() {
     assertException(\ -> Foo.selectWhere("Select * from \"Foo\" WHERE \"FirstName\" = 'Bob'"),
         IllegalArgumentException,
-        "The selectWhere(String, Map) method should only be caused with the WHERE clause of a query.  To specify the full SQL for the query, use the select(String, Map) method instead.")
+        "The selectWhere(String, Map) method should only be called with the WHERE clause of a query.  To specify the full SQL for the query, use the select(String, Map) method instead.")
   }
   // TODO - AHK - Error cases
 
@@ -478,13 +478,116 @@ class DBTypeInfoSelectTest {
   }
 
   @Test
-  function testSelectWithStringNotStartingWithSelectCountStarAsCountFromThrowsIllegalArgumentException() {
+  function testCountWithStringNotStartingWithSelectCountStarAsCountFromThrowsIllegalArgumentException() {
     try {
       Foo.count("SELECT id FROM \"Foo\" WHERE \"FirstName\" = 'Bob'")
     } catch (e : IllegalArgumentException) {
       Assert.assertEquals("The count(String, Map) method must always be called with 'SELECT count(*) as count FROM' as the start of the statement.  The sql passed in was SELECT id FROM \"Foo\" WHERE \"FirstName\" = 'Bob'", e.Message)
     }
   }
+
+  // ---------------------------------------------
+  // Tests for the countWhere(String, Map) method
+  // ---------------------------------------------
+
+  @Test
+  function testCountWhereWithNullArgumentCountsAllElements() {
+    var bar = createBar("4/22/2009", "misc")
+    var bar2 = createBar("4/23/2009", "other")
+    Assert.assertEquals(2, Bar.countWhere(null))
+  }
+
+  @Test
+  function testCountWhereWithEmptyArgumentCountsAllElements() {
+    var bar = createBar("4/22/2009", "misc")
+    var bar2 = createBar("4/23/2009", "other")
+    Assert.assertEquals(2, Bar.countWhere(""))
+  }
+
+  @Test
+  function testCountWhereThatMatchesNothingReturnsZero() {
+    var bar = createBar("4/22/2009", "misc")
+    Assert.assertEquals(0, Bar.countWhere("\"Misc\" = 'nosuchvalue'"))
+  }
+
+  @Test
+  function testCountWhereWithOneParam() {
+    var bar = createBar("4/22/2009", "misc")
+    var bar2 = createBar("4/23/2009", "other")
+    Assert.assertEquals(1, Bar.countWhere("\"Misc\" = :arg", {"arg" -> "misc"}))
+  }
+
+  @Test
+  function testCountWhereWithTwoParams() {
+    var bar = createBar("4/22/2009", "misc")
+    var bar2 = createBar("4/23/2009", "other")
+    Assert.assertEquals(1, Bar.countWhere("\"Misc\" = :arg OR \"Misc\" = :arg2", {"arg" -> "nothing", "arg2" -> "misc"}))
+  }
+
+  @Test
+  function testCountWhereWithMultipleUsesOfSameParam() {
+    var foo = createFoo("Bob", "Bob")
+    var foo2 = createFoo("Bob", "Other")
+
+    var result = Foo.countWhere("\"FirstName\" = :arg AND \"LastName\" = :arg", {"arg" -> "Bob"})
+    Assert.assertEquals(1, result)
+  }
+
+  @Test
+  function testCountWhereWithUnusedParametersIgnoresExtraParameters() {
+    var foo = createFoo("Bob", "Bob")
+    var foo2 = createFoo("Bob", "Other")
+
+    var result = Foo.countWhere("\"FirstName\" = :arg AND \"LastName\" = :arg", {"arg" -> "Bob", "arg2" -> "Other", "arg3" -> "Hrm"})
+    Assert.assertEquals(1, result)
+  }
+
+  @Test
+  function testCountWhereWithMissingParametersDoesntSubstituteIfNoParamArgIsSpecified() {
+    var foo = createFoo("Bob", "Bob")
+    var foo2 = createFoo("Bob", "Other")
+
+    var result = Foo.countWhere("\"FirstName\" = ':arg' AND \"LastName\" = ':arg'")
+    Assert.assertEquals(0, result)
+  }
+
+  @Test
+  function testCountWhereWithMissingParametersThrowsIfParamMapIsSpecified() {
+    var foo = createFoo("Bob", "Bob")
+    var foo2 = createFoo("Bob", "Other")
+
+    try {
+      var result = Foo.countWhere("\"FirstName\" = :arg AND \"LastName\" = :arg", {"arrg" -> "Bob"})
+      Assert.fail("Expected an IllegalArgumentException")
+    } catch (e : IllegalArgumentException) {
+      Assert.assertEquals("No value for the token arg was found in the map", e.Message)
+    }
+  }
+
+  @Test
+  function testCountWhereWithEscapedParametersDoesntSubstituteForEscapedParams() {
+    var foo = createFoo("Bob", "Bob")
+    var foo2 = createFoo("Bob", "Other")
+
+    var result = Foo.countWhere("\"FirstName\" = '\\:arg' AND \"LastName\" = :arg", {"arg" -> "Bob"})
+    Assert.assertEquals(0, result)
+  }
+
+  @Test
+  function testCountWhereWithStringStartingWithSelectThrowsIllegalArgumentException() {
+    assertException(\ -> Foo.countWhere("SELECT count(*) as count FROM \"Foo\" WHERE \"FirstName\" = 'Bob'"),
+        IllegalArgumentException,
+        "The countWhere(String, Map) method should only be called with the WHERE clause of a query.  To specify the full SQL for the query, use the count(String, Map) method instead.")
+  }
+
+  @Test
+  function testCountWhereWithStringStartingWithSelectInAlternateCaseThrowsIllegalArgumentException() {
+    assertException(\ -> Foo.countWhere("select count(*) as count FROM \"Foo\" WHERE \"FirstName\" = 'Bob'"),
+        IllegalArgumentException,
+        "The countWhere(String, Map) method should only be called with the WHERE clause of a query.  To specify the full SQL for the query, use the count(String, Map) method instead.")
+  }
+
+
   // TODO - AHK - Validate the SQL being spit out
   // Check that the query being issued contains a ?
 

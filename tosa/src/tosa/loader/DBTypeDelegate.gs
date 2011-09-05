@@ -56,17 +56,19 @@ class DBTypeDelegate {
       throw new IllegalArgumentException("The count(String, Map) method must always be called with 'SELECT count(*) as count FROM' as the start of the statement.  The sql passed in was " + sql)
     }
 
-    var queryString : String
-    var paramArray : Object[]
-    if (params != null) {
-      var query = sub(sql, params)
-      queryString = query.First
-      paramArray = query.Second
-    } else {
-      queryString = sql
-      paramArray = {}
+    var countArgs = subIfNecessary(sql, null, params)
+    return dbType.NewQueryExecutor.count(dbType.Name + ".count(String, Map)", countArgs.First, countArgs.Second)
+  }
+
+  static function countWhere(dbType : IDBType, sql : String, params : Map<String, Object> = null) : long {
+    // TODO - AHK - Is this the right thing to enforce?
+    if (sql != null && sql.toUpperCase().startsWith("SELECT")) {
+      throw new IllegalArgumentException("The countWhere(String, Map) method should only be called with the WHERE clause of a query.  To specify the full SQL for the query, use the count(String, Map) method instead.")
     }
-    return dbType.NewQueryExecutor.count(dbType.Name + ".count(String, Map)", queryString, paramArray)
+
+    var queryPrefix = sub("SELECT count(*) as count FROM :table", {"table" -> dbType.Table}).First
+    var countArgs = subIfNecessary(sql, queryPrefix, params)
+    return dbType.NewQueryExecutor.count(dbType.Name + ".countWhere(String, Map)", countArgs.First, countArgs.Second)
   }
 
   static function select(dbType : IDBType, sql : String, params : Map<String, Object> = null) : QueryResult<IDBObject> {
@@ -76,40 +78,36 @@ class DBTypeDelegate {
       throw new IllegalArgumentException("The select(String, Map) method must always be called with 'SELECT * FROM' as the start of the statement.  The sql passed in was " + sql)
     }
 
-    var queryString : String
-    var paramArray : Object[]
-    if (params != null) {
-      var query = sub(sql, params)
-      queryString = query.First
-      paramArray = query.Second
-    } else {
-      queryString = sql
-      paramArray = {}
-    }
-    return dbType.NewQueryExecutor.selectEntity(dbType.Name + ".select(String, Map)", dbType, queryString, paramArray)
+    var selectArgs = subIfNecessary(sql, null, params)
+    return dbType.NewQueryExecutor.selectEntity(dbType.Name + ".select(String, Map)", dbType, selectArgs.First, selectArgs.Second)
   }
 
   static function selectWhere(dbType : IDBType, sql : String, params : Map<String, Object> = null) : QueryResult<IDBObject> {
     // TODO - AHK - Is this the right thing to enforce?
     if (sql != null && sql.toUpperCase().startsWith("SELECT")) {
-      throw new IllegalArgumentException("The selectWhere(String, Map) method should only be caused with the WHERE clause of a query.  To specify the full SQL for the query, use the select(String, Map) method instead.")
+      throw new IllegalArgumentException("The selectWhere(String, Map) method should only be called with the WHERE clause of a query.  To specify the full SQL for the query, use the select(String, Map) method instead.")
     }
 
     var queryPrefix = sub("SELECT * FROM :table", {"table" -> dbType.Table}).First
+    var selectArgs = subIfNecessary(sql, queryPrefix, params)
+    return dbType.NewQueryExecutor.selectEntity(dbType.Name + ".selectWhere(String, Map)", dbType, selectArgs.First, selectArgs.Second)
+  }
+
+  private static function subIfNecessary(sql : String, prefix : String, params : Map<String, Object>) : Pair<String, Object[]> {
     var queryString : String
     var paramArray : Object[]
     if (sql == null || sql.Empty) {
-      queryString = queryPrefix
+      queryString = prefix
       paramArray = {}
     } else if (params != null) {
       var query = sub(sql, params)
-      queryString = queryPrefix + " WHERE " + query.First
+      queryString = (prefix == null ? query.First : prefix + " WHERE " + query.First)
       paramArray = query.Second
     } else {
-      queryString = queryPrefix + " WHERE " + sql
+      queryString = (prefix == null ? sql : prefix + " WHERE " + sql)
       paramArray = {}
     }
-    return dbType.NewQueryExecutor.selectEntity(dbType.Name + ".selectWhere(String, Map)", dbType, queryString, paramArray)
+    return new Pair<String, Object[]>(queryString, paramArray)
   }
 
   private static function sub(input : String, tokenValues : Map<String, Object>) : Pair<String, Object[]> {

@@ -3,6 +3,7 @@ package tosa.loader;
 import gw.config.CommonServices;
 import gw.internal.gosu.runtime.GosuRuntimeMethods;
 import gw.lang.reflect.*;
+import gw.lang.reflect.gs.IGosuClass;
 import gw.lang.reflect.java.IJavaType;
 import sun.plugin2.util.ParameterNames;
 import tosa.dbmd.DatabaseImpl;
@@ -125,6 +126,10 @@ public abstract class TosaBaseTypeInfo extends FeatureManagerTypeInfoBase {
   }
 
   protected void delegateStaticMethods(IType typeToDelegateTo) {
+    if (!typeToDelegateTo.isValid()) {
+      ((IGosuClass) typeToDelegateTo).getParseResultsException().printStackTrace();
+    }
+
     List<? extends IMethodInfo> methods = typeToDelegateTo.getTypeInfo().getMethods();
     Map<String, IMethodInfo> propertyGetters = new HashMap<String, IMethodInfo>();
     Map<String, IMethodInfo> propertySetters = new HashMap<String, IMethodInfo>();
