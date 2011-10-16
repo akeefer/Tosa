@@ -99,6 +99,12 @@ class DBTypeDelegate {
     return dbType.NewQueryExecutor.selectEntity(dbType.Name + ".selectWhere(String, Map)", dbType, selectArgs.Sql, selectArgs.Params)
   }
 
+  static function selectLike(dbType : IDBType, template : IDBObject) : QueryResult<IDBObject> {
+    var queryPrefix = sub("SELECT * FROM :table", {"table" -> dbType.Table}).Sql
+    var whereClause = buildWhereClause(template)
+    return dbType.NewQueryExecutor.selectEntity(dbType.Name + ".selectWhere(String, Map)", dbType, queryPrefix + whereClause.Sql, whereClause.Params)
+  }
+
   private static function subIfNecessary(sql : String, prefix : String, params : Map<String, Object>) : SqlAndParams {
     var queryString : String
     var paramArray : Object[]
@@ -141,23 +147,6 @@ class DBTypeDelegate {
       // TODO - AHK - Should we just leave the clause out entirely?
       return new SqlAndParams(" WHERE 1 = 1", params.toTypedArray())
     }
-  }
-
-  /**
-   * Executes a count query in the database.
-   *
-   * @param sql the sql to execute
-   */
-  static function countWithSql(dbType : IDBType, sql : String) : int {
-    return dbType.Finder.countWithSql(sql)
-  }
-
-  static function findWithSql(dbType : IDBType, sql : String) : List<IDBObject> {
-    return dbType.Finder.findWithSql(sql)
-  }
-
-  static function find(dbType : IDBType, template : IDBObject) : List<IDBObject> {
-    return dbType.Finder.find(template)
   }
 
   static function findSorted(dbType : IDBType, template : IDBObject, sortProperty : PropertyReference<IDBObject, Object>, ascending : boolean) : List<IDBObject> {

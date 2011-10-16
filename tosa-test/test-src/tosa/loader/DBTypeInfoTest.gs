@@ -192,20 +192,30 @@ class DBTypeInfoTest {
       var deleteMethod = typeinfo.getMethod("delete", {})
       Assert.assertNotNull(deleteMethod)
 
-      var findBySqlMethod = typeinfo.getMethod("findWithSql", {String})
-      Assert.assertNotNull(findBySqlMethod)
-      Assert.assertTrue(findBySqlMethod.Static)
-      Assert.assertEquals(List<test.testdb.Foo>, findBySqlMethod.ReturnType)
+      var selectMethod = typeinfo.getMethod("select", {String, Map<String, Object>})
+      Assert.assertNotNull(selectMethod)
+      Assert.assertTrue(selectMethod.Static)
+      Assert.assertEquals(QueryResult<test.testdb.Foo>, selectMethod.ReturnType)
 
-      var findMethod = typeinfo.getMethod("find", {test.testdb.Foo})
+      var selectWhereMethod = typeinfo.getMethod("selectWhere", {String, Map<String, Object>})
+      Assert.assertNotNull(selectWhereMethod)
+      Assert.assertTrue(selectWhereMethod.Static)
+      Assert.assertEquals(QueryResult<test.testdb.Foo>, selectWhereMethod.ReturnType)
+
+      var findMethod = typeinfo.getMethod("selectLike", {test.testdb.Foo})
       Assert.assertNotNull(findMethod)
       Assert.assertTrue(findMethod.Static)
-      Assert.assertEquals(List<test.testdb.Foo>, findMethod.ReturnType)
+      Assert.assertEquals(QueryResult<test.testdb.Foo>, findMethod.ReturnType)
 
-      var countBySqlMethod = typeinfo.getMethod("countWithSql", {String})
-      Assert.assertNotNull(countBySqlMethod)
-      Assert.assertTrue(countBySqlMethod.Static)
-      Assert.assertEquals(int, countBySqlMethod.ReturnType)
+      var countMethod = typeinfo.getMethod("count", {String, Map<String, Object>})
+      Assert.assertNotNull(countMethod)
+      Assert.assertTrue(countMethod.Static)
+      Assert.assertEquals(long, countMethod.ReturnType)
+
+      var countWhereMethod = typeinfo.getMethod("countWhere", {String, Map<String, Object>})
+      Assert.assertNotNull(countWhereMethod)
+      Assert.assertTrue(countWhereMethod.Static)
+      Assert.assertEquals(long, countWhereMethod.ReturnType)
 
       var countLikeMethod = typeinfo.getMethod("countLike", {test.testdb.Foo})
       Assert.assertNotNull(countLikeMethod)
@@ -226,12 +236,6 @@ class DBTypeInfoTest {
       Assert.assertNotNull(findSortedPagedMethod)
       Assert.assertTrue(findSortedPagedMethod.Static)
       Assert.assertEquals(List<test.testdb.Foo>, findSortedPagedMethod.ReturnType)
-
-      // select(dbType : IDBType, sql : String, params : Map<String, Object> = null) : QueryResult<IDBObject>
-      var selectMethod = typeinfo.getMethod("select", {String, Map<String, Object>})
-      Assert.assertNotNull(selectMethod)
-      Assert.assertTrue(selectMethod.Static)
-      Assert.assertEquals(QueryResult<test.testdb.Foo>, selectMethod.ReturnType)
   }
 
   @Test
@@ -246,20 +250,20 @@ class DBTypeInfoTest {
   }
 
   @Test
-  function testFindWithSqlMethod() {
-      var foos = test.testdb.Foo.findWithSql("select * from \"Foo\" where \"FirstName\"='Charlie'")
+  function testSelectMethod() {
+      var foos = test.testdb.Foo.select("SELECT * FROM \"Foo\" where \"FirstName\"='Charlie'").toList()
       Assert.assertEquals(1, foos.Count)
       var foo = foos[0]
       Assert.assertEquals("Charlie", foo.FirstName)
       Assert.assertEquals("Brown", foo.LastName)
 
-      var noFoo = test.testdb.Foo.findWithSql("select * from \"Foo\" where \"FirstName\"='Rupert'")
+      var noFoo = test.testdb.Foo.select("SELECT * FROM \"Foo\" where \"FirstName\"='Rupert'")
       Assert.assertEquals(0, noFoo.Count)
   }
 
   @Test
-  function testFindWithSqlWithJoin() {
-      var foos = test.testdb.Foo.findWithSql("select * from \"Foo\" inner join \"SortPage\" on \"SortPage\".\"id\" = \"Foo\".\"Named_SortPage_id\" where \"SortPage\".\"Number\" = 1")
+  function testSelectWithJoin() {
+      var foos = test.testdb.Foo.select("SELECT * FROM \"Foo\" inner join \"SortPage\" on \"SortPage\".\"id\" = \"Foo\".\"Named_SortPage_id\" where \"SortPage\".\"Number\" = 1").toList()
       Assert.assertEquals(1, foos.Count)
       var foo = foos[0]
       Assert.assertEquals("Charlie", foo.FirstName)
@@ -268,19 +272,19 @@ class DBTypeInfoTest {
   }
 
   @Test
-  function testFindWithRegularColumns() {
-      var foos = test.testdb.Foo.find(new test.testdb.Foo(){:FirstName = "Charlie"})
+  function testSelectLikeWithRegularColumns() {
+      var foos = test.testdb.Foo.selectLike(new test.testdb.Foo(){:FirstName = "Charlie"}).toList()
       Assert.assertEquals(1, foos.Count)
       var foo = foos[0]
       Assert.assertEquals("Charlie", foo.FirstName)
       Assert.assertEquals("Brown", foo.LastName)
 
-      var noFoo = test.testdb.Foo.find(new test.testdb.Foo(){:FirstName = "Rupert"})
+      var noFoo = test.testdb.Foo.selectLike(new test.testdb.Foo(){:FirstName = "Rupert"}).toList()
       Assert.assertEquals(0, noFoo.Count)
 
-      var allFoos = test.testdb.Foo.find(new test.testdb.Foo())
+      var allFoos = test.testdb.Foo.selectLike(new test.testdb.Foo()).toList()
       Assert.assertEquals(NUM_FOOS, allFoos.Count)
-      allFoos = test.testdb.Foo.find(null)
+      allFoos = test.testdb.Foo.selectLike(null).toList()
       Assert.assertEquals(NUM_FOOS, allFoos.Count)
   }
 
@@ -316,20 +320,20 @@ class DBTypeInfoTest {
   }
 
   @Test
-  function testCount() {
+  function testCountLike() {
       Assert.assertEquals(20, test.testdb.SortPage.countLike(null))
       Assert.assertEquals(4, test.testdb.SortPage.countLike(new test.testdb.SortPage(){:Number = 1}))
   }
 
   @Test
-  function testCountWithSql() {
-      Assert.assertEquals(8, test.testdb.SortPage.countWithSql("select count(*) as count from \"SortPage\" where \"Number\" < 3"))
+  function testCount() {
+      Assert.assertEquals(8, test.testdb.SortPage.count("SELECT count(*) as count from \"SortPage\" where \"Number\" < 3"))
   }
 
   @Test
-  function testFindWithFK() {
+  function testSelectLikeWithFK() {
       var bar = test.testdb.Bar.fromID(1)
-      var foos = test.testdb.Foo.find(new test.testdb.Foo(){:Bar = bar})
+      var foos = test.testdb.Foo.selectLike(new test.testdb.Foo(){:Bar = bar}).toList()
       Assert.assertEquals(1, foos.Count)
       var foo = foos[0]
       Assert.assertEquals("Charlie", foo.FirstName)
@@ -384,7 +388,7 @@ class DBTypeInfoTest {
   @Test
   function testDelete() {
       test.testdb.Foo.fromID(_fooId).delete()
-      Assert.assertEquals(0, test.testdb.Foo.find(new test.testdb.Foo()).Count)
+      Assert.assertEquals(0, test.testdb.Foo.selectLike(new test.testdb.Foo()).Count)
   }
 
   @Test
@@ -393,7 +397,7 @@ class DBTypeInfoTest {
       newFoo.update()
 
       Assert.assertNotNull(newFoo.id)
-      Assert.assertEquals(NUM_FOOS + 1, test.testdb.Foo.find(null).Count)
+      Assert.assertEquals(NUM_FOOS + 1, test.testdb.Foo.selectLike(null).Count)
 
       var newFooRetrieved = test.testdb.Foo.fromID(newFoo.id)
       Assert.assertEquals("Linus", newFooRetrieved.FirstName)
