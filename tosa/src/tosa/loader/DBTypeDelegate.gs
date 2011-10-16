@@ -38,7 +38,7 @@ class DBTypeDelegate {
     var query = sub("SELECT * FROM :table WHERE :id_column = :id",
                     {"table" -> table, "id_column" -> idColumn, "id" -> id})
 
-    var results = dbType.NewQueryExecutor.selectEntity(dbType.Name + ".fromId()", dbType, query.First, query.Second)
+    var results = dbType.NewQueryExecutor.selectEntity(dbType.Name + ".fromId()", dbType, query.Sql, query.Params)
 
     if (results.Count == 0) {
       return null
@@ -57,7 +57,7 @@ class DBTypeDelegate {
     }
 
     var countArgs = subIfNecessary(sql, null, params)
-    return dbType.NewQueryExecutor.count(dbType.Name + ".count(String, Map)", countArgs.First, countArgs.Second)
+    return dbType.NewQueryExecutor.count(dbType.Name + ".count(String, Map)", countArgs.Sql, countArgs.Params)
   }
 
   static function countWhere(dbType : IDBType, sql : String, params : Map<String, Object> = null) : long {
@@ -66,9 +66,15 @@ class DBTypeDelegate {
       throw new IllegalArgumentException("The countWhere(String, Map) method should only be called with the WHERE clause of a query.  To specify the full SQL for the query, use the count(String, Map) method instead.")
     }
 
-    var queryPrefix = sub("SELECT count(*) as count FROM :table", {"table" -> dbType.Table}).First
+    var queryPrefix = sub("SELECT count(*) as count FROM :table", {"table" -> dbType.Table}).Sql
     var countArgs = subIfNecessary(sql, queryPrefix, params)
-    return dbType.NewQueryExecutor.count(dbType.Name + ".countWhere(String, Map)", countArgs.First, countArgs.Second)
+    return dbType.NewQueryExecutor.count(dbType.Name + ".countWhere(String, Map)", countArgs.Sql, countArgs.Params)
+  }
+
+  static function countLike(dbType : IDBType, template: IDBObject) : long {
+    var queryPrefix = sub("SELECT count(*) as count FROM :table", {"table" -> dbType.Table}).Sql
+    var whereClause = buildWhereClause(template)
+    return dbType.NewQueryExecutor.count(dbType.Name + ".countLike(" + dbType.Name + ")", queryPrefix + whereClause.Sql, whereClause.Params)
   }
 
   static function select(dbType : IDBType, sql : String, params : Map<String, Object> = null) : QueryResult<IDBObject> {
@@ -79,7 +85,7 @@ class DBTypeDelegate {
     }
 
     var selectArgs = subIfNecessary(sql, null, params)
-    return dbType.NewQueryExecutor.selectEntity(dbType.Name + ".select(String, Map)", dbType, selectArgs.First, selectArgs.Second)
+    return dbType.NewQueryExecutor.selectEntity(dbType.Name + ".select(String, Map)", dbType, selectArgs.Sql, selectArgs.Params)
   }
 
   static function selectWhere(dbType : IDBType, sql : String, params : Map<String, Object> = null) : QueryResult<IDBObject> {
@@ -88,12 +94,12 @@ class DBTypeDelegate {
       throw new IllegalArgumentException("The selectWhere(String, Map) method should only be called with the WHERE clause of a query.  To specify the full SQL for the query, use the select(String, Map) method instead.")
     }
 
-    var queryPrefix = sub("SELECT * FROM :table", {"table" -> dbType.Table}).First
+    var queryPrefix = sub("SELECT * FROM :table", {"table" -> dbType.Table}).Sql
     var selectArgs = subIfNecessary(sql, queryPrefix, params)
-    return dbType.NewQueryExecutor.selectEntity(dbType.Name + ".selectWhere(String, Map)", dbType, selectArgs.First, selectArgs.Second)
+    return dbType.NewQueryExecutor.selectEntity(dbType.Name + ".selectWhere(String, Map)", dbType, selectArgs.Sql, selectArgs.Params)
   }
 
-  private static function subIfNecessary(sql : String, prefix : String, params : Map<String, Object>) : Pair<String, Object[]> {
+  private static function subIfNecessary(sql : String, prefix : String, params : Map<String, Object>) : SqlAndParams {
     var queryString : String
     var paramArray : Object[]
     if (sql == null || sql.Empty) {
@@ -101,17 +107,40 @@ class DBTypeDelegate {
       paramArray = {}
     } else if (params != null) {
       var query = sub(sql, params)
-      queryString = (prefix == null ? query.First : prefix + " WHERE " + query.First)
-      paramArray = query.Second
+      queryString = (prefix == null ? query.Sql : prefix + " WHERE " + query.Sql)
+      paramArray = query.Params
     } else {
       queryString = (prefix == null ? sql : prefix + " WHERE " + sql)
       paramArray = {}
     }
-    return new Pair<String, Object[]>(queryString, paramArray)
+    return new SqlAndParams(queryString, paramArray)
   }
 
-  private static function sub(input : String, tokenValues : Map<String, Object>) : Pair<String, Object[]> {
-    return SqlStringSubstituter.substitute(input, tokenValues)
+  private static function sub(input : String, tokenValues : Map<String, Object>) : SqlAndParams {
+    var pair = SqlStringSubstituter.substitute(input, tokenValues)
+    return new SqlAndParams(pair.First, pair.Second)
+  }
+
+  private static function buildWhereClause(template : IDBObject) : SqlAndParams {
+    var clauses : List<String> = {}
+    var params : List<Object> = {}
+    if (template != null) {
+      for (column in template.DBTable.Columns) {
+        var value = template.getColumnValue(column.Name)
+        if (value != null) {
+          var result = sub(":column = :value", {"column" -> column, "value" -> value})
+          clauses.add(result.Sql)
+          params.add(result.Params[0])
+        }
+      }
+    }
+
+    if (not clauses.Empty) {
+      return new SqlAndParams(" WHERE " + clauses.join(" AND "), params.toTypedArray())
+    } else {
+      // TODO - AHK - Should we just leave the clause out entirely?
+      return new SqlAndParams(" WHERE 1 = 1", params.toTypedArray())
+    }
   }
 
   /**
@@ -121,15 +150,6 @@ class DBTypeDelegate {
    */
   static function countWithSql(dbType : IDBType, sql : String) : int {
     return dbType.Finder.countWithSql(sql)
-  }
-
-  /**
-   * Executes a count query in the database using the given object as a template.
-   *
-   * @param template the template object to form the query from
-   */
-  static function countLike(dbType : IDBType, template : IDBObject) : int {
-    return dbType.Finder.count(template)
   }
 
   static function findWithSql(dbType : IDBType, sql : String) : List<IDBObject> {
@@ -150,5 +170,15 @@ class DBTypeDelegate {
 
   static function findSortedPaged(dbType : IDBType, template : IDBObject, sortProperty : PropertyReference<IDBObject, Object>, ascending : boolean, pageSize : int, offset : int) : List<IDBObject> {
     return dbType.Finder.findSortedPaged(template, sortProperty, ascending, pageSize, offset)
+  }
+
+  private static class SqlAndParams {
+    private var _sql : String as Sql
+    private var _params : Object[] as Params
+
+    construct(sqlArg : String, paramsArg : Object[]) {
+      _sql = sqlArg
+      _params = paramsArg
+    }
   }
 }

@@ -210,7 +210,7 @@ class DBTypeInfoTest {
       var countLikeMethod = typeinfo.getMethod("countLike", {test.testdb.Foo})
       Assert.assertNotNull(countLikeMethod)
       Assert.assertTrue(countLikeMethod.Static)
-      Assert.assertEquals(int, countLikeMethod.ReturnType)
+      Assert.assertEquals(long, countLikeMethod.ReturnType)
 
       var findSortedMethod = typeinfo.getMethod("findSorted", {test.testdb.Foo, PropertyReference<Foo, Object>, boolean})
       Assert.assertNotNull(findSortedMethod)
