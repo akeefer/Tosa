@@ -3,7 +3,7 @@ package tosa.loader;
 import gw.fs.IFile;
 import gw.util.GosuExceptionUtil;
 import gw.util.StreamUtil;
-import gw.util.concurrent.LazyVar;
+import gw.util.concurrent.LockingLazyVar;
 import tosa.dbmd.DatabaseImpl;
 import tosa.loader.parser.QueryParser;
 import tosa.loader.parser.Token;
@@ -18,13 +18,13 @@ public class SQLFileInfo {
   private DatabaseImpl _db;
   private IFile _sql;
   private String _name;
-  private LazyVar<SelectStatement> _select;
+  private LockingLazyVar<SelectStatement> _select;
 
   public SQLFileInfo(String name, DatabaseImpl dbData, final IFile sql) {
     _name = name;
     _sql = sql;
     _db = dbData;
-    _select = new LazyVar<SelectStatement>() {
+    _select = new LockingLazyVar<SelectStatement>() {
       @Override
       protected SelectStatement init() {
         try {

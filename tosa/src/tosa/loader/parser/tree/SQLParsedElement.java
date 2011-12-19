@@ -2,6 +2,7 @@ package tosa.loader.parser.tree;
 
 import gw.lang.reflect.IType;
 import gw.lang.reflect.java.IJavaType;
+import gw.lang.reflect.java.JavaTypes;
 import tosa.api.IDBColumnType;
 import tosa.loader.data.DBColumnTypeImpl;
 import tosa.loader.data.DBData;
@@ -292,6 +293,6 @@ public abstract class SQLParsedElement {
   }
 
   public IType getVarTypeForChild() {
-    return IJavaType.STRING;
+    return JavaTypes.STRING();
   }
 }

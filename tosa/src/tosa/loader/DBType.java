@@ -1,7 +1,7 @@
 package tosa.loader;
 
 import gw.lang.reflect.*;
-import gw.util.concurrent.LazyVar;
+import gw.util.concurrent.LockingLazyVar;
 import tosa.api.IDBObject;
 import tosa.api.IDBTable;
 import tosa.api.query.CoreFinder;
@@ -23,14 +23,14 @@ import java.util.List;
 public class DBType extends TypeBase implements IDBType {
 
   private DBTypeLoader _typeLoader;
-  private LazyVar<DBTypeInfo> _typeInfo;
+  private LockingLazyVar<DBTypeInfo> _typeInfo;
   private IDBTable _table;
   private CoreFinder _finder;
 
   public DBType(DBTypeLoader dbTypeLoader, IDBTable table) {
     _typeLoader = dbTypeLoader;
     _table = table;
-    _typeInfo = new LazyVar<DBTypeInfo>() {
+    _typeInfo = new LockingLazyVar<DBTypeInfo>() {
       @Override
       protected DBTypeInfo init() {
         return new DBTypeInfo(getTypeReference());

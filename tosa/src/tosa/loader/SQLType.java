@@ -5,6 +5,7 @@ import gw.lang.reflect.ITypeInfo;
 import gw.lang.reflect.TypeBase;
 import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.java.IJavaType;
+import gw.lang.reflect.java.JavaTypes;
 import gw.util.GosuClassUtil;
 
 import java.util.Collections;
@@ -43,7 +44,7 @@ public class SQLType extends TypeBase implements ISQLType {
 
   @Override
   public IType getSupertype() {
-    return IJavaType.OBJECT;
+    return JavaTypes.OBJECT();
   }
 
   @Override

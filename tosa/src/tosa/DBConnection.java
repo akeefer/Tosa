@@ -1,8 +1,10 @@
 package tosa;
 
+import gw.lang.reflect.IDefaultTypeLoader;
+import gw.lang.reflect.ITypeLoader;
 import gw.lang.reflect.module.IModule;
 import gw.util.GosuExceptionUtil;
-import gw.util.concurrent.LazyVar;
+import gw.util.concurrent.LockingLazyVar;
 import org.apache.commons.dbcp.ConnectionFactory;
 import org.apache.commons.dbcp.DriverManagerConnectionFactory;
 import org.apache.commons.dbcp.PoolableConnectionFactory;
@@ -17,10 +19,7 @@ import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -34,7 +33,7 @@ public class DBConnection implements IDBConnection {
   private IModule _module;
   private ThreadLocal<Connection> _transaction;
 
-  private LazyVar<DataSource> _dataSource = new LazyVar() {
+  private LockingLazyVar<DataSource> _dataSource = new LockingLazyVar() {
     @Override
     protected Object init() {
       return setupDataSource(_connectURL, _module);
@@ -111,12 +110,9 @@ public class DBConnection implements IDBConnection {
 
   private DataSource setupDataSource(String connectURI, IModule module) {
     // Ensure the JDBC driver class is loaded
-    try {
       // TODO - AHK
-      Class.forName(getDriverName(connectURI), true, module.getClassLoader());
-    } catch (ClassNotFoundException e) {
-      throw GosuExceptionUtil.forceThrow(e);
-    }
+    final List<? extends ITypeLoader> typeLoaders = module.getTypeLoaders(IDefaultTypeLoader.class);
+    ((IDefaultTypeLoader)typeLoaders.get(0)).loadClass(getDriverName(connectURI));
 
     // TODO - AHK - Figure out the implications of the connection pooling when the jdbc url changes
 

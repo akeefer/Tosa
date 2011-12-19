@@ -2,6 +2,7 @@ package tosa.loader.parser.tree;
 
 import gw.lang.reflect.IType;
 import gw.lang.reflect.java.IJavaType;
+import gw.lang.reflect.java.JavaTypes;
 import tosa.api.IDBColumnType;
 import tosa.loader.data.DBColumnTypeImpl;
 import tosa.loader.data.DBData;
@@ -31,9 +32,9 @@ public class InPredicate extends SQLParsedElement{
   public IType getVarTypeForChild() {
     IDBColumnType type = _lhs.getDBType();
     if (type == null) {
-      return IJavaType.LIST;
+      return JavaTypes.LIST();
     } else {
-      return IJavaType.LIST.getGenericType().getParameterizedType(type.getGosuType());
+      return JavaTypes.LIST().getGenericType().getParameterizedType(type.getGosuType());
     }
   }
 

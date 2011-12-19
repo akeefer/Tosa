@@ -2,6 +2,7 @@ package tosa.loader;
 
 import gw.lang.reflect.IType;
 import gw.lang.reflect.java.IJavaType;
+import gw.lang.reflect.java.JavaTypes;
 import gw.util.Pair;
 import tosa.api.IDBColumnType;
 import tosa.loader.parser.tree.VariableExpression;
@@ -30,12 +31,12 @@ public class SQLParameterInfo {
       _type = var.getGosuType();
     } else if (_type != null && var.getGosuType() != null) {
       if (!_type.equals(var.getGosuType())) {
-        _type = IJavaType.OBJECT;
+        _type = JavaTypes.OBJECT();
       }
     }
   }
 
   public IType getGosuType() {
-    return _type == null ? IJavaType.STRING : _type;
+    return _type == null ? JavaTypes.STRING() : _type;
   }
 }

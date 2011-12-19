@@ -2,6 +2,7 @@ package tosa.loader.parser.tree;
 
 import gw.lang.reflect.IType;
 import gw.lang.reflect.java.IJavaType;
+import gw.lang.reflect.java.JavaTypes;
 import tosa.api.IDBColumnType;
 import tosa.loader.data.DBData;
 import tosa.loader.parser.Token;
@@ -50,7 +51,7 @@ public class VariableExpression extends SQLParsedElement {
   @Override
   public void resolveVars(DBData dbData) {
     _gosuType = getParent().getVarTypeForChild();
-    _list = IJavaType.LIST.isAssignableFrom(_gosuType);
+    _list = JavaTypes.LIST().isAssignableFrom(_gosuType);
   }
 
   public String getName() {

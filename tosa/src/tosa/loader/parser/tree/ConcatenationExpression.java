@@ -2,6 +2,7 @@ package tosa.loader.parser.tree;
 
 import gw.lang.reflect.IType;
 import gw.lang.reflect.java.IJavaType;
+import gw.lang.reflect.java.JavaTypes;
 
 import java.util.Map;
 
@@ -18,7 +19,7 @@ public class ConcatenationExpression extends SQLParsedElement {
 
   @Override
   public IType getVarTypeForChild() {
-    return IJavaType.STRING;
+    return JavaTypes.STRING();
   }
 
   @Override

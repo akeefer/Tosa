@@ -2,9 +2,11 @@ package tosa.loader;
 
 import gw.config.CommonServices;
 import gw.internal.gosu.runtime.GosuRuntimeMethods;
+import gw.lang.parser.IExpression;
 import gw.lang.reflect.*;
 import gw.lang.reflect.gs.IGosuClass;
 import gw.lang.reflect.java.IJavaType;
+import gw.lang.reflect.java.JavaTypes;
 import sun.plugin2.util.ParameterNames;
 import tosa.dbmd.DatabaseImpl;
 
@@ -172,11 +174,11 @@ public abstract class TosaBaseTypeInfo extends FeatureManagerTypeInfoBase {
   }
 
   private boolean isPropertyGetter(IMethodInfo method) {
-    return method.getDisplayName().startsWith("get") && method.getParameters().length == 1 && method.getReturnType() != IJavaType.pVOID;
+    return method.getDisplayName().startsWith("get") && method.getParameters().length == 1 && method.getReturnType() != JavaTypes.pVOID();
   }
 
   private boolean isPropertySetter(IMethodInfo method) {
-    return method.getDisplayName().startsWith("set") && method.getParameters().length == 2 && method.getReturnType().equals(IJavaType.pVOID);
+    return method.getDisplayName().startsWith("set") && method.getParameters().length == 2 && method.getReturnType().equals(JavaTypes.pVOID());
   }
 
   private IPropertyInfo createDelegatedProperty(IMethodInfo getter, IMethodInfo setter) {
@@ -228,11 +230,11 @@ public abstract class TosaBaseTypeInfo extends FeatureManagerTypeInfoBase {
     // TODO - AHK - Sanity check that the method has the right first argument
 
     IParameterInfo[] parameters = method.getParameters();
-    Object[] defaultValues;
+    IExpression[] defaultValues;
     if (method instanceof IOptionalParamCapable) {
-      defaultValues = ((IOptionalParamCapable) method).getDefaultValues();
+      defaultValues = ((IOptionalParamCapable) method).getDefaultValueExpressions();
     } else {
-      defaultValues = new Object[parameters.length];
+      defaultValues = new IExpression[parameters.length];
     }
     ParameterInfoBuilder[] params = createDelegatedMethodParameters(parameters, defaultValues);
 
@@ -267,7 +269,7 @@ public abstract class TosaBaseTypeInfo extends FeatureManagerTypeInfoBase {
     return parameterTypes;
   }
 
-  private ParameterInfoBuilder[] createDelegatedMethodParameters(IParameterInfo[] parameters, Object[] defaultValues) {
+  private ParameterInfoBuilder[] createDelegatedMethodParameters(IParameterInfo[] parameters, IExpression[] defaultValues) {
     ParameterInfoBuilder[] params = new ParameterInfoBuilder[parameters.length - 1];
     for (int i = 1; i < parameters.length; i++) {
       IParameterInfo param = parameters[i];

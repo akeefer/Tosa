@@ -10,6 +10,7 @@ import gw.lang.reflect.MethodInfoBuilder;
 import gw.lang.reflect.PropertyInfoBuilder;
 import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.java.IJavaType;
+import gw.lang.reflect.java.JavaTypes;
 import tosa.ConnectionWrapper;
 import tosa.DBConnection;
 import tosa.api.IDBConnection;
@@ -36,7 +37,7 @@ public class TransactionTypeInfo extends TosaBaseTypeInfo {
   public TransactionTypeInfo(TransactionType type) {
     super(type);
 
-    createMethod("commit", params(), IJavaType.pVOID, Modifiers.PublicStatic,
+    createMethod("commit", params(), JavaTypes.pVOID(), Modifiers.PublicStatic,
         "Commits the underlying transaction.",
         new IMethodCallHandler() {
           @Override

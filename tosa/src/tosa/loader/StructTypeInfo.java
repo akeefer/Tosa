@@ -2,6 +2,7 @@ package tosa.loader;
 
 import gw.lang.reflect.*;
 import gw.lang.reflect.java.IJavaType;
+import gw.lang.reflect.java.JavaTypes;
 
 import java.util.*;
 
@@ -39,7 +40,7 @@ public class StructTypeInfo extends TypeInfoBase implements ITypeInfo {
 
   @Override
   public List<? extends IMethodInfo> getMethods() {
-    return IJavaType.OBJECT.getTypeInfo().getMethods();
+    return JavaTypes.OBJECT().getTypeInfo().getMethods();
   }
 
   @Override

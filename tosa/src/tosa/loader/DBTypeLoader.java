@@ -9,7 +9,7 @@ import gw.lang.reflect.module.IExecutionEnvironment;
 import gw.lang.reflect.module.IModule;
 import gw.util.GosuClassUtil;
 import gw.util.Pair;
-import gw.util.concurrent.LazyVar;
+import gw.util.concurrent.LockingLazyVar;
 import tosa.CachedDBObject;
 import tosa.api.IDBTable;
 import tosa.api.IDatabase;
@@ -37,19 +37,19 @@ public class DBTypeLoader implements IExtendedTypeLoader {
 //  private Set<String> _initializedDrivers = new HashSet<String>();
 //  private Map<String, DBConnection> _connInfos = new HashMap<String, DBConnection>();
 
-  private LazyVar<Map<String, DatabaseImpl>> _typeDataByNamespace = new LazyVar<Map<String, DatabaseImpl>>() {
+  private LockingLazyVar<Map<String, DatabaseImpl>> _typeDataByNamespace = new LockingLazyVar<Map<String, DatabaseImpl>>() {
     protected Map<String, DatabaseImpl> init() { return initializeDBTypeData(); }
   };
 
-  private LazyVar<Map<String, SQLFileInfo>> _sqlFilesByName = new LazyVar<Map<String, SQLFileInfo>>() {
+  private LockingLazyVar<Map<String, SQLFileInfo>> _sqlFilesByName = new LockingLazyVar<Map<String, SQLFileInfo>>() {
     protected Map<String, SQLFileInfo> init() { return initializeSQLFiles(); }
   };
 
-  private LazyVar<Set<String>> _namespaces = new LazyVar<Set<String>>() {
+  private LockingLazyVar<Set<String>> _namespaces = new LockingLazyVar<Set<String>>() {
     protected Set<String> init() { return initializeNamespaces(); }
   };
 
-  private LazyVar<Set<String>> _typeNames = new LazyVar<Set<String>>() {
+  private LockingLazyVar<Set<String>> _typeNames = new LockingLazyVar<Set<String>>() {
     protected Set<String> init() { return initializeTypeNames(); }
   };
 
@@ -114,12 +114,18 @@ public class DBTypeLoader implements IExtendedTypeLoader {
 
   @Override
   public URL getResource(String name) {
-    return _module.getResource(name);
+    throw new UnsupportedOperationException();
+//    return _module.getResource(name);
   }
 
   @Override
   public File getResourceFile(String name) {
     return TypeSystem.getResourceFileResolver().resolveToFile(name);
+  }
+
+  @Override
+  public List<IType> refreshedFile(IFile iFile) {
+    return null;
   }
 
   @Override
@@ -167,7 +173,7 @@ public class DBTypeLoader implements IExtendedTypeLoader {
 
   private Map<String, SQLFileInfo> initializeSQLFiles() {
     HashMap<String, SQLFileInfo> results = new HashMap<String, SQLFileInfo>();
-    for (Pair<String, IFile> pair : _module.getResourceAccess().findAllFilesByExtension(".sql")) {
+    for (Pair<String, IFile> pair : _module.getFileRepository().findAllFilesByExtension(".sql")) {
       String fileName = pair.getFirst();
       IFile sqlFil = pair.getSecond();
       for (DatabaseImpl db : _typeDataByNamespace.get().values()) {

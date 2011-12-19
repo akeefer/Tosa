@@ -2,7 +2,7 @@ package tosa.impl.md;
 
 import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.module.IModule;
-import gw.util.concurrent.LazyVar;
+import gw.util.concurrent.LockingLazyVar;
 import tosa.api.IDatabase;
 import tosa.dbmd.DatabaseImpl;
 import tosa.loader.data.DBData;
@@ -25,7 +25,7 @@ public class DatabaseImplSource {
   private Map<IModule, Collection<? extends IDatabase>> _dbsByModule;
   private Map<String, IDatabase> _dbsByName;
 
-  private static final LazyVar<DatabaseImplSource> INSTANCE = new LazyVar<DatabaseImplSource>() {
+  private static final LockingLazyVar<DatabaseImplSource> INSTANCE = new LockingLazyVar<DatabaseImplSource>() {
     @Override
     protected DatabaseImplSource init() {
       return new DatabaseImplSource();

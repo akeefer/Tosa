@@ -27,11 +27,11 @@ public class DDLDBDataSource implements IDBDataSource {
   @Override
   public Map<String, DBData> getDBData(IModule module) {
     Map<String, DBData> results = new HashMap<String, DBData>();
-    for (Pair<String, IFile> ddlFile : module.getResourceAccess().findAllFilesByExtension(".ddl")) {
+    for (Pair<String, IFile> ddlFile : module.getFileRepository().findAllFilesByExtension(".ddl")) {
       // TODO - AHK - Lots o' error handling
       // TODO - AHK - Select the correct parser somehow
-      String path = module.getResourceAccess().pathRelativeToRoot(ddlFile.getSecond());
-      IFile connectionFile = module.getResourceAccess().findFirstFile(path.substring(0, path.length() - ".ddl".length()) + ".dbc");
+      String path = module.pathRelativeToRoot(ddlFile.getSecond());
+      IFile connectionFile = module.getFileRepository().findFirstFile(path.substring(0, path.length() - ".ddl".length()) + ".dbc");
       String connectionString = null;
       if (connectionFile != null && connectionFile.exists()) {
         connectionString = readFile(connectionFile);

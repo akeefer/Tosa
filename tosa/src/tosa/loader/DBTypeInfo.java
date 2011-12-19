@@ -4,7 +4,7 @@ import gw.config.CommonServices;
 import gw.lang.reflect.*;
 import gw.lang.reflect.features.PropertyReference;
 import gw.lang.reflect.java.IJavaType;
-import gw.util.concurrent.LazyVar;
+import gw.util.concurrent.LockingLazyVar;
 import tosa.CachedDBObject;
 import tosa.api.*;
 import tosa.api.query.CoreFinder;

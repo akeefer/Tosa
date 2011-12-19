@@ -6,6 +6,7 @@ import gw.lang.reflect.gs.IGosuObject;
 import gw.lang.reflect.java.IJavaBackedType;
 import gw.lang.reflect.java.IJavaClassInfo;
 import gw.lang.reflect.java.IJavaType;
+import gw.lang.reflect.java.JavaTypes;
 import gw.util.GosuClassUtil;
 
 import java.util.Collections;
@@ -47,7 +48,7 @@ public class StructType extends TypeBase implements IType {
 
   @Override
   public IType getSupertype() {
-    return IJavaType.OBJECT;
+    return JavaTypes.OBJECT();
   }
 
   @Override

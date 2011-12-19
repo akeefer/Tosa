@@ -2,6 +2,7 @@ package tosa.loader.parser.tree;
 
 import gw.lang.reflect.IType;
 import gw.lang.reflect.java.IJavaType;
+import gw.lang.reflect.java.JavaTypes;
 import tosa.api.IDBColumnType;
 import tosa.loader.SQLParameterInfo;
 import tosa.loader.data.ColumnData;
@@ -115,7 +116,7 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
     if (hasSpecificColumns()) {
       for (SQLParsedElement col : _selectList.getChildren()) {
         IDBColumnType type = col.getDBType();
-        IType gosuType = type == null ? IJavaType.OBJECT : type.getGosuType();
+        IType gosuType = type == null ? JavaTypes.OBJECT() : type.getGosuType();
         if (col instanceof ColumnReference) {
           cols.put(((ColumnReference) col).getName(), gosuType);
         } else if (col instanceof DerivedColumn) {
