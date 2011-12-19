@@ -9,8 +9,9 @@
       <root url="jar://$GOSU_HOME$/jars/gw-asm-util-3.1.jar!/" />
       <root url="jar://$GOSU_HOME$/jars/gw-gosu-core.jar!/" />
       <root url="jar://$GOSU_HOME$/jars/gw-asm-analysis-3.1.jar!/" />
-      <root url="jar://$GOSU_HOME$/jars/gw-jline-0.9.94.jar!/" />
       <root url="jar://$GOSU_HOME$/jars/gw-asm-commons-3.1.jar!/" />
+      <root url="jar://$GOSU_HOME$/jars/antlr-3.4-runtime.jar!/" />
+      <root url="jar://$GOSU_HOME$/jars/jline-0.9.94.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
