@@ -8,16 +8,6 @@
     <orderEntry type="jdk" jdkName="Default Gosu SDK" jdkType="Gosu SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="JUnit" level="project" />
-    <orderEntry type="module" module-name="tosa" />
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library>
-        <CLASSES>
-          <root url="file://$MODULE_DIR$/test-src" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
     <orderEntry type="library" name="H2" level="project" />
     <orderEntry type="library" name="SLF4J" level="project" />
     <orderEntry type="module-library">
@@ -29,6 +19,7 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="DBCP" level="project" />
   </component>
 </module>
 

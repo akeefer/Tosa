@@ -10,15 +10,6 @@
     <orderEntry type="library" name="JUnit" level="project" />
     <orderEntry type="library" name="DBCP" level="project" />
     <orderEntry type="library" name="SLF4J" level="project" />
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library>
-        <CLASSES>
-          <root url="file://$MODULE_DIR$/src" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
   </component>
 </module>
 
