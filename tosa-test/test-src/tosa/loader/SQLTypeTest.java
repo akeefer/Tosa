@@ -5,6 +5,7 @@ import gw.fs.IFile;
 import gw.fs.ResourcePath;
 import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.java.IJavaType;
+import gw.lang.reflect.java.JavaTypes;
 import gw.util.GosuExceptionUtil;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -159,7 +160,7 @@ public class SQLTypeTest {
 
 
   private <T> Iterable<T> executeQuery(Class<T> clz, SQLType sType, Object... args) {
-    return (Iterable<T>) sType.getTypeInfo().invokeQuery( IJavaType.MAP.getGenericType().getParameterizedType(IJavaType.STRING, IJavaType.OBJECT), args);
+    return (Iterable<T>) sType.getTypeInfo().invokeQuery( JavaTypes.MAP().getGenericType().getParameterizedType(JavaTypes.STRING(), JavaTypes.OBJECT()), args);
   }
 
   private SQLType parse(String sql) {
