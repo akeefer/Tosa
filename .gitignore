@@ -1,6 +1,7 @@
 # Compilation artifacts #
 lib/*
 build/*
+dist/*
 out/*
 tosa/build/*
 tosa/out/*
