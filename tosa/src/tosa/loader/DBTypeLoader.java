@@ -53,6 +53,8 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     protected Set<String> init() { return initializeTypeNames(); }
   };
 
+  private Map<String, List<String>> _typeNamesByFile = new HashMap<String, List<String>>();
+
   public DBTypeLoader() {
     this(TypeSystem.getExecutionEnvironment(), new HashMap<String, String>());
   }
@@ -81,25 +83,41 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     if (databaseImpl == null) {
       SQLFileInfo data = _sqlFilesByName.get().get(fullyQualifiedName);
       if (data != null) {
-        return new SQLType(data, this).getTypeReference();
+        SQLType sqlType = new SQLType(data, this);
+        addTypeForFile(data.getSqlFile(), sqlType);
+        return sqlType.getTypeReference();
       } else {
         return null;
       }
     }
 
+    IType rVal = null;
     if (TransactionType.TYPE_NAME.equals(relativeName)) {
       // TODO - AHK - Turn that into a type reference
-      return new TransactionType(databaseImpl, this);
+      rVal = new TransactionType(databaseImpl, this);
     } else if (DatabaseAccessType.TYPE_NAME.equals(relativeName)) {
-      return new DatabaseAccessType(databaseImpl, this);
+      rVal = new DatabaseAccessType(databaseImpl, this);
     } else {
       IDBTable dbTable = databaseImpl.getTable(relativeName);
-      if (dbTable == null) {
-        return null;
-      } else {
-        return new DBType(this, dbTable).getTypeReference();
+      if (dbTable != null) {
+        rVal = new DBType(this, dbTable).getTypeReference();
       }
     }
+
+    if (rVal != null) {
+      addTypeForFile(databaseImpl.getDdlFile(), rVal);
+    }
+    return rVal;
+  }
+
+  private void addTypeForFile(IFile file, IType type) {
+    String filePath = file.getPath().getPathString();
+    List<String> typeNamesByFile = _typeNamesByFile.get(filePath);
+    if (typeNamesByFile == null) {
+      typeNamesByFile = new ArrayList<String>();
+      _typeNamesByFile.put(filePath, typeNamesByFile);
+    }
+    typeNamesByFile.add(type.getName());
   }
 
   @Override
@@ -125,7 +143,32 @@ public class DBTypeLoader implements IExtendedTypeLoader {
 
   @Override
   public List<IType> refreshedFile(IFile iFile) {
-    return null;
+    List<String> typeNames = _typeNamesByFile.get(iFile.getPath().getPathString());
+    // For now, we clear all types on any change to  a .ddl or .sql file; we know the set of types
+    // that came from any existing SQL or DDL file, but if it's a new sql or ddl file we still need to clear our
+    // caches.  This could be made more sophisticated in the future by detecting if it's a new file and
+    // responding appropriately, without having to re-parse all existing files, and to ignore entirely files
+    // that aren't within this loader's modules
+    boolean clearTypes = (typeNames != null || iFile.getExtension().equals("ddl") || iFile.getExtension().equals("sql"));
+
+    if (clearTypes) {
+      DatabaseImplSource.getInstance().clear();
+      _typeDataByNamespace.clear();
+      _sqlFilesByName.clear();
+      _namespaces.clear();
+      _typeNames.clear();
+      _typeNamesByFile.clear();
+    }
+
+    if (typeNames != null) {
+      List<IType> reloadedTypes = new ArrayList<IType>();
+      for (String typeName : typeNames) {
+        reloadedTypes.add(TypeSystem.getByFullName(typeName));
+      }
+      return reloadedTypes;
+    } else {
+      return null;
+    }
   }
 
   @Override

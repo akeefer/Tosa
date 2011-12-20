@@ -67,4 +67,8 @@ public class SQLFileInfo {
   public String getFileName() {
     return _sql.getName();
   }
+
+  public IFile getSqlFile() {
+    return _sql;
+  }
 }

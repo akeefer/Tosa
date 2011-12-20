@@ -52,6 +52,10 @@ public class DatabaseImplSource {
     return _dbsByModule.get(module);
   }
 
+  public void clear() {
+    INSTANCE.clear();
+  }
+
   private void loadDBData() {
     _dbsByModule = new HashMap<IModule, Collection<? extends IDatabase>>();
     _dbsByName = new HashMap<String, IDatabase>();
