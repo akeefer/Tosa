@@ -22,19 +22,6 @@
       <url>http://gosu-lang.org/m2</url>
     </repository>
   </repositories>
-  <pluginRepositories>
-    <pluginRepository>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <id>gosu-lang.org</id>
-      <name>Official Gosu website</name>
-      <url>http://gosu-lang.org/m2</url>
-    </pluginRepository>
-  </pluginRepositories>
 
   <pluginRepositories>
     <pluginRepository>
