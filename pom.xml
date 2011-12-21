@@ -22,6 +22,19 @@
       <url>http://gosu-lang.org/m2</url>
     </repository>
   </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <id>gosu-lang.org</id>
+      <name>Official Gosu website</name>
+      <url>http://gosu-lang.org/m2</url>
+    </pluginRepository>
+  </pluginRepositories>
 
   <pluginRepositories>
     <pluginRepository>
@@ -108,6 +121,23 @@
         <configuration>
           <gosuVersion>0.9-SNAPSHOT</gosuVersion>
           <includeImpl>true</includeImpl> <!-- TODO: remove me -->
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.gosu-lang</groupId>
+        <artifactId>maven-gosu-plugin</artifactId>
+        <version>1.0</version>
+        <executions>
+          <execution>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>insert-gosu-artifact</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <gosuVersion>0.9-SNAPSHOT</gosuVersion>
+          <includeImpl>true</includeImpl> <!-- TODO: naughty, naugty -->
         </configuration>
       </plugin>
       <plugin>
