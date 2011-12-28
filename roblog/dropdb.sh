@@ -1,1 +1,0 @@
-mysql --user=root --password=root -e 'DROP DATABASE roblog'

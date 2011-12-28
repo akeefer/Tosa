@@ -1,2 +1,0 @@
-Gosu-Typeloaders: tosa.loader.DBTypeLoader
-Contains-Sources: gs, gsx

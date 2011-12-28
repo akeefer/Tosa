@@ -31,7 +31,7 @@ class OverallCollectionAPITest {
   }
 
   private function assertFooIsInBarsArrayInDatabase(bar : Bar, foo : Foo) : Foo {
-    var queryResults = Foo.findWithSql("select * from \"Foo\" where \"Bar_id\" = ${bar.id}")
+    var queryResults = Foo.select("select * from \"Foo\" where \"Bar_id\" = ${bar.id}")
     Assert.assertEquals(1, queryResults.size())
     Assert.assertEquals(queryResults.get(0).id, foo.id)
     return queryResults.get(0)
@@ -100,7 +100,7 @@ class OverallCollectionAPITest {
     assertFooIsInBarsArrayInMemory(bar, foo)
 
     bar.Foos.remove(foo)
-    var queryResults = Foo.findWithSql("select * from \"Foo\" where \"Bar_id\" = ${bar.id}")
+    var queryResults = test.testdb.Foo.select("select * from \"Foo\" where \"Bar_id\" = ${bar.id}")
     Assert.assertEquals(0, queryResults.size())
     Assert.assertEquals(0, bar.Foos.size())
   }

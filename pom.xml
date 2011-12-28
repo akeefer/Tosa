@@ -124,7 +124,7 @@
         </executions>
         <configuration>
           <gosuVersion>0.9-SNAPSHOT</gosuVersion>
-          <includeImpl>true</includeImpl> <!-- TODO: naughty, naugty -->
+          <includeImpl>true</includeImpl> <!-- TODO: naughty, naughty -->
         </configuration>
       </plugin>
       <plugin>
@@ -136,6 +136,10 @@
             <manifest>
               <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
             </manifest>
+            <manifestEntries>
+	            <Gosu-Typeloaders>tosa.loader.DBTypeLoader</Gosu-Typeloaders>
+              <Contains-Sources>gs, gsx</Contains-Sources>
+	          </manifestEntries>
           </archive>
         </configuration>
       </plugin>
