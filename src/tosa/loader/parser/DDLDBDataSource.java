@@ -31,15 +31,10 @@ public class DDLDBDataSource implements IDBDataSource {
       // TODO - AHK - Lots o' error handling
       // TODO - AHK - Select the correct parser somehow
       String path = module.pathRelativeToRoot(ddlFile.getSecond());
-      IFile connectionFile = module.getFileRepository().findFirstFile(path.substring(0, path.length() - ".ddl".length()) + ".dbc");
-      String connectionString = null;
-      if (connectionFile != null && connectionFile.exists()) {
-        connectionString = readFile(connectionFile);
-      }
       List<TableData> tables = new NewMySQL51Parser().parseDDLFile(readFile(ddlFile.getSecond()));
       String fileName = ddlFile.getFirst();
       String namespace = fileName.substring(0, fileName.length() - ".ddl".length()).replace("/", ".");
-      DBData dbData = new DBData(namespace, tables, connectionString, ddlFile.getSecond());
+      DBData dbData = new DBData(namespace, tables, ddlFile.getSecond());
       validateAndLogResults(dbData);
       results.put(namespace, dbData);
     }

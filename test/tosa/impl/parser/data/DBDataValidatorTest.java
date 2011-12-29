@@ -21,7 +21,7 @@ public class DBDataValidatorTest {
 
   private DBData parse(String ddl) {
     List<TableData> tables = new NewMySQL51Parser().parseDDLFile(ddl);
-    return new DBData("test.testdb", tables, "jdbc:h2:mem:testdb", null);
+    return new DBData("test.testdb", tables, null);
   }
 
   private ValidationResult validate(String ddl) {

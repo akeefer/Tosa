@@ -1,7 +1,6 @@
 package tosa.loader.data;
 
 import gw.fs.IFile;
-import org.omg.CosNaming.NamingContextExtPackage.StringNameHelper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,22 +17,16 @@ public class DBData {
   // TODO - AHK - Additional metadata about the database, such as the type
   private final String _namespace;
   private final List<TableData> _tables;
-  private final String _connectionString;
   private final IFile _ddlFile;
 
-  public DBData(String namespace, List<TableData> tables, String connectionString, IFile ddlFile) {
+  public DBData(String namespace, List<TableData> tables, IFile ddlFile) {
     _namespace = namespace;
     _tables = Collections.unmodifiableList(new ArrayList<TableData>(tables));
-    _connectionString = connectionString;
     _ddlFile = ddlFile;
   }
 
   public String getNamespace() {
     return _namespace;
-  }
-
-  public String getConnectionString() {
-    return _connectionString;
   }
 
   public List<TableData> getTables() {

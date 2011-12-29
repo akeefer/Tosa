@@ -115,7 +115,7 @@ class SQLTypeInfoTest {
   function testBasicBetweenComparisonWorks() {
     var result = test.query.SampleBetweenQuery.select("1/1/2001".toDate(), "1/1/2101".toDate())
     Assert.assertEquals(1, result.Count)
-
+    test.testdb.Database.JdbcUrl = "blah"
     result = test.query.SampleBetweenQuery.select("1/1/2101".toDate(), "1/1/2101".toDate())
     Assert.assertEquals(0, result.Count)
   }

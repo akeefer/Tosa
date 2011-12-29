@@ -8,11 +8,13 @@ import tosa.db.execution.DBExecutionKernelImpl;
 import tosa.db.execution.DBUpgraderImpl;
 import tosa.impl.md.DBFkArrayImpl;
 import tosa.impl.md.DBJoinArrayImpl;
-import tosa.loader.DBTypeLoader;
 import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -40,12 +42,8 @@ public class DatabaseImpl implements IDatabase {
     processDBData(tables);
 
     _tables = Collections.unmodifiableMap(tables);
-    if (dbData.getConnectionString() != null) {
-      _jdbcUrl = dbData.getConnectionString();
-      _connection = new DBConnection(dbData.getConnectionString(), module);
-    } else {
-      _connection = null;
-    }
+
+    _connection = null;
     _executionKernel = new DBExecutionKernelImpl(this);
   }
 
