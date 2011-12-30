@@ -93,23 +93,6 @@
       </testResource>
     </testResources>
     <plugins>
-	  <plugin>
-        <groupId>org.gosu-lang</groupId>
-        <artifactId>maven-gosu-plugin</artifactId>
-        <version>1.0</version>
-        <executions>
-          <execution>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>insert-gosu-artifact</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <gosuVersion>0.9-SNAPSHOT</gosuVersion>
-          <includeImpl>true</includeImpl> <!-- TODO: remove me -->
-        </configuration>
-      </plugin>
       <plugin>
         <groupId>org.gosu-lang</groupId>
         <artifactId>maven-gosu-plugin</artifactId>
