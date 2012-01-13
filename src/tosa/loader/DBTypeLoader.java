@@ -4,7 +4,6 @@ import gw.fs.IFile;
 import gw.lang.reflect.IExtendedTypeLoader;
 import gw.lang.reflect.IType;
 import gw.lang.reflect.TypeSystem;
-import gw.lang.reflect.java.IJavaClassInfo;
 import gw.lang.reflect.module.IExecutionEnvironment;
 import gw.lang.reflect.module.IModule;
 import gw.util.GosuClassUtil;
@@ -13,12 +12,8 @@ import gw.util.concurrent.LockingLazyVar;
 import tosa.CachedDBObject;
 import tosa.api.IDBTable;
 import tosa.api.IDatabase;
-import tosa.dbmd.DBTableImpl;
 import tosa.dbmd.DatabaseImpl;
 import tosa.impl.md.DatabaseImplSource;
-import tosa.loader.data.DBData;
-import tosa.loader.data.IDBDataSource;
-import tosa.loader.parser.DDLDBDataSource;
 
 import java.io.File;
 import java.net.URL;
@@ -169,6 +164,11 @@ public class DBTypeLoader implements IExtendedTypeLoader {
     } else {
       return null;
     }
+  }
+
+  @Override
+  public List<IType> getTypesForFile(IFile iFile) {
+    return Collections.emptyList();
   }
 
   @Override
