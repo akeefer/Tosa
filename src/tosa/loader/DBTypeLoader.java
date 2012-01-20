@@ -294,4 +294,8 @@ public class DBTypeLoader implements IExtendedTypeLoader {
   public void uninit() {
     // TODO - AHK
   }
+
+  public List<IType> getTypesForFile(IFile file) {
+    return Collections.emptyList();
+  }
 }
