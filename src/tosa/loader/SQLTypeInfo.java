@@ -6,6 +6,7 @@ import gw.lang.reflect.*;
 import gw.lang.reflect.java.IJavaType;
 import gw.lang.reflect.java.JavaTypes;
 import gw.util.GosuExceptionUtil;
+import org.slf4j.profiler.Profiler;
 import tosa.api.IPreparedStatementParameter;
 import tosa.api.IQueryResultProcessor;
 import tosa.db.execution.QueryExecutor;
@@ -22,7 +23,6 @@ public class SQLTypeInfo extends BaseTypeInfo {
   private List<IMethodInfo> _methods;
   private ISQLType _sqlType;
   private SQLParseException _sqlpe;
-  QueryExecutor _queryExecutor = new QueryExecutor();
   private IMethodInfo _selectMethod;
 
   public SQLTypeInfo(ISQLType sqlType) {
@@ -43,7 +43,7 @@ public class SQLTypeInfo extends BaseTypeInfo {
         public Object handleCall(Object ctx, Object... args) {
           return invokeQuery(selectReturnType, args);
         }
-      }).build(this));
+      }).build(this);
     _methods.add(_selectMethod);
 
     if (addSelectAsStructMethod()) {
@@ -92,9 +92,13 @@ public class SQLTypeInfo extends BaseTypeInfo {
       }
     }
 
-    String featureName = _selectMethod == null ? "select" : _selectMethod.getName();
-    return _queryExecutor.findFromSql(database,
-      featureName, sql, params, new SQLTypeInfoQueryProcessor(returnType));
+    Profiler profiler = Util.newProfiler("");
+    profiler.start(_sqlType.getName() + ".select()");
+    try {
+      return database.getDBExecutionKernel().executeSelect(sql, new SQLTypeInfoQueryProcessor(returnType), params.toArray(new IPreparedStatementParameter[params.size()]));
+    } finally {
+      profiler.stop();
+    }
   }
 
   private void verifySql() {
