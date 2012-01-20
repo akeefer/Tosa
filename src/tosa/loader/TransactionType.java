@@ -5,6 +5,7 @@ import gw.lang.reflect.ITypeInfo;
 import gw.lang.reflect.ITypeLoader;
 import gw.lang.reflect.TypeBase;
 import tosa.api.IDatabase;
+import gw.lang.reflect.TypeSystem;
 import tosa.dbmd.DatabaseImpl;
 
 import java.util.Collections;
@@ -29,6 +30,10 @@ public class TransactionType extends TypeBase implements ITransactionType {
     _databaseImpl = databaseImpl;
     _typeLoader = dbTypeLoader;
     _typeInfo = new TransactionTypeInfo(this);
+  }
+
+  public ITransactionType getTypeReference() {
+    return (ITransactionType) TypeSystem.getOrCreateTypeReference(this);
   }
 
   @Override

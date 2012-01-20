@@ -1,8 +1,54 @@
 package tosa.loader.parser;
 
-import gw.internal.gosu.parser.ParenthesizedExpression;
 import tosa.loader.data.DBData;
-import tosa.loader.parser.tree.*;
+import tosa.loader.parser.tree.AbsExpression;
+import tosa.loader.parser.tree.AsteriskSelectList;
+import tosa.loader.parser.tree.BetweenPredicate;
+import tosa.loader.parser.tree.BooleanIsNotExpression;
+import tosa.loader.parser.tree.ColumnReference;
+import tosa.loader.parser.tree.ColumnSelectList;
+import tosa.loader.parser.tree.ComparisonPredicate;
+import tosa.loader.parser.tree.ConcatenationExpression;
+import tosa.loader.parser.tree.CountAllExpression;
+import tosa.loader.parser.tree.DerivedColumn;
+import tosa.loader.parser.tree.ExistsPredicate;
+import tosa.loader.parser.tree.GenericFunctionCall;
+import tosa.loader.parser.tree.GroupByClause;
+import tosa.loader.parser.tree.InListExpression;
+import tosa.loader.parser.tree.InPredicate;
+import tosa.loader.parser.tree.IsNotNullPredicate;
+import tosa.loader.parser.tree.JoinCondition;
+import tosa.loader.parser.tree.LikePredicate;
+import tosa.loader.parser.tree.ModExpression;
+import tosa.loader.parser.tree.OrderByClause;
+import tosa.loader.parser.tree.QualifiedAsteriskSelectList;
+import tosa.loader.parser.tree.QualifiedJoin;
+import tosa.loader.parser.tree.QuantifiedComparison;
+import tosa.loader.parser.tree.QuantifierModifier;
+import tosa.loader.parser.tree.SQLAdditiveExpression;
+import tosa.loader.parser.tree.SQLAndExpression;
+import tosa.loader.parser.tree.SQLMultiplicitiveExpression;
+import tosa.loader.parser.tree.SQLNotExpression;
+import tosa.loader.parser.tree.SQLNumericLiteral;
+import tosa.loader.parser.tree.SQLOptionalExpression;
+import tosa.loader.parser.tree.SQLOrExpression;
+import tosa.loader.parser.tree.SQLParenthesizedExpression;
+import tosa.loader.parser.tree.SQLParseError;
+import tosa.loader.parser.tree.SQLParsedElement;
+import tosa.loader.parser.tree.SQLSignedExpression;
+import tosa.loader.parser.tree.SelectStatement;
+import tosa.loader.parser.tree.SetFunctionExpression;
+import tosa.loader.parser.tree.SimpleTableReference;
+import tosa.loader.parser.tree.SortSpecification;
+import tosa.loader.parser.tree.StringCaseChangeExpression;
+import tosa.loader.parser.tree.StringLiteralExpression;
+import tosa.loader.parser.tree.SubSelectExpression;
+import tosa.loader.parser.tree.TableExpression;
+import tosa.loader.parser.tree.TableFromClause;
+import tosa.loader.parser.tree.UnexpectedTokenExpression;
+import tosa.loader.parser.tree.UniquePredicate;
+import tosa.loader.parser.tree.VariableExpression;
+import tosa.loader.parser.tree.WhereClause;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -15,7 +61,7 @@ public class QueryParser implements SQLParserConstants {
   private DBData _data;
 
   public QueryParser(Token token, DBData dbData) {
-    _currentToken = token;
+    _currentToken = token.removeTokens( TokenType.COMMENT );
     _data = dbData;
   }
 
@@ -664,6 +710,7 @@ public class QueryParser implements SQLParserConstants {
 
   private SQLParsedElement parseTablePrimary() {
     //TODO cgross - shouldn't allow keywords, should support AS and derived column lists
+    //TODO cgross verify valid table
     return new SimpleTableReference(takeToken());
   }
 
@@ -678,21 +725,39 @@ public class QueryParser implements SQLParserConstants {
   private SQLParsedElement parseSelectSubList() {
     ArrayList<SQLParsedElement> cols = new ArrayList<SQLParsedElement>();
     do {
-      SQLParsedElement value = parseValueExpression();
-      if (!(value instanceof ColumnReference)) {
-        if (match(AS)) {
-          Token colName = takeToken();
-          if (!colName.isSymbol()) {
-            colName.addTemporaryError(new SQLParseError(colName, "Expected a column name!"));
-          }
-          value = new DerivedColumn(value, colName);
-        } else {
-          value.addParseError(new SQLParseError(value.firstToken(), value.lastToken(), "Only column references are supported right now."));
-        }
+      SQLParsedElement value = parseQualifiedAsterisk();
+      if (value == null) {
+        value = parseDerivedValue();
       }
       cols.add(value);
     } while (match(COMMA));
     return new ColumnSelectList(cols);
+  }
+
+  private SQLParsedElement parseDerivedValue() {
+    SQLParsedElement value;
+    value = parseValueExpression();
+    if (match(AS)) {
+      Token colName = takeToken();
+      if (!colName.isSymbol()) {
+        colName.addTemporaryError(new SQLParseError(colName, "Expected a column name!"));
+      }
+      value = new DerivedColumn(value, colName);
+    }
+    return value;
+  }
+
+  private SQLParsedElement parseQualifiedAsterisk() {
+    if (_currentToken.isSymbol() &&
+      _currentToken.nextToken().match(DOT_OP) &&
+      _currentToken.nextToken().nextToken().match(ASTERISK)) {
+      Token start = takeToken();
+      takeToken();
+      Token end = takeToken();
+      return new QualifiedAsteriskSelectList(start, end);
+    } else {
+      return null;
+    }
   }
 
   private SQLParsedElement parseSetQuantifers() {

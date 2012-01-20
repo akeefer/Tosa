@@ -1,5 +1,6 @@
 package tosa.loader;
 
+import gw.config.BaseService;
 import gw.fs.IFile;
 import gw.lang.reflect.IExtendedTypeLoader;
 import gw.lang.reflect.IType;
@@ -19,14 +20,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.*;
 
-/**
- * Created by IntelliJ IDEA.
- * User: alan
- * Date: 12/29/10
- * Time: 10:35 PM
- * To change this template use File | Settings | File Templates.
- */
-public class DBTypeLoader implements IExtendedTypeLoader {
+public class DBTypeLoader extends BaseService implements IExtendedTypeLoader {
 
   private IModule _module;
 //  private Set<String> _initializedDrivers = new HashSet<String>();
@@ -62,6 +56,14 @@ public class DBTypeLoader implements IExtendedTypeLoader {
   @Override
   public IModule getModule() {
     return _module;
+  }
+
+  public IType getIntrinsicType(Class javaClass) {
+    return null;
+  }
+
+  public IType getIntrinsicType(IJavaClassInfo javaClassInfo) {
+    return null;
   }
 
   @Override
@@ -193,6 +195,16 @@ public class DBTypeLoader implements IExtendedTypeLoader {
       return false;
     }
     return _typeDataByNamespace.get().keySet().contains(fullyQualifiedTypeName.substring(0, lastDot));
+  }
+
+  @Override
+  public List<Throwable> getInitializationErrors() {
+    return Collections.emptyList();
+  }
+
+  @Override
+  public boolean handlesNonPrefixLoads() {
+    return true;
   }
 
   @Override

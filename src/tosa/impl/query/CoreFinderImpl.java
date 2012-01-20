@@ -10,6 +10,7 @@ import tosa.impl.SimpleSqlBuilder;
 import tosa.loader.DBTypeInfo;
 import tosa.loader.IDBType;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 

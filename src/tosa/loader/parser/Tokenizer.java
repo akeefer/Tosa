@@ -1,9 +1,6 @@
 package tosa.loader.parser;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class Tokenizer {
 
@@ -51,6 +48,8 @@ public class Tokenizer {
       _type = TokenType.STRING;
     } else if (consumeNumber()) {
       _type = TokenType.NUMBER;
+    } else if (consumeComment()) {
+      _type = TokenType.COMMENT;
     } else {
       _type = TokenType.UNKNOWN;
       consumeChar();
@@ -59,6 +58,24 @@ public class Tokenizer {
     _currentStringValue = _contents.substring(_currentStartOffset, _currentEndOffset);
 
     return true;
+  }
+
+  private boolean consumeComment()
+  {
+    if (!atEndOfInput() &&
+        currentChar() == '-' && canPeek( 2 ) && peek() == '-') {
+      consumeLineComment();
+      return true;
+    }
+    return false;
+  }
+
+  private void consumeLineComment()
+  {
+    while( !atEndOfInput() && currentChar() != '\n' )
+    {
+      incrementOffset();
+    }
   }
 
   private void consumeChar() {

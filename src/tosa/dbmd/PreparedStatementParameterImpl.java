@@ -1,5 +1,6 @@
 package tosa.dbmd;
 
+import org.omg.CORBA.UNKNOWN;
 import tosa.api.IPreparedStatementParameter;
 
 import java.sql.PreparedStatement;
@@ -17,6 +18,8 @@ public class PreparedStatementParameterImpl implements IPreparedStatementParamet
   private Object _value;
   private int _jdbcType;
 
+  public static final int UNKNOWN = -666;
+
   public PreparedStatementParameterImpl(Object value, int jdbcType) {
     _value = value;
     _jdbcType = jdbcType;
@@ -27,6 +30,9 @@ public class PreparedStatementParameterImpl implements IPreparedStatementParamet
     // TODO - AHK - Lots of stuff here
     if (_value == null) {
       statement.setNull(index, _jdbcType);
+    } else if (_jdbcType == UNKNOWN ) {
+      // TODO - cgross - resolve all variable types in selects
+      statement.setObject(index, _value);
     } else {
       // TODO - AHK - Deal with lots of other potential types more specifically
       statement.setObject(index, _value, _jdbcType);

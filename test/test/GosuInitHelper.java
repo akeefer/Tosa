@@ -22,7 +22,7 @@ import java.util.List;
  */
 public class GosuInitHelper {
 
-  public static List<? extends GosuPathEntry> constructPathEntriesFromSystemClasspath(String... globalTypeloadersToPush) {
+  public static List<GosuPathEntry> constructPathEntriesFromSystemClasspath(String... globalTypeloadersToPush) {
     String classpath = System.getProperty("java.class.path");
     String[] classpathComponents = GosuStringUtil.split(classpath, ":");
     List<File> files = new ArrayList<File>();

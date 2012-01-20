@@ -16,7 +16,6 @@ uses gw.lang.reflect.TypeSystem
 uses tosa.impl.md.DatabaseImplSource
 
 class SQLTypeInfoTest {
-
   @BeforeClass
   static function beforeTestClass() {
     print("*** Before class")
@@ -224,50 +223,6 @@ class SQLTypeInfoTest {
   @Test @Ignore("H2 does not implement FULL OUTER JOIN" )
   function testBasicFullOuterJoinWorks() {
     var result = test.query.SampleFullOuterJoinQuery.select()
-    Assert.assertEquals(2, result.Count)
-  }
-
-  @Test
-  function testBasicJoinAsStructWorks() {
-    var result = test.query.SampleJoinQuery.selectAsStruct("First")
-    Assert.assertEquals(1, result.Count)
-    Assert.assertEquals(sqlDate("4/22/2009"), result.first().Date)
-    Assert.assertEquals("misc", result.first().Misc)
-    Assert.assertEquals("First", result.first().FirstName)
-    Assert.assertEquals("Bar", result.first().LastName)
-  }
-
-  @Test
-  function testBasicInnerJoinAsStructWorks() {
-    var result = test.query.SampleInnerJoinQuery.selectAsStruct("First")
-    Assert.assertEquals(1, result.Count)
-    Assert.assertEquals(sqlDate("4/22/2009"), result.first().Date)
-    Assert.assertEquals("misc", result.first().Misc)
-    Assert.assertEquals("First", result.first().FirstName)
-    Assert.assertEquals("Bar", result.first().LastName)
-  }
-
-  @Test
-  function testBasicLeftOuterJoinAsStructWorks() {
-    var result = test.query.SampleLeftOuterJoinQuery.selectAsStruct("First")
-    Assert.assertEquals(1, result.Count)
-    Assert.assertEquals(sqlDate("4/22/2009"), result.first().Date)
-    Assert.assertEquals("misc", result.first().Misc)
-    Assert.assertEquals("First", result.first().FirstName)
-    Assert.assertEquals("Bar", result.first().LastName)
-  }
-
-  @Test
-  function testBasicRightOuterJoinAsStructWorks() {
-    var result = test.query.SampleRightOuterJoinQuery.selectAsStruct("First")
-    Assert.assertEquals(2, result.Count)
-    Assert.assertTrue( result.hasMatch( \ f -> f.Misc == "misc" and f.FirstName == "First" ) )
-    Assert.assertTrue( result.hasMatch( \ f -> f.Date == null and f.Misc == null and f.FirstName == "First2") )
-  }
-
-  @Test @Ignore("H2 does not implement FULL OUTER JOIN" )
-  function testBasicFullOuterJoinAsStructWorks() {
-    var result = test.query.SampleFullOuterJoinQuery.selectAsStruct()
     Assert.assertEquals(2, result.Count)
   }
 
@@ -594,4 +549,23 @@ class SQLTypeInfoTest {
     result = test.query.SampleOptionalAndQuery.select(:misc1="blah", :misc2="blah", :misc3="blah")
     Assert.assertEquals(0, result.Count)
   }
+
+  @Test
+  function testJoinWithQualifiedAsteriskWorks() {
+    var result = test.query.SampleJoinQueryWithQualifiedAsterisk.select("First")
+    Assert.assertTrue(result.first() typeis Bar)
+    Assert.assertEquals(1, result.Count)
+    Assert.assertEquals(sqlDate("4/22/2009"), result.first().Date)
+    Assert.assertEquals("misc", result.first().Misc)
+  }
+
+  @Test
+  function testQueryWithCommendsWorks() {
+    var result = test.query.SampleQueryWithComments.select("First")
+    Assert.assertTrue(result.first() typeis Bar)
+    Assert.assertEquals(1, result.Count)
+    Assert.assertEquals(sqlDate("4/22/2009"), result.first().Date)
+    Assert.assertEquals("misc", result.first().Misc)
+  }
+
 }

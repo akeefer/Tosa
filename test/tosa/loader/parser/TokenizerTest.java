@@ -1,7 +1,8 @@
 package tosa.loader.parser;
 
-import static org.junit.Assert.*;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class TokenizerTest {
   @Test
@@ -22,46 +23,46 @@ public class TokenizerTest {
   @Test
   public void lineNumbersCorrect() {
     Token token = Token.tokenize("asdf");
-    assertEquals(1, token.getLine());
+    assertEquals( 1, token.getLine() );
 
     token = Token.tokenize("\nasdf");
-    assertEquals(2, token.getLine());
+    assertEquals( 2, token.getLine() );
 
     token = Token.tokenize("asdf\nasdf");
-    assertEquals(1, token.getLine());
-    assertEquals(2, token.nextToken().getLine());
+    assertEquals( 1, token.getLine() );
+    assertEquals( 2, token.nextToken().getLine() );
   }
 
   @Test
   public void columnsNumbersCorrect() {
     Token token = Token.tokenize("asdf");
-    assertEquals(1, token.getColumn());
+    assertEquals( 1, token.getColumn() );
 
     token = Token.tokenize("\nasdf");
     assertEquals(1, token.getColumn());
 
     token = Token.tokenize("asdf\nasdf");
     assertEquals(1, token.getColumn());
-    assertEquals(1, token.nextToken().getColumn());
+    assertEquals( 1, token.nextToken().getColumn() );
 
     token = Token.tokenize("  asdf\n    asdf");
-    assertEquals(3, token.getColumn());
-    assertEquals(5, token.nextToken().getColumn());
+    assertEquals( 3, token.getColumn() );
+    assertEquals( 5, token.nextToken().getColumn() );
   }
 
   @Test
   public void isNumberWorks() {
     Token token = Token.tokenize("1");
-    assertTrue(token.isNumber());
+    assertTrue( token.isNumber() );
 
     token = Token.tokenize("a");
-    assertFalse(token.isNumber());
+    assertFalse( token.isNumber() );
   }
 
   @Test
   public void isStringWorks() {
     Token token = Token.tokenize("\"\"");
-    assertTrue(token.isString());
+    assertTrue( token.isString() );
 
     token = Token.tokenize("\'\'");
     assertTrue(token.isString());
@@ -70,7 +71,31 @@ public class TokenizerTest {
     assertTrue(token.isString());
     
     token = Token.tokenize("asdf");
-    assertFalse(token.isString());
+    assertFalse( token.isString() );
+  }
+
+  @Test
+  public void testCommentsWork() {
+    Token token = Token.tokenize("--blah blah\n \"\" --blah blah");
+    assertTrue(token.isComment());
+
+    token = token.nextToken();
+    assertTrue(token.isString());
+
+    token = token.nextToken();
+    assertTrue( token.isComment() );
+  }
+
+  @Test
+  public void testCommentRemovalWorks() {
+    Token token = Token.tokenize("--blah blah\n \"\" --blah blah");
+
+    token = token.removeTokens( TokenType.COMMENT );
+
+    assertTrue(token.isString());
+
+    token = token.nextToken();
+    assertTrue( token.isEOF() );
   }
 
   @Test

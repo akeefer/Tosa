@@ -295,4 +295,5 @@ public abstract class SQLParsedElement {
   public IType getVarTypeForChild() {
     return JavaTypes.STRING();
   }
+
 }

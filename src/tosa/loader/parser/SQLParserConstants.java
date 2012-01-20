@@ -40,6 +40,7 @@ public interface SQLParserConstants {
   public static final String TIMES_OP = OPS.reg("*");
   public static final String DIV_OP = OPS.reg("/");
   public static final String CONCAT_OP = OPS.reg("||");
+  public static final String DOT_OP = OPS.reg(".");
 
   public static final String ACTION = "ACTION";
   public static final String ASC = "ASC";
