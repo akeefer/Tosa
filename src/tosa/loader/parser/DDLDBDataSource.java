@@ -75,10 +75,10 @@ public class DDLDBDataSource implements IDBDataSource {
   private void validateAndLogResults(DBData dbData) {
     ValidationResult validationResult = DBDataValidator.validate(dbData);
     for (String error : validationResult.getErrors()) {
-      LoggerFactory.getLogger("Tosa").error(error);
+//      LoggerFactory.getLogger("Tosa").error(error);
     }
     for (String warning : validationResult.getWarnings()) {
-      LoggerFactory.getLogger("Tosa").warn(warning);
+//      LoggerFactory.getLogger("Tosa").warn(warning);
     }
   }
 }
