@@ -70,6 +70,9 @@ public class DatabaseImpl implements IDatabase {
 
   @Override
   public IDBConnection getConnection() {
+    if ( _connection == null ) {
+      throw new IllegalStateException("Database Connection is null.  Please ensure your JdbcUrl is set properly.");
+    }
     return _connection;
   }
 
