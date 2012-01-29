@@ -26,7 +26,7 @@ public class ReverseFkEntityCollectionImplTest {
 
   @BeforeClass
   static public void resetDB() {
-    TestEnv.maybeInit();
+    TestEnv.init();
     getDB().getDBUpgrader().recreateTables();
   }
 

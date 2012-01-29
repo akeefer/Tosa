@@ -4,7 +4,6 @@ import gw.fs.IDirectory;
 import gw.fs.IFile;
 import gw.fs.ResourcePath;
 import gw.lang.reflect.TypeSystem;
-import gw.lang.reflect.java.IJavaType;
 import gw.lang.reflect.java.JavaTypes;
 import gw.util.GosuExceptionUtil;
 import org.junit.Before;
@@ -36,7 +35,7 @@ public class SQLTypeTest {
 
   @BeforeClass
   static public void resetDB() {
-    TestEnv.maybeInit();
+    TestEnv.init();
   }
 
   @Before

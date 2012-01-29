@@ -29,7 +29,7 @@ public class JoinArrayEntityCollectionImplTest {
 
   @BeforeClass
   static public void resetDB() {
-    TestEnv.maybeInit();
+    TestEnv.init();
     getDB().getDBUpgrader().recreateTables();
   }
 
