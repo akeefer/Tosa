@@ -1,48 +1,21 @@
-uses java.io.File
-uses java.lang.System
-uses gw.vark.Aardvark
-uses org.apache.tools.ant.types.Path
-
-//=======================================================================
-// Change to gosu distro home
-//=======================================================================
-
-var ghVar = System.getenv( "GOSU_HOME" )
-if(ghVar == null) {
-  Ant.fail( :message = "Please define the GOSU_HOME system variable" )
-}
-var gosuHome = file( ghVar )
-
-//=======================================================================
-//
-//=======================================================================
-
-var tosaHome = file( "." )
-
-function deps() {
-  Ivy.retrieve(:sync = true, :log = "download-only")
-}
 
 function clean() {
-  file( "tosa/build" ).deleteRecursively()
+  file( "target" ).deleteRecursively()
 }
 
-@Depends({"deps"})
-function build() {
-  buildModule( file("tosa"), classpath().withFileset( gosuHome.file( "jars" ).fileset() ).withFileset(tosaHome.file("lib").fileset()), "tosa.jar" )
-}
-
-private function buildModule(root : File, cp : Path, jarName : String) {
-  var classesDir = root.file( "build/classes" )
+function compile() {
+  var classesDir = file("target/classes")
   classesDir.mkdirs()
-  Ant.javac( :srcdir = path(root.file("src")),
+  Ant.javac( :srcdir = classpath( file("src") ),
              :destdir = classesDir,
-             :classpath = cp,
+             :classpath = pom().dependencies(COMPILE, :additionalDeps = {{
+                                              :GroupId = "org.gosu-lang.gosu", :ArtifactId = "gosu-core", :Version = "0.9-SNAPSHOT"
+                                             }}).Path,
              :debug = true,
              :includeantruntime = false)
-  Ant.copy( :filesetList = {root.file( "src" ).fileset( :excludes = "**/*.java") },
-            :todir = classesDir )
-  Ant.jar( :destfile = root.file( "build/${jarName}" ),
-           :manifest = root.file( "src/META-INF/MANIFEST.MF" ).exists() ? root.file( "src/META-INF/MANIFEST.MF" ) : null,
-           :basedir = classesDir )
+}
+
+@Depends( {"compile"} )
+function test() {
+  throw "Not yet implemented"
 }
