@@ -60,6 +60,11 @@ class DBTypeDelegate {
     return dbType.NewQueryExecutor.count(dbType.Name + ".count(String, Map)", countArgs.Sql, countArgs.Params)
   }
 
+  static function countAll(dbType : IDBType) : long {
+    var sql = sub("SELECT count(*) as count FROM :table", {"table" -> dbType.Table}).Sql
+    return dbType.NewQueryExecutor.count(dbType.Name + ".countAll()", sql, {});
+  }
+
   static function countWhere(dbType : IDBType, sql : String, params : Map<String, Object> = null) : long {
     // TODO - AHK - Is this the right thing to enforce?
     if (sql != null && sql.toUpperCase().startsWith("SELECT")) {
@@ -86,6 +91,11 @@ class DBTypeDelegate {
 
     var selectArgs = subIfNecessary(sql, null, params)
     return dbType.NewQueryExecutor.selectEntity(dbType.Name + ".select(String, Map)", dbType, selectArgs.Sql, selectArgs.Params)
+  }
+
+  static function selectAll(dbType : IDBType) : QueryResult<IDBObject> {
+    var sql = sub("SELECT * FROM :table", {"table" -> dbType.Table}).Sql
+    return dbType.NewQueryExecutor.selectEntity(dbType.Name + ".selectAll()", dbType, sql, {})
   }
 
   static function selectWhere(dbType : IDBType, sql : String, params : Map<String, Object> = null) : QueryResult<IDBObject> {
