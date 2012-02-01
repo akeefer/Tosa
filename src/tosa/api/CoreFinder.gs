@@ -36,7 +36,7 @@ class CoreFinder<T extends IDBObject> {
     var query = sub("SELECT * FROM :table WHERE :id_column = :id",
                     {"table" -> table, "id_column" -> idColumn, "id" -> id})
 
-    var results = _dbType.NewQueryExecutor.selectEntity(_dbType.Name + ".fromId()", _dbType, query.Sql, query.Params)
+    var results = selectEntity(_dbType.Name + ".fromId()", query.Sql, query.Params)
 
     if (results.Count == 0) {
       return null
@@ -49,7 +49,7 @@ class CoreFinder<T extends IDBObject> {
 
   function count(sql : String, params : Map<String, Object> = null) : long {
     // TODO - AHK - Is this the right thing to enforce?  Should we enforce SELECT count(*) as count FROM <table>?
-    // Should we even bother enforcing it here, or let it be enforced in NewQueryExecutor?
+    // Should we even bother enforcing it here, or let it be enforced in countImpl()?
     if (!sql.startsWith("SELECT count(*) as count")) {
       throw new IllegalArgumentException("The count(String, Map) method must always be called with 'SELECT count(*) as count FROM' as the start of the statement.  The sql passed in was " + sql)
     }
@@ -82,13 +82,13 @@ class CoreFinder<T extends IDBObject> {
 
   function select(sql : String, params : Map<String, Object> = null) : QueryResult<T> {
     // TODO - AHK - Is this the right thing to enforce?  Should we enforce SELECT * FROM <table>?
-    // Should we even bother enforcing it here, or let it be enforced in NewQueryExecutor?
+    // Should we even bother enforcing it here, or let it be enforced in selectEntity?
     if (!sql.toUpperCase().startsWith("SELECT * FROM")) {
       throw new IllegalArgumentException("The select(String, Map) method must always be called with 'SELECT * FROM' as the start of the statement.  The sql passed in was " + sql)
     }
 
     var selectArgs = subIfNecessary(sql, null, params)
-    return _dbType.NewQueryExecutor.selectEntity(_dbType.Name + ".select(String, Map)", _dbType, selectArgs.Sql, selectArgs.Params) as QueryResult<T>
+    return selectEntity(_dbType.Name + ".select(String, Map)", selectArgs.Sql, selectArgs.Params) as QueryResult<T>
   }
 
   function selectWhere(sql : String, params : Map<String, Object> = null) : QueryResult<T> {
