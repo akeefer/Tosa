@@ -1,4 +1,6 @@
-package tosa.api;
+package tosa.api
+
+uses java.lang.Iterable
 
 /**
  * This class represents the results of a particular query.
@@ -9,10 +11,10 @@ public interface QueryResult<T> extends Iterable<T> {
 
   // TODO - AHK - Should these be longs?
 
-  int size();
+  function size() : int
 
-  int getCount();
+  property get Count() : int
 
   // TODO - AHK - Yeahhh
-  T get(int index);
+  function get(idx : int) : T
 }
