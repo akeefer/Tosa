@@ -8,6 +8,9 @@ uses gw.lang.reflect.features.PropertyReference
 uses tosa.loader.Util
 uses java.util.Arrays
 uses java.lang.IllegalStateException
+uses tosa.impl.query.QueryResultImpl
+uses java.sql.ResultSet
+uses tosa.CachedDBObject
 
 /**
  */
@@ -52,7 +55,7 @@ class CoreFinder<T extends IDBObject> {
     }
 
     var countArgs = subIfNecessary(sql, null, params)
-    return _dbType.NewQueryExecutor.count(_dbType.Name + ".count(String, Map)", countArgs.Sql, countArgs.Params)
+    return countImpl(_dbType.Name + ".count(String, Map)", countArgs.Sql, countArgs.Params)
   }
 
   function countWhere(sql : String, params : Map<String, Object> = null) : long {
@@ -63,18 +66,18 @@ class CoreFinder<T extends IDBObject> {
 
     var queryPrefix = sub("SELECT count(*) as count FROM :table", {"table" -> _dbType.Table}).Sql
     var countArgs = subIfNecessary(sql, queryPrefix, params)
-    return _dbType.NewQueryExecutor.count(_dbType.Name + ".countWhere(String, Map)", countArgs.Sql, countArgs.Params)
+    return countImpl(_dbType.Name + ".countWhere(String, Map)", countArgs.Sql, countArgs.Params)
   }
 
   function countAll() : long {
     var sql = sub("SELECT count(*) as count FROM :table", {"table" -> _dbType.Table}).Sql
-    return _dbType.NewQueryExecutor.count(_dbType.Name + ".countAll()", sql, {});
+    return countImpl(_dbType.Name + ".countAll()", sql, {});
   }
 
   function countLike(template: T) : long {
     var queryPrefix = sub("SELECT count(*) as count FROM :table", {"table" -> _dbType.Table}).Sql
     var whereClause = buildWhereClause(template)
-    return _dbType.NewQueryExecutor.count(_dbType.Name + ".countLike(" + _dbType.Name + ")", queryPrefix + whereClause.Sql, whereClause.Params)
+    return countImpl(_dbType.Name + ".countLike(" + _dbType.Name + ")", queryPrefix + whereClause.Sql, whereClause.Params)
   }
 
   function select(sql : String, params : Map<String, Object> = null) : QueryResult<T> {
@@ -96,18 +99,18 @@ class CoreFinder<T extends IDBObject> {
 
     var queryPrefix = sub("SELECT * FROM :table", {"table" -> _dbType.Table}).Sql
     var selectArgs = subIfNecessary(sql, queryPrefix, params)
-    return _dbType.NewQueryExecutor.selectEntity(_dbType.Name + ".selectWhere(String, Map)", _dbType, selectArgs.Sql, selectArgs.Params) as QueryResult<T>
+    return selectEntity(_dbType.Name + ".selectWhere(String, Map)", selectArgs.Sql, selectArgs.Params) as QueryResult<T>
   }
 
   function selectLike(template : T) : QueryResult<T> {
     var queryPrefix = sub("SELECT * FROM :table", {"table" -> _dbType.Table}).Sql
     var whereClause = buildWhereClause(template)
-    return _dbType.NewQueryExecutor.selectEntity(_dbType.Name + ".selectWhere(String, Map)", _dbType, queryPrefix + whereClause.Sql, whereClause.Params) as QueryResult<T>
+    return selectEntity(_dbType.Name + ".selectWhere(String, Map)", queryPrefix + whereClause.Sql, whereClause.Params) as QueryResult<T>
   }
 
   function selectAll() : QueryResult<T> {
     var sql = sub("SELECT * FROM :table", {"table" -> _dbType.Table}).Sql
-    return _dbType.NewQueryExecutor.selectEntity(_dbType.Name + ".selectAll()", _dbType, sql, {}) as QueryResult<T>
+    return selectEntity(_dbType.Name + ".selectAll()", sql, {}) as QueryResult<T>
   }
 
   function findSorted(template : T, sortProperty : PropertyReference<IDBObject, Object>, ascending : boolean) : List<T> {
@@ -199,19 +202,15 @@ class CoreFinder<T extends IDBObject> {
     }
   }
 
-//  private static class CountQueryResultProcessor implements IQueryResultProcessor<Integer> {
-//    @Override
-//    public Integer processResult(ResultSet result) throws SQLException {
-//      return result.getInt("count");
-//    }
-//  }
-
-//  @Override
-//  public QueryResult<IDBObject> selectEntity(String profilerTag, IDBType type, String sqlStatement, Object... parameters) {
-//    // TODO - AHK - Validate the input string here?
-//    return new QueryResultImpl<IDBObject>(profilerTag, sqlStatement, wrapParameters(parameters), _db, new CachedDBQueryResultProcessor(type));
-//  }
-//
+  private function selectEntity(profilerTag : String, sqlStatement : String, parameters : Object[]) : QueryResult<IDBObject> {
+    // TODO - AHK - Validate the input string here?
+    return new QueryResultImpl<IDBObject>(
+        profilerTag,
+        sqlStatement,
+        parameters.map(\p -> wrapParameter(p)),
+        _dbType.Table.Database,
+        \r -> buildObject(_dbType, r));
+  }
 
   private function wrapParameter(objectParameter : Object) : IPreparedStatementParameter {
     if (objectParameter == null) {
@@ -226,38 +225,16 @@ class CoreFinder<T extends IDBObject> {
       // TODO - AHK - The problem is that in order to send NULL as a value, we need to
       // know what the matching column type is . . .
       return \ s, i -> s.setObject(i, objectParameter)
-
-//      return new IPreparedStatementParameter() {
-//        @Override
-//        public void setParameter(PreparedStatement s, int index) throws SQLException {
-//          statement.setObject(index, objectParameter);
-//        }
-//      };
     }
   }
 
-//  // TODO - AHK - This is a duplicate AND it's public
-//  // TODO - AHK The general query execution API here just needs a weeeee bit of help
-//  public static class CachedDBQueryResultProcessor implements IQueryResultProcessor<IDBObject> {
-//    private IDBType _type;
-//
-//    public CachedDBQueryResultProcessor(IDBType type) {
-//      _type = type;
-//    }
-//
-//    @Override
-//    public CachedDBObject processResult(ResultSet result) throws SQLException {
-//      return buildObject(_type, result);
-//    }
-//  }
-//
-//  public static CachedDBObject buildObject(IDBType type, ResultSet resultSet) throws SQLException {
-//    CachedDBObject obj = new CachedDBObject(type, false);
-//    IDBTable table = type.getTable();
-//    for (IDBColumn column : table.getColumns()) {
-//      Object resultObject = column.getColumnType().readFromResultSet(resultSet, table.getName() + "." + column.getName());
-//      obj.setColumnValue(column.getName(), resultObject);
-//    }
-//    return obj;
-//  }
+  static function buildObject(type : IDBType, resultSet : ResultSet) : CachedDBObject {
+    var obj = new CachedDBObject(type, false);
+    var table = type.Table;
+    for (column in table.Columns) {
+      var resultObject = column.getColumnType().readFromResultSet(resultSet, table.getName() + "." + column.getName());
+      obj.setColumnValue(column.getName(), resultObject);
+    }
+    return obj;
+  }
 }
