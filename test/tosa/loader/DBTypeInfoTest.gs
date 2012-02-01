@@ -289,11 +289,19 @@ class DBTypeInfoTest {
   }
 
   @Test
-  function testFindSorted() {
-      var sorted = test.testdb.SortPage.findSorted(null, test.testdb.SortPage#Number, true)
+  function testSelectAllWithOrderBy() {
+      var sorted = test.testdb.SortPage.selectAll().orderBy(test.testdb.SortPage#Number, ASC)
       sorted.eachWithIndex(\s, i -> {
-        Assert.assertTrue(i == 0 or s.Number >= sorted[i - 1].Number)
+        Assert.assertTrue(i == 0 or s.Number >= sorted.get(i - 1).Number)
       })
+  }
+
+  @Test
+  function testSelectAllWithOrderBySql() {
+    var sorted = test.testdb.SortPage.selectAll().orderBySql("\"Number\" ASC")
+    sorted.eachWithIndex(\s, i -> {
+      Assert.assertTrue(i == 0 or s.Number >= sorted.get(i - 1).Number)
+    })
   }
 
   @Test
