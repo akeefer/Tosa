@@ -83,6 +83,7 @@ public class QueryResultImpl<T> implements QueryResult<T> {
     // TODO - AHK - Lots more argument validation
     var realStartOffset = (startOffset > 0 ? startOffset : pageSize * startOffset)
     _pagingInfo = new PagingInfo(startPage, pageSize)
+    _results = null
     return this
   }
 
