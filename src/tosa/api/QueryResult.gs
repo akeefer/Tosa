@@ -24,5 +24,6 @@ public interface QueryResult<T> extends Iterable<T> {
 
   function orderBySql(sql : String) : QueryResult<T>
 
+  function page(startPage : int = 0, pageSize : int = 100, startOffset : int = 0) : QueryResult<T>
 
 }
