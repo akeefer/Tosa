@@ -289,34 +289,41 @@ class DBTypeInfoTest {
   }
 
   @Test
-  function testFindSorted() {
-      var sorted = test.testdb.SortPage.findSorted(null, test.testdb.SortPage#Number, true)
+  function testSelectAllWithOrderBy() {
+      var sorted = test.testdb.SortPage.selectAll().orderBy(test.testdb.SortPage#Number, ASC)
       sorted.eachWithIndex(\s, i -> {
-        Assert.assertTrue(i == 0 or s.Number >= sorted[i - 1].Number)
+        Assert.assertTrue(i == 0 or s.Number >= sorted.get(i - 1).Number)
       })
   }
 
   @Test
-  function testFindPaged() {
-      var page1 = test.testdb.SortPage.findPaged(null, 10, 0)
-      var page2 = test.testdb.SortPage.findPaged(null, 10, 10)
-      Assert.assertEquals(10, page1.Count)
-      Assert.assertEquals(10, page2.Count)
-      page1.each(\s -> {
-          Assert.assertNull(page2.firstWhere(\s2 -> s2.id == s.id))
-      })
+  function testSelectAllWithOrderBySql() {
+    var sorted = test.testdb.SortPage.selectAll().orderBySql("\"Number\" ASC")
+    sorted.eachWithIndex(\s, i -> {
+      Assert.assertTrue(i == 0 or s.Number >= sorted.get(i - 1).Number)
+    })
   }
 
   @Test
-  function testFindSortedPaged() {
-      var page1 = test.testdb.SortPage.findSortedPaged(null, test.testdb.SortPage#Number, true, 10, 0)
-      var page2 = test.testdb.SortPage.findSortedPaged(null, test.testdb.SortPage#Number, true, 10, 10)
-      Assert.assertEquals(10, page1.Count)
-      Assert.assertEquals(10, page2.Count)
-      page1.eachWithIndex(\s, i -> {
-          Assert.assertTrue(i == 0 or s.Number >= page1[i - 1].Number)
-          Assert.assertNull(page2.firstWhere(\s2 -> s2.id == s.id or s2.Number < s.Number))
-      })
+  function testSelectAllWithPaging() {
+      var fromPage1 = test.testdb.SortPage.selectAll().orderBy(SortPage#id).page(0, 10).toList()
+      var fromPage2 = test.testdb.SortPage.selectAll().orderBy(SortPage#id).page(10, 10).toList()
+      Assert.assertEquals(20, fromPage1.Count)
+      Assert.assertEquals(10, fromPage2.Count)
+      Assert.assertEquals(fromPage1[10].Id, fromPage2[0].Id)
+  }
+
+  @Test
+  function testSelectAllWithOrderByAndPaging() {
+    var fromPage1 = test.testdb.SortPage.selectAll().orderBy(SortPage#Number).page(0, 10).toList()
+    var fromPage2 = test.testdb.SortPage.selectAll().orderBy(SortPage#Number).page(10, 10).toList()
+    Assert.assertEquals(20, fromPage1.Count)
+    Assert.assertEquals(10, fromPage2.Count)
+    Assert.assertEquals(fromPage1[10].Id, fromPage2[0].Id)
+
+    fromPage1.eachWithIndex(\s, i -> {
+        Assert.assertTrue(i == 0 or s.Number >= fromPage1[i - 1].Number)
+    })
   }
 
   @Test

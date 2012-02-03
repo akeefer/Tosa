@@ -5,10 +5,7 @@ import gw.util.concurrent.LockingLazyVar;
 import tosa.api.IDBObject;
 import tosa.api.IDBTable;
 import tosa.api.query.CoreFinder;
-import tosa.dbmd.DBTableImpl;
 import tosa.impl.query.CoreFinderImpl;
-import tosa.impl.query.NewQueryExecutor;
-import tosa.impl.query.NewQueryExecutorImpl;
 
 import java.util.Collections;
 import java.util.List;
@@ -86,9 +83,4 @@ public class DBType extends TypeBase implements IDBType {
     return _finder;
   }
 
-  @Override
-  public NewQueryExecutor getNewQueryExecutor() {
-    // TODO - AHK - Cache this?
-    return new NewQueryExecutorImpl(_table.getDatabase());
-  }
 }
