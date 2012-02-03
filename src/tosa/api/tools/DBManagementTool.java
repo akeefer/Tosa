@@ -4,7 +4,7 @@ import gw.fs.IDirectory;
 import gw.lang.init.GosuInitialization;
 import gw.lang.reflect.ITypeLoader;
 import gw.lang.reflect.TypeSystem;
-import gw.lang.shell.Gosu;
+import gw.lang.Gosu;
 import gw.util.GosuExceptionUtil;
 import tosa.DBConnection;
 import tosa.api.DBLocator;

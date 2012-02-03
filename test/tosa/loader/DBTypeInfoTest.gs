@@ -148,7 +148,7 @@ class DBTypeInfoTest {
       Assert.assertNotNull(textProp)
       Assert.assertEquals(String, textProp.FeatureType)
 
-      var joinProp = typeInfo.getProperty("Bazs")
+      var joinProp = typeinfo.getProperty("Bazs")
       Assert.assertNotNull(joinProp)
       Assert.assertEquals(EntityCollection<test.testdb.Baz>, joinProp.FeatureType)
 
@@ -172,7 +172,7 @@ class DBTypeInfoTest {
       Assert.assertEquals(EntityCollection<test.testdb.Foo>, arrayProp.FeatureType)
       Assert.assertFalse(arrayProp.Writable)
 
-      joinProp = typeInfo.getProperty("Relatives")
+      joinProp = typeinfo.getProperty("Relatives")
       Assert.assertNotNull(joinProp)
       Assert.assertEquals(EntityCollection<test.testdb.Baz>, joinProp.FeatureType)
   }

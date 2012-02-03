@@ -1,7 +1,7 @@
 package test
 
 uses gw.lang.reflect.TypeSystem
-uses gw.lang.shell.Gosu
+uses gw.lang.Gosu
 uses org.junit.runner.RunWith
 uses org.junit.runners.Suite
 uses org.junit.runners.model.InitializationError
