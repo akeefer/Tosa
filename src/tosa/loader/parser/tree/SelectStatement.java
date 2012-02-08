@@ -22,7 +22,7 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
   private List<VariableExpression> _variables;
 
   public SelectStatement(Token start, SQLParsedElement quantifier, SQLParsedElement selectList, TableExpression tableExpr, SQLParsedElement orderBy) {
-    super(start, quantifier, selectList, tableExpr);
+    super(start, quantifier, selectList, tableExpr, orderBy);
     _quantifier = quantifier;
     _selectList = selectList;
     _tableExpr = tableExpr;

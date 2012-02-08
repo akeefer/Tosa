@@ -9,25 +9,25 @@ CREATE TABLE "SortPage"(
     "Number" INT
 );
 
-CREATE TABLE "ForOrderByTests" (
+CREATE TABLE ForOrderByTests (
     "id" BIGINT PRIMARY KEY AUTO_INCREMENT,
-    "Number" INT,
-    "Date" DATE,
-    "Str" VARCHAR(50),
-    "Str2" VARCHAR(50)
+    Number INT,
+    Date DATE,
+    Str VARCHAR(50),
+    Str2 VARCHAR(50)
 );
 
-CREATE TABLE "ForGroupByTests" (
+CREATE TABLE ForGroupByTests (
     "id" BIGINT PRIMARY KEY AUTO_INCREMENT,
-    "Number" INT,
-    "Date" DATE,
-    "Str" VARCHAR(50),
-    "Str2" VARCHAR(50)
+    Number INT,
+    Date DATE,
+    Str VARCHAR(50),
+    Str2 VARCHAR(50)
 );
 
-CREATE TABLE "ForNumericTests" (
+CREATE TABLE ForNumericTests (
     "id" BIGINT PRIMARY KEY AUTO_INCREMENT,
-    "Number" INT
+    Number INT
 );
 
 CREATE TABLE "Foo"(

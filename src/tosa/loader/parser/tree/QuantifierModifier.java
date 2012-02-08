@@ -14,6 +14,6 @@ public class QuantifierModifier extends SQLParsedElement{
 
   @Override
   protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
-    sb.append(_quantifier.toString());
+    sb.append(_quantifier.toString()).append(" ");
   }
 }

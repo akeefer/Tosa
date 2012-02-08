@@ -37,6 +37,9 @@ public class ColumnReference extends SQLParsedElement {
         _columnData = _tableData.getColumn(_column.getValue());
       }
     }
+    if (_tableData == null) {
+      System.out.println("Whooopsie!");
+    }
     if (_columnData != null) {
       setType(_columnData.getColumnType());
     }
@@ -55,15 +58,14 @@ public class ColumnReference extends SQLParsedElement {
 
   @Override
   protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
-    sb.append('"');
     if (_table != null) {
-      sb.append(_table.getValue());
-      sb.append('"');
+      sb.append(_tableData.getPossiblyQuotedName());
       sb.append(".");
-      sb.append('"');
     }
-    sb.append(_column.getValue());
-    sb.append('"');
+    if (_columnData == null) {
+      System.out.println("Hrm");
+    }
+    sb.append(_columnData.getPossiblyQuotedName());
   }
 
   public String getName() {

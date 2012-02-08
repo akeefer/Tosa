@@ -25,9 +25,9 @@ class SQLTypeInfoTest {
   private function deleteAllData() {
     clearTable("Bar")
     clearTable("\"Foo\"")
-    clearTable("\"ForOrderByTests\"")
-    clearTable("\"ForGroupByTests\"")
-    clearTable("\"ForNumericTests\"")
+    clearTable("ForOrderByTests")
+    clearTable("ForGroupByTests")
+    clearTable("ForNumericTests")
   }
 
   private function clearTable(tableName : String) {

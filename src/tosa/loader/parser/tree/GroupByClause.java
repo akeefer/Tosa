@@ -12,7 +12,7 @@ public class GroupByClause extends SQLParsedElement {
 
   @Override
   protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
-    sb.append(" GROUP BY");
+    sb.append(" GROUP BY ");
     for (SQLParsedElement groupByClauses : getChildren()) {
       groupByClauses.toSQL(prettyPrint, indent, sb, values);
     }

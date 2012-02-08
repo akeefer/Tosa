@@ -22,7 +22,7 @@ public class SimpleTableReference extends SQLParsedElement {
 
   @Override
   protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
-    sb.append("\"").append(_name.getValue()).append("\"");
+    sb.append(_table.getPossiblyQuotedName());
   }
 
   public Token getName() {
