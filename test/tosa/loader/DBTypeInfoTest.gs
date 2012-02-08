@@ -202,10 +202,15 @@ class DBTypeInfoTest {
       Assert.assertTrue(selectWhereMethod.Static)
       Assert.assertEquals(QueryResult<test.testdb.Foo>, selectWhereMethod.ReturnType)
 
-      var findMethod = typeinfo.getMethod("selectLike", {test.testdb.Foo})
-      Assert.assertNotNull(findMethod)
-      Assert.assertTrue(findMethod.Static)
-      Assert.assertEquals(QueryResult<test.testdb.Foo>, findMethod.ReturnType)
+      var selectLikeMethod = typeinfo.getMethod("selectLike", {test.testdb.Foo})
+      Assert.assertNotNull(selectLikeMethod)
+      Assert.assertTrue(selectLikeMethod.Static)
+      Assert.assertEquals(QueryResult<test.testdb.Foo>, selectLikeMethod.ReturnType)
+    
+    var selectAllMethod = typeinfo.getMethod("selectAll", {})
+    Assert.assertNotNull(selectAllMethod)
+    Assert.assertTrue(selectAllMethod.Static)
+    Assert.assertEquals(QueryResult<test.testdb.Foo>, selectAllMethod.ReturnType)
 
       var countMethod = typeinfo.getMethod("count", {String, Map<String, Object>})
       Assert.assertNotNull(countMethod)
@@ -222,30 +227,20 @@ class DBTypeInfoTest {
       Assert.assertTrue(countLikeMethod.Static)
       Assert.assertEquals(long, countLikeMethod.ReturnType)
 
-      var findSortedMethod = typeinfo.getMethod("findSorted", {test.testdb.Foo, PropertyReference<Foo, Object>, boolean})
-      Assert.assertNotNull(findSortedMethod)
-      Assert.assertTrue(findSortedMethod.Static)
-      Assert.assertEquals(List<test.testdb.Foo>, findSortedMethod.ReturnType)
-
-      var findPagedMethod = typeinfo.getMethod("findPaged", {test.testdb.Foo, int, int})
-      Assert.assertNotNull(findPagedMethod)
-      Assert.assertTrue(findPagedMethod.Static)
-      Assert.assertEquals(List<test.testdb.Foo>, findPagedMethod.ReturnType)
-
-      var findSortedPagedMethod = typeinfo.getMethod("findSortedPaged", {test.testdb.Foo, PropertyReference<Foo, Object>, boolean, int, int})
-      Assert.assertNotNull(findSortedPagedMethod)
-      Assert.assertTrue(findSortedPagedMethod.Static)
-      Assert.assertEquals(List<test.testdb.Foo>, findSortedPagedMethod.ReturnType)
+    var countAllMethod = typeinfo.getMethod("countAll", {})
+    Assert.assertNotNull(countAllMethod)
+    Assert.assertTrue(countAllMethod.Static)
+    Assert.assertEquals(long, countAllMethod.ReturnType)
   }
 
   @Test
   function testGetMethod() {
-      var foo = test.testdb.Foo.fromID(_fooId)
+      var foo = test.testdb.Foo.fromId(_fooId)
       Assert.assertNotNull(foo)
       Assert.assertEquals("Charlie", foo.FirstName)
       Assert.assertEquals("Brown", foo.LastName)
 
-      var noFoo = test.testdb.Foo.fromID(3582053)
+      var noFoo = test.testdb.Foo.fromId(3582053)
       Assert.assertNull(noFoo)
   }
 
@@ -339,7 +334,7 @@ class DBTypeInfoTest {
 
   @Test
   function testSelectLikeWithFK() {
-      var bar = test.testdb.Bar.fromID(1)
+      var bar = test.testdb.Bar.fromId(1)
       var foos = test.testdb.Foo.selectLike(new test.testdb.Foo(){:Bar = bar}).toList()
       Assert.assertEquals(1, foos.Count)
       var foo = foos[0]
@@ -349,32 +344,32 @@ class DBTypeInfoTest {
 
   @Test
   function testForeignKey() {
-      var foo = test.testdb.Foo.fromID(_fooId)
+      var foo = test.testdb.Foo.fromId(_fooId)
       Assert.assertEquals(_barId, foo.Bar.id)
   }
 
   @Test
   function testNamedForeignKey() {
-      var foo = test.testdb.Foo.fromID(_fooId)
+      var foo = test.testdb.Foo.fromId(_fooId)
       Assert.assertEquals(_sortPageId, foo.Named.id)
       Assert.assertEquals(1, foo.Named.Number)
   }
 
   @Test
   function testArray() {
-      var bar = test.testdb.Bar.fromID(_barId)
-      var array = bar.foos.map(\f -> f.id)
+      var bar = test.testdb.Bar.fromId(_barId)
+      var array = bar.Foos.map(\f -> f.id)
       Assert.assertEquals(1, array.Count)
       Assert.assertEquals(_fooId, array[0])
   }
 
   @Test
   function testJoinArray() {
-      var foo = test.testdb.Foo.fromID(_fooId)
+      var foo = test.testdb.Foo.fromId(_fooId)
       var array = foo.Bazs.map(\b -> b.id)
       Assert.assertEquals(1, array.Count)
       Assert.assertEquals(_bazId, array[0])
-      var baz = test.testdb.Baz.fromID(_bazId)
+      var baz = test.testdb.Baz.fromId(_bazId)
       var array2 = baz.Foos.map(\f -> f.id)
       Assert.assertEquals(1, array2.Count)
       Assert.assertEquals(_fooId, array2[0])
@@ -382,11 +377,11 @@ class DBTypeInfoTest {
 
   @Test
   function testNamedJoinArray() {
-      var bar = test.testdb.Bar.fromID(_barId)
+      var bar = test.testdb.Bar.fromId(_barId)
       var array = bar.Relatives.map(\b -> b.id)
       Assert.assertEquals(1, array.Count)
       Assert.assertEquals(_barId, array[0])
-      var baz = test.testdb.Baz.fromID(_bazId)
+      var baz = test.testdb.Baz.fromId(_bazId)
       var array2 = baz.Relatives.map(\b -> b.id)
       Assert.assertEquals(1, array2.Count)
       Assert.assertEquals(_bazId, array2[0])
@@ -394,7 +389,7 @@ class DBTypeInfoTest {
 
   @Test
   function testDelete() {
-      test.testdb.Foo.fromID(_fooId).delete()
+      test.testdb.Foo.fromId(_fooId).delete()
       Assert.assertEquals(0, test.testdb.Foo.selectLike(new test.testdb.Foo()).Count)
   }
 
@@ -406,28 +401,28 @@ class DBTypeInfoTest {
       Assert.assertNotNull(newFoo.id)
       Assert.assertEquals(NUM_FOOS + 1, test.testdb.Foo.selectLike(null).Count)
 
-      var newFooRetrieved = test.testdb.Foo.fromID(newFoo.id)
+      var newFooRetrieved = test.testdb.Foo.fromId(newFoo.id)
       Assert.assertEquals("Linus", newFooRetrieved.FirstName)
       Assert.assertEquals("Van Pelt", newFooRetrieved.LastName)
   }
 
   @Test
   function testUpdateRegularColumns() {
-      var foo = test.testdb.Foo.fromID(_fooId)
+      var foo = test.testdb.Foo.fromId(_fooId)
       foo.FirstName = "Leroy"
       foo.update()
 
-      var retrievedFoo = test.testdb.Foo.fromID(_fooId)
+      var retrievedFoo = test.testdb.Foo.fromId(_fooId)
       Assert.assertEquals("Leroy", retrievedFoo.FirstName)
   }
 
   @Test
   function testUpdateTextColumn() {
-      var foo = test.testdb.Foo.fromID(_fooId)
+      var foo = test.testdb.Foo.fromId(_fooId)
       foo.Address = "54321 Centre Ave.\nMiddleton, IA 52341"
       foo.update()
 
-      var retrievedFoo = test.testdb.Foo.fromID(_fooId)
+      var retrievedFoo = test.testdb.Foo.fromId(_fooId)
       Assert.assertEquals("54321 Centre Ave.\nMiddleton, IA 52341", retrievedFoo.Address)
   }
 
@@ -438,7 +433,7 @@ class DBTypeInfoTest {
     newBar.Date = today
     newBar.update()
 
-    var retrievedBar = test.testdb.Bar.fromID(newBar.id)
+    var retrievedBar = test.testdb.Bar.fromId(newBar.id)
     Assert.assertEquals(today, retrievedBar.Date)
   }
 
@@ -447,11 +442,11 @@ class DBTypeInfoTest {
       var newBar = new test.testdb.Bar()
       newBar.update()
 
-      var foo = test.testdb.Foo.fromID(_fooId)
+      var foo = test.testdb.Foo.fromId(_fooId)
       foo.Bar = newBar
       foo.update()
 
-      var retrievedFoo = test.testdb.Foo.fromID(_fooId)
+      var retrievedFoo = test.testdb.Foo.fromId(_fooId)
       Assert.assertEquals(newBar, retrievedFoo.Bar)
   }
 
@@ -459,7 +454,7 @@ class DBTypeInfoTest {
   function testAddJoin() {
       var newBaz = new test.testdb.Baz()
       newBaz.update()
-      var foo = test.testdb.Foo.fromID(_fooId)
+      var foo = test.testdb.Foo.fromId(_fooId)
       foo.Bazs.add(newBaz)
       Assert.assertTrue(foo.Bazs.toList().contains(newBaz))
   }
@@ -487,8 +482,8 @@ class DBTypeInfoTest {
 
   @Test
   function testRemoveJoin() {
-      var foo = test.testdb.Foo.fromID(_fooId)
-      foo.Bazs.remove(test.testdb.Baz.fromID(_bazId))
+      var foo = test.testdb.Foo.fromId(_fooId)
+      foo.Bazs.remove(test.testdb.Baz.fromId(_bazId))
       Assert.assertEquals(0, foo.Bazs.Count)
   }
 
@@ -496,15 +491,15 @@ class DBTypeInfoTest {
   function testAddNamedJoin() {
       var newBaz = new test.testdb.Baz()
       newBaz.update()
-      var bar = test.testdb.Bar.fromID(_barId)
+      var bar = test.testdb.Bar.fromId(_barId)
       bar.Relatives.add(newBaz)
       Assert.assertTrue(bar.Relatives.toList().contains(newBaz))
   }
 
   @Test
   function testRemoveNamedJoin() {
-      var bar = test.testdb.Bar.fromID(_barId)
-      bar.Relatives.remove(test.testdb.Baz.fromID(_bazId))
+      var bar = test.testdb.Bar.fromId(_barId)
+      bar.Relatives.remove(test.testdb.Baz.fromId(_bazId))
       Assert.assertEquals(0, bar.Relatives.Count)
   }
 
@@ -526,7 +521,7 @@ class DBTypeInfoTest {
 
   @Test
   function testTextColumn() {
-      var foo = test.testdb.Foo.fromID(_fooId)
+      var foo = test.testdb.Foo.fromId(_fooId)
       Assert.assertEquals("1234 Main St.\nCentreville, KS 12345", foo.Address)
   }
 
@@ -535,7 +530,7 @@ class DBTypeInfoTest {
       var newFoo = new test.testdb.Foo()
       Assert.assertTrue(newFoo.New)
 
-      var oldFoo = test.testdb.Foo.fromID(_fooId)
+      var oldFoo = test.testdb.Foo.fromId(_fooId)
       Assert.assertFalse(oldFoo.New)
   }
 
@@ -544,29 +539,29 @@ class DBTypeInfoTest {
       var foo = new test.testdb.Foo(){:FirstName = "It's-a", :LastName = "me!!"}
       foo.update()
 
-      var retrievedFoo = test.testdb.Foo.fromID(foo.id)
+      var retrievedFoo = test.testdb.Foo.fromId(foo.id)
       Assert.assertEquals("It's-a", retrievedFoo.FirstName)
   }
 
   @Test
   function testTransactionNoCommit() {
-    var foo = test.testdb.Foo.fromID(_fooId)
+    var foo = test.testdb.Foo.fromId(_fooId)
     using(test.testdb.Transaction.Lock) {
       foo.FirstName = "not committed"
       foo.update()
     }
-    Assert.assertFalse(test.testdb.Foo.fromID(_fooId).FirstName == "not committed")
+    Assert.assertFalse(test.testdb.Foo.fromId(_fooId).FirstName == "not committed")
   }
 
   @Test
   function testTransactionCommit() {
-    var foo = test.testdb.Foo.fromID(_fooId)
+    var foo = test.testdb.Foo.fromId(_fooId)
     using(test.testdb.Transaction.Lock) {
       foo.FirstName = "committed"
       foo.update()
       test.testdb.Transaction.commit()
     }
-    Assert.assertEquals("committed", test.testdb.Foo.fromID(_fooId).FirstName)
+    Assert.assertEquals("committed", test.testdb.Foo.fromId(_fooId).FirstName)
   }
 
 }

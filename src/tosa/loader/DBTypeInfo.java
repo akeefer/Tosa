@@ -1,24 +1,9 @@
 package tosa.loader;
 
-import gw.config.CommonServices;
 import gw.lang.reflect.*;
-import gw.lang.reflect.features.PropertyReference;
-import gw.lang.reflect.java.IJavaType;
-import gw.util.concurrent.LockingLazyVar;
 import tosa.CachedDBObject;
 import tosa.api.*;
-import tosa.api.query.CoreFinder;
 import tosa.dbmd.DBColumnImpl;
-import tosa.impl.query.CoreFinderImpl;
-
-import java.nio.channels.WritableByteChannel;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.

@@ -66,16 +66,4 @@ class DBTypeDelegate {
   static function selectLike(dbType : IDBType, template : IDBObject) : QueryResult<IDBObject> {
     return new CoreFinder(dbType).selectLike(template)
   }
-
-  static function findSorted(dbType : IDBType, template : IDBObject, sortProperty : PropertyReference<IDBObject, Object>, ascending : boolean) : List<IDBObject> {
-    return new CoreFinder(dbType).findSorted(template, sortProperty, ascending)
-  }
-
-  static function findPaged(dbType : IDBType, template : IDBObject, pageSize : int, offset : int) : List<IDBObject> {
-    return new CoreFinder(dbType).findPaged(template, pageSize, offset)
-  }
-
-  static function findSortedPaged(dbType : IDBType, template : IDBObject, sortProperty : PropertyReference<IDBObject, Object>, ascending : boolean, pageSize : int, offset : int) : List<IDBObject> {
-    return new CoreFinder(dbType).findSortedPaged(template, sortProperty, ascending, pageSize, offset)
-  }
 }

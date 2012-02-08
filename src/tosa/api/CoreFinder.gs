@@ -113,18 +113,6 @@ class CoreFinder<T extends IDBObject> {
     return selectEntity(_dbType.Name + ".selectAll()", sql, {}) as QueryResult<T>
   }
 
-  function findSorted(template : T, sortProperty : PropertyReference<IDBObject, Object>, ascending : boolean) : List<T> {
-    return _dbType.Finder.findSorted(template, sortProperty, ascending) as List<T>
-  }
-
-  function findPaged(template : T, pageSize : int, offset : int) : List<T> {
-    return _dbType.Finder.findPaged(template, pageSize, offset) as List<T>
-  }
-
-  function findSortedPaged(template : IDBObject, sortProperty : PropertyReference<IDBObject, Object>, ascending : boolean, pageSize : int, offset : int) : List<IDBObject> {
-    return _dbType.Finder.findSortedPaged(template, sortProperty, ascending, pageSize, offset)
-  }
-
   // ---------------------- Private Helper Methods ------------------------------------
 
   private static function subIfNecessary(sql : String, prefix : String, params : Map<String, Object>) : SqlAndParams {

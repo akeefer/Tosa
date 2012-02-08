@@ -4,8 +4,6 @@ import gw.lang.reflect.*;
 import gw.util.concurrent.LockingLazyVar;
 import tosa.api.IDBObject;
 import tosa.api.IDBTable;
-import tosa.api.query.CoreFinder;
-import tosa.impl.query.CoreFinderImpl;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,7 +20,6 @@ public class DBType extends TypeBase implements IDBType {
   private DBTypeLoader _typeLoader;
   private LockingLazyVar<DBTypeInfo> _typeInfo;
   private IDBTable _table;
-  private CoreFinder _finder;
 
   public DBType(DBTypeLoader dbTypeLoader, IDBTable table) {
     _typeLoader = dbTypeLoader;
@@ -33,7 +30,6 @@ public class DBType extends TypeBase implements IDBType {
         return new DBTypeInfo(getTypeReference());
       }
     };
-    _finder = new CoreFinderImpl<IDBObject>(getTypeReference());
   }
 
   public IDBType getTypeReference() {
@@ -77,10 +73,6 @@ public class DBType extends TypeBase implements IDBType {
   @Override
   public ITypeInfo getTypeInfo() {
     return _typeInfo.get();
-  }
-
-  public CoreFinder getFinder() {
-    return _finder;
   }
 
 }
