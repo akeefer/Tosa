@@ -27,6 +27,15 @@ public interface IDBTable {
   String getName();
 
   /**
+   * Returns the name of this table, surrounded by quotes if the original table name
+   * in the DDL file was specified with quotes.
+   *
+   * @return the name of this table, surrounded by quotes if that's how it was specified
+   *         in the DDL file
+   */
+  String getPossiblyQuotedName();
+
+  /**
    * Returns the IDBColumn with the given case-sensitive name, if any such column exists on this table.
    * The name is considered to be case-sensitive.
    *

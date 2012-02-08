@@ -43,10 +43,9 @@ public class SqlStringSubstituter {
       Object value = _tokenValues.get(token);
 
       if (value instanceof IDBTable) {
-        // TODO - AHK - Quoting
-        return '"' + ((IDBTable) value).getName() + '"';
+        return ((IDBTable) value).getPossiblyQuotedName();
       } else if (value instanceof IDBColumn) {
-        return '"' + ((IDBColumn) value).getName() + '"';
+        return ((IDBColumn) value).getPossiblyQuotedName();
       } else {
         _paramValues.add(value);
         return "?";

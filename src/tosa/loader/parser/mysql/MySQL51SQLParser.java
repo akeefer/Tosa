@@ -129,7 +129,7 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
       accept(TEMPORARY); // Discard; we don't care
       if(accept(TABLE)) {
         accept(IF, NOT, EXISTS);
-        String tableName = stripQuotes(consumeToken());
+        String tableName = consumeToken();
         List<ColumnData> columns = null;
         if (accept(LIKE)) {
           String likeTableName = consumeToken();
@@ -345,7 +345,6 @@ CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
     // Note:  In the syntax defined in the MySQL docs they don't include the name as part of the column_definition
     // production, but I'm moving it in there for the sake of sanity
     String name = consumeToken();
-    name = stripQuotes(name);
     DBColumnTypeImpl columnType = parseDataType();
     while (parseColumnOption()) {
       // Keep looping to consume all the options

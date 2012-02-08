@@ -17,6 +17,7 @@ uses gw.lang.reflect.TypeSystem
 uses tosa.api.EntityCollection
 uses tosa.api.QueryResult
 uses tosa.impl.md.DatabaseImplSource
+uses gw.lang.reflect.IType
 
 class DBTypeInfoTest {
 
@@ -35,19 +36,19 @@ class DBTypeInfoTest {
   }
 
   private function deleteAllData() {
-    clearTable("SelfJoins_join_Baz_Baz")
-    clearTable("Relatives_join_Bar_Baz")
-    clearTable("join_Foo_Baz")
-    clearTable("Baz")
-    clearTable("Foo")
-    clearTable("SortPage")
+    clearTable("\"SelfJoins_join_Baz_Baz\"")
+    clearTable("\"Relatives_join_Bar_Baz\"")
+    clearTable("\"join_Foo_Baz\"")
+    clearTable("\"Baz\"")
+    clearTable("\"Foo\"")
+    clearTable("\"SortPage\"")
     clearTable("Bar")
   }
 
   private function clearTable(tableName : String) {
     var database = DatabaseImplSource.getInstance().getDatabase( "test.testdb" )
     var connection = database.Connection.connect()
-    connection.createStatement().executeUpdate( "DELETE FROM \"${tableName}\"" )
+    connection.createStatement().executeUpdate( "DELETE FROM ${tableName}" )
     connection.close()
   }
 

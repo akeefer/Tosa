@@ -55,6 +55,11 @@ public class DBColumnImpl implements IDBColumn {
   }
 
   @Override
+  public String getPossiblyQuotedName() {
+      return _columnData.getPossiblyQuotedName();
+  }
+
+    @Override
   public boolean isFK() {
     return _isFK;
   }

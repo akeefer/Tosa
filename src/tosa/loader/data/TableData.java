@@ -13,17 +13,23 @@ import java.util.List;
  */
 public class TableData {
   private final String _name;
+  private final String _possiblyQuotedName;
   private final List<ColumnData> _columns;
   private final CreateTableStatement _originalDefinition;
 
-  public TableData(String name, List<ColumnData> columns, CreateTableStatement originalDefinition) {
-    _name = name;
+  public TableData(String possiblyQuotedName, List<ColumnData> columns, CreateTableStatement originalDefinition) {
+    _possiblyQuotedName = possiblyQuotedName;
+    _name = stripQuotes(possiblyQuotedName);
     _columns = columns;
     _originalDefinition = originalDefinition;
   }
 
   public String getName() {
     return _name;
+  }
+
+  public String getPossiblyQuotedName() {
+    return _possiblyQuotedName;
   }
 
   public List<ColumnData> getColumns() {
@@ -41,5 +47,15 @@ public class TableData {
 
   public CreateTableStatement getOriginalDefinition() {
     return _originalDefinition;
+  }
+
+  private String stripQuotes(String str) {
+    if (str.startsWith("\"")) {
+      str = str.substring(1);
+    }
+    if (str.endsWith("\"")) {
+      str = str.substring(0, str.length() - 1);
+    }
+    return str;
   }
 }

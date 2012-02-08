@@ -38,7 +38,7 @@ public class NewMySQL51Parser implements ISQLParser, SQLParserConstants {
   }
 
   private TableData transformCreateTableStatement(CreateTableStatement statement) {
-    return new TableData(stripQuotes(statement.getTableName().getValue()),
+    return new TableData(statement.getTableName().getValue(),
         transformColumnDefinitions(statement.getColumnDefinitions()),
         statement);
   }
@@ -52,7 +52,7 @@ public class NewMySQL51Parser implements ISQLParser, SQLParserConstants {
   }
 
   private ColumnData transformColumnDefinition(ColumnDefinition columnDefinition) {
-    return new ColumnData(stripQuotes(columnDefinition.getName().getValue()),
+    return new ColumnData(columnDefinition.getName().getValue(),
         transformDataType(columnDefinition.getColumnDataType()),
         columnDefinition);
   }

@@ -103,9 +103,9 @@ public class SimpleSqlBuilder {
       }
       return values.toString();
     } else if (value instanceof IDBColumn) {
-      return "\"" + ((IDBColumn) value).getName() + "\"";
+      return ((IDBColumn) value).getPossiblyQuotedName();
     } else if (value instanceof IDBTable) {
-      return "\"" + ((IDBTable) value).getName() + "\"";
+      return ((IDBTable) value).getPossiblyQuotedName();
     } else {
       return value.toString();
     }

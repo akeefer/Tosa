@@ -1,7 +1,7 @@
-CREATE TABLE "Bar"(
+CREATE TABLE Bar(
     "id" BIGINT PRIMARY KEY AUTO_INCREMENT,
-    "Date" DATE,
-    "Misc" VARCHAR(50)
+    Date DATE,
+    Misc VARCHAR(50)
 );
 
 CREATE TABLE "SortPage"(

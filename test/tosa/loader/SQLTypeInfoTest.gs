@@ -24,17 +24,17 @@ class SQLTypeInfoTest {
 
   private function deleteAllData() {
     clearTable("Bar")
-    clearTable("Foo")
-    clearTable("ForOrderByTests")
-    clearTable("ForGroupByTests")
-    clearTable("ForNumericTests")
+    clearTable("\"Foo\"")
+    clearTable("\"ForOrderByTests\"")
+    clearTable("\"ForGroupByTests\"")
+    clearTable("\"ForNumericTests\"")
   }
 
   private function clearTable(tableName : String) {
     print("Clearing table ${tableName}")
     var dbTypeData = DatabaseImplSource.getInstance().getDatabase( "test.testdb" )
     var connection = dbTypeData.Connection.connect()
-    connection.createStatement().executeUpdate( "DELETE FROM \"${tableName}\"" )
+    connection.createStatement().executeUpdate( "DELETE FROM ${tableName}" )
     connection.close()
   }
 

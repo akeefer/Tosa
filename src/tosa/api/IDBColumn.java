@@ -22,6 +22,15 @@ public interface IDBColumn {
    */
   String getName();
 
+    /**
+     * Returns the name of this column, surrounded by quotation marks if the
+     * original DDL file defined this column name using quotation marks
+     *
+     * @return the name of the column, with quotation marks surrounding it if
+     *         it was specified that way in the DDL file
+     */
+  String getPossiblyQuotedName();
+
   /**
    * Indicates whether or not this column represents a foreign key to another table.
    *

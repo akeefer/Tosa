@@ -58,6 +58,11 @@ public class DBTableImpl implements IDBTable {
   }
 
   @Override
+  public String getPossiblyQuotedName() {
+    return _tableData.getPossiblyQuotedName();
+  }
+
+  @Override
   public IDatabase getDatabase() {
     return _database;
   }

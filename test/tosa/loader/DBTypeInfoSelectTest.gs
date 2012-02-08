@@ -37,15 +37,16 @@ class DBTypeInfoSelectTest {
     // clearTable("Relatives_join_Bar_Baz")
     // clearTable("join_Foo_Baz")
     // clearTable("Baz")
-    clearTable("Foo")
+    clearTable(Foo)
     // clearTable("SortPage")
-    clearTable("Bar")
+    clearTable(Bar)
   }
 
-  private function clearTable(tableName : String) {
+  private function clearTable(type : IType) {
     var database = DatabaseImplSource.getInstance().getDatabase( "test.testdb" )
     var connection = database.Connection.connect()
-    connection.createStatement().executeUpdate( "DELETE FROM \"${tableName}\"" )
+    var tableName = (type as IDBType).Table.PossiblyQuotedName
+    connection.createStatement().executeUpdate( "DELETE FROM ${tableName}" )
     connection.close()
   }
 
@@ -94,7 +95,7 @@ class DBTypeInfoSelectTest {
   function testSelectAllBarsReturnsAllBars() {
     var bar = createBar("4/22/2009", "misc")
 
-    var result = Bar.select("SELECT * FROM \"Bar\"")
+    var result = Bar.select("SELECT * FROM Bar")
     Assert.assertEquals(1, result.Count)
     Assert.assertEquals(bar.Id, result.get(0).Id)
     Assert.assertEquals("misc", result.get(0).Misc)
@@ -105,7 +106,7 @@ class DBTypeInfoSelectTest {
   function testSelectThatMatchesNothingReturnsEmptyQueryResult() {
     var bar = createBar("4/22/2009", "misc")
 
-    var result = Bar.select("SELECT * FROM \"Bar\" WHERE \"Misc\" = 'nosuchvalue'")
+    var result = Bar.select("SELECT * FROM Bar WHERE Misc = 'nosuchvalue'")
     Assert.assertEquals(0, result.Count)
   }
 
@@ -114,7 +115,7 @@ class DBTypeInfoSelectTest {
     var bar = createBar("4/22/2009", "misc")
     var bar2 = createBar("4/23/2009", "other")
 
-    var result = Bar.select("SELECT * FROM \"Bar\" WHERE \"Misc\" = :arg", {"arg" -> "misc"})
+    var result = Bar.select("SELECT * FROM Bar WHERE Misc = :arg", {"arg" -> "misc"})
     Assert.assertEquals(1, result.Count)
     assertMatch(bar, result.get(0))
   }
@@ -124,7 +125,7 @@ class DBTypeInfoSelectTest {
     var bar = createBar("4/22/2009", "misc")
     var bar2 = createBar("4/23/2009", "other")
 
-    var result = Bar.select("SELECT * FROM \"Bar\" WHERE \"Misc\" = :arg OR \"Misc\" = :arg2", {"arg" -> "nothing", "arg2" -> "misc"})
+    var result = Bar.select("SELECT * FROM Bar WHERE Misc = :arg OR Misc = :arg2", {"arg" -> "nothing", "arg2" -> "misc"})
     Assert.assertEquals(1, result.Count)
     assertMatch(bar, result.get(0))
   }
@@ -134,7 +135,7 @@ class DBTypeInfoSelectTest {
     var bar = createBar("4/22/2009", "misc")
     var bar2 = createBar("4/23/2009", "other")
 
-    var result = Bar.select("SELECT * FROM \"Bar\" WHERE \"Misc\" = :arg OR \"Misc\" = :arg2", {"arg" -> "other", "arg2" -> "misc"})
+    var result = Bar.select("SELECT * FROM Bar WHERE Misc = :arg OR Misc = :arg2", {"arg" -> "other", "arg2" -> "misc"})
     Assert.assertEquals(2, result.Count)
     if (result.get(0).Id == bar.Id) {
       assertMatch(bar, result.get(0))
@@ -155,7 +156,7 @@ class DBTypeInfoSelectTest {
     var foo2 = new Foo(){:Bar = bar2, :FirstName = "Alice"}
     foo2.update()
 
-    var result = Bar.select("SELECT * FROM \"Bar\" INNER JOIN \"Foo\" ON \"Foo\".\"Bar_id\" = \"Bar\".\"id\" WHERE \"Foo\".\"FirstName\" = :arg", {"arg" -> "Bob"})
+    var result = Bar.select("SELECT * FROM Bar INNER JOIN \"Foo\" ON \"Foo\".\"Bar_id\" = Bar.\"id\" WHERE \"Foo\".\"FirstName\" = :arg", {"arg" -> "Bob"})
     Assert.assertEquals(1, result.Count)
     assertMatch(bar, result.get(0))
   }
@@ -274,7 +275,7 @@ class DBTypeInfoSelectTest {
   function testSelectWhereThatMatchesNothingReturnsEmptyQueryResult() {
     var bar = createBar("4/22/2009", "misc")
 
-    var result = Bar.selectWhere("\"Misc\" = 'nosuchvalue'")
+    var result = Bar.selectWhere("Misc = 'nosuchvalue'")
     Assert.assertEquals(0, result.Count)
   }
 
@@ -283,7 +284,7 @@ class DBTypeInfoSelectTest {
     var bar = createBar("4/22/2009", "misc")
     var bar2 = createBar("4/23/2009", "other")
 
-    var result = Bar.selectWhere("\"Misc\" = :arg", {"arg" -> "misc"})
+    var result = Bar.selectWhere("Misc = :arg", {"arg" -> "misc"})
     Assert.assertEquals(1, result.Count)
     assertMatch(bar, result.get(0))
   }
@@ -293,7 +294,7 @@ class DBTypeInfoSelectTest {
     var bar = createBar("4/22/2009", "misc")
     var bar2 = createBar("4/23/2009", "other")
 
-    var result = Bar.selectWhere("\"Misc\" = :arg OR \"Misc\" = :arg2", {"arg" -> "nothing", "arg2" -> "misc"})
+    var result = Bar.selectWhere("Misc = :arg OR Misc = :arg2", {"arg" -> "nothing", "arg2" -> "misc"})
     Assert.assertEquals(1, result.Count)
     assertMatch(bar, result.get(0))
   }
@@ -303,7 +304,7 @@ class DBTypeInfoSelectTest {
     var bar = createBar("4/22/2009", "misc")
     var bar2 = createBar("4/23/2009", "other")
 
-    var result = Bar.selectWhere("\"Misc\" = :arg OR \"Misc\" = :arg2", {"arg" -> "other", "arg2" -> "misc"})
+    var result = Bar.selectWhere("Misc = :arg OR Misc = :arg2", {"arg" -> "other", "arg2" -> "misc"})
     Assert.assertEquals(2, result.Count)
     if (result.get(0).Id == bar.Id) {
       assertMatch(bar, result.get(0))
@@ -391,27 +392,27 @@ class DBTypeInfoSelectTest {
   function testCountWithNoWhereClauseCountsAllBars() {
     var bar = createBar("4/22/2009", "misc")
     var bar2 = createBar("4/23/2009", "other")
-    Assert.assertEquals(2, Bar.count("SELECT count(*) as count FROM \"Bar\""))
+    Assert.assertEquals(2, Bar.count("SELECT count(*) as count FROM Bar"))
   }
 
   @Test
   function testCountThatMatchesNothingReturnsZero() {
     var bar = createBar("4/22/2009", "misc")
-    Assert.assertEquals(0, Bar.count("SELECT count(*) as count FROM \"Bar\" WHERE \"Misc\" = 'nosuchvalue'"))
+    Assert.assertEquals(0, Bar.count("SELECT count(*) as count FROM Bar WHERE Misc = 'nosuchvalue'"))
   }
 
   @Test
   function testCountWithOneParam() {
     var bar = createBar("4/22/2009", "misc")
     var bar2 = createBar("4/23/2009", "other")
-    Assert.assertEquals(1, Bar.count("SELECT count(*) as count FROM \"Bar\" WHERE \"Misc\" = :arg", {"arg" -> "misc"}))
+    Assert.assertEquals(1, Bar.count("SELECT count(*) as count FROM Bar WHERE Misc = :arg", {"arg" -> "misc"}))
   }
 
   @Test
   function testCountWithTwoParams() {
     var bar = createBar("4/22/2009", "misc")
     var bar2 = createBar("4/23/2009", "other")
-    Assert.assertEquals(1, Bar.count("SELECT count(*) as count FROM \"Bar\" WHERE \"Misc\" = :arg OR \"Misc\" = :arg2", {"arg" -> "nothing", "arg2" -> "misc"}))
+    Assert.assertEquals(1, Bar.count("SELECT count(*) as count FROM Bar WHERE Misc = :arg OR Misc = :arg2", {"arg" -> "nothing", "arg2" -> "misc"}))
   }
 
   @Test
@@ -424,7 +425,7 @@ class DBTypeInfoSelectTest {
     var foo2 = new Foo(){:Bar = bar2, :FirstName = "Alice"}
     foo2.update()
 
-    var result = Bar.count("SELECT count(*) as count FROM \"Bar\" INNER JOIN \"Foo\" ON \"Foo\".\"Bar_id\" = \"Bar\".\"id\" WHERE \"Foo\".\"FirstName\" = :arg", {"arg" -> "Bob"})
+    var result = Bar.count("SELECT count(*) as count FROM Bar INNER JOIN \"Foo\" ON \"Foo\".\"Bar_id\" = Bar.\"id\" WHERE \"Foo\".\"FirstName\" = :arg", {"arg" -> "Bob"})
     Assert.assertEquals(1, result)
   }
 
@@ -507,21 +508,21 @@ class DBTypeInfoSelectTest {
   @Test
   function testCountWhereThatMatchesNothingReturnsZero() {
     var bar = createBar("4/22/2009", "misc")
-    Assert.assertEquals(0, Bar.countWhere("\"Misc\" = 'nosuchvalue'"))
+    Assert.assertEquals(0, Bar.countWhere("Misc = 'nosuchvalue'"))
   }
 
   @Test
   function testCountWhereWithOneParam() {
     var bar = createBar("4/22/2009", "misc")
     var bar2 = createBar("4/23/2009", "other")
-    Assert.assertEquals(1, Bar.countWhere("\"Misc\" = :arg", {"arg" -> "misc"}))
+    Assert.assertEquals(1, Bar.countWhere("Misc = :arg", {"arg" -> "misc"}))
   }
 
   @Test
   function testCountWhereWithTwoParams() {
     var bar = createBar("4/22/2009", "misc")
     var bar2 = createBar("4/23/2009", "other")
-    Assert.assertEquals(1, Bar.countWhere("\"Misc\" = :arg OR \"Misc\" = :arg2", {"arg" -> "nothing", "arg2" -> "misc"}))
+    Assert.assertEquals(1, Bar.countWhere("Misc = :arg OR Misc = :arg2", {"arg" -> "nothing", "arg2" -> "misc"}))
   }
 
   @Test
