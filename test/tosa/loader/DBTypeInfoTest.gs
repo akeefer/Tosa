@@ -36,12 +36,12 @@ class DBTypeInfoTest {
   }
 
   private function deleteAllData() {
-    clearTable("\"SelfJoins_join_Baz_Baz\"")
-    clearTable("\"Relatives_join_Bar_Baz\"")
+    clearTable("SelfJoins_join_Baz_Baz")
+    clearTable("Relatives_join_Bar_Baz")
     clearTable("\"join_Foo_Baz\"")
     clearTable("\"Baz\"")
-    clearTable("\"Foo\"")
-    clearTable("\"SortPage\"")
+    clearTable("Foo")
+    clearTable("SortPage")
     clearTable("Bar")
   }
 
@@ -247,19 +247,19 @@ class DBTypeInfoTest {
 
   @Test
   function testSelectMethod() {
-      var foos = test.testdb.Foo.select("SELECT * FROM \"Foo\" where \"FirstName\"='Charlie'").toList()
+      var foos = test.testdb.Foo.select("SELECT * FROM Foo where FirstName='Charlie'").toList()
       Assert.assertEquals(1, foos.Count)
       var foo = foos[0]
       Assert.assertEquals("Charlie", foo.FirstName)
       Assert.assertEquals("Brown", foo.LastName)
 
-      var noFoo = test.testdb.Foo.select("SELECT * FROM \"Foo\" where \"FirstName\"='Rupert'")
+      var noFoo = test.testdb.Foo.select("SELECT * FROM Foo where FirstName='Rupert'")
       Assert.assertEquals(0, noFoo.Count)
   }
 
   @Test
   function testSelectWithJoin() {
-      var foos = test.testdb.Foo.select("SELECT * FROM \"Foo\" inner join \"SortPage\" on \"SortPage\".\"id\" = \"Foo\".\"Named_SortPage_id\" where \"SortPage\".\"Number\" = 1").toList()
+      var foos = test.testdb.Foo.select("SELECT * FROM Foo inner join SortPage on SortPage.id = Foo.Named_SortPage_id where SortPage.Number = 1").toList()
       Assert.assertEquals(1, foos.Count)
       var foo = foos[0]
       Assert.assertEquals("Charlie", foo.FirstName)
@@ -294,7 +294,7 @@ class DBTypeInfoTest {
 
   @Test
   function testSelectAllWithOrderBySql() {
-    var sorted = test.testdb.SortPage.selectAll().orderBySql("\"Number\" ASC")
+    var sorted = test.testdb.SortPage.selectAll().orderBySql("Number ASC")
     sorted.eachWithIndex(\s, i -> {
       Assert.assertTrue(i == 0 or s.Number >= sorted.get(i - 1).Number)
     })
@@ -330,7 +330,7 @@ class DBTypeInfoTest {
 
   @Test
   function testCount() {
-      Assert.assertEquals(8, test.testdb.SortPage.count("SELECT count(*) as count from \"SortPage\" where \"Number\" < 3"))
+      Assert.assertEquals(8, test.testdb.SortPage.count("SELECT count(*) as count from SortPage where Number < 3"))
   }
 
   @Test

@@ -7,6 +7,7 @@ import gw.lang.reflect.ITypeInfo;
 import gw.lang.reflect.PropertyInfoBase;
 import gw.lang.reflect.TypeSystem;
 import tosa.CachedDBObject;
+import tosa.api.IDBColumn;
 import tosa.api.IDBObject;
 import tosa.dbmd.DBColumnImpl;
 import tosa.db.execution.QueryExecutor;
@@ -88,6 +89,10 @@ public class DBPropertyInfo extends PropertyInfoBase {
 
   public String getColumnName() {
     return _column.getName();
+  }
+
+  public IDBColumn getColumn() {
+    return _column;
   }
 
   private class DBPropertyAccessor implements IPropertyAccessor {

@@ -16,6 +16,7 @@ uses java.lang.System
 uses tosa.dbmd.PreparedStatementParameterImpl
 uses java.sql.Types
 uses java.util.NoSuchElementException
+uses tosa.api.IDBColumn
 
 /**
  * Created by IntelliJ IDEA.
@@ -195,7 +196,8 @@ public class QueryResultImpl<T> implements QueryResult<T> {
         return _sql
       } else {
         // TODO - AHK - Quoting
-        return "\"" + _sortColumn.PropertyInfo["ColumnName"] + "\"" + (_direction == ASC ? " ASC" : " DESC")
+        var column = _sortColumn.PropertyInfo["Column"] as IDBColumn
+        return column.PossiblyQuotedName + (_direction == ASC ? " ASC" : " DESC")
       }
     }
   }

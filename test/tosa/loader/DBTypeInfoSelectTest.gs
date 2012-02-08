@@ -156,7 +156,7 @@ class DBTypeInfoSelectTest {
     var foo2 = new Foo(){:Bar = bar2, :FirstName = "Alice"}
     foo2.update()
 
-    var result = Bar.select("SELECT * FROM Bar INNER JOIN \"Foo\" ON \"Foo\".\"Bar_id\" = Bar.\"id\" WHERE \"Foo\".\"FirstName\" = :arg", {"arg" -> "Bob"})
+    var result = Bar.select("SELECT * FROM Bar INNER JOIN Foo ON Foo.Bar_id = Bar.id WHERE Foo.FirstName = :arg", {"arg" -> "Bob"})
     Assert.assertEquals(1, result.Count)
     assertMatch(bar, result.get(0))
   }
@@ -166,7 +166,7 @@ class DBTypeInfoSelectTest {
     var foo = createFoo("Bob", "Bob")
     var foo2 = createFoo("Bob", "Other")
 
-    var result = Foo.select("SELECT * FROM \"Foo\" WHERE \"FirstName\" = :arg AND \"LastName\" = :arg", {"arg" -> "Bob"})
+    var result = Foo.select("SELECT * FROM Foo WHERE FirstName = :arg AND LastName = :arg", {"arg" -> "Bob"})
     Assert.assertEquals(1, result.Count)
     assertMatch(foo, result.get(0))
   }
@@ -176,7 +176,7 @@ class DBTypeInfoSelectTest {
     var foo = createFoo("Bob", "Bob")
     var foo2 = createFoo("Bob", "Other")
 
-    var result = Foo.select("SELECT * FROM \"Foo\" WHERE \"FirstName\" = :arg AND \"LastName\" = :arg", {"arg" -> "Bob", "arg2" -> "Other", "arg3" -> "Hrm"})
+    var result = Foo.select("SELECT * FROM Foo WHERE FirstName = :arg AND LastName = :arg", {"arg" -> "Bob", "arg2" -> "Other", "arg3" -> "Hrm"})
     Assert.assertEquals(1, result.Count)
     assertMatch(foo, result.get(0))
   }
@@ -186,7 +186,7 @@ class DBTypeInfoSelectTest {
     var foo = createFoo("Bob", "Bob")
     var foo2 = createFoo("Bob", "Other")
 
-    var result = Foo.select("SELECT * FROM \"Foo\" WHERE \"FirstName\" = ':arg' AND \"LastName\" = ':arg'")
+    var result = Foo.select("SELECT * FROM Foo WHERE FirstName = ':arg' AND LastName = ':arg'")
     Assert.assertEquals(0, result.Count)
   }
 
@@ -196,7 +196,7 @@ class DBTypeInfoSelectTest {
     var foo2 = createFoo("Bob", "Other")
 
     try {
-      var result = Foo.select("SELECT * FROM \"Foo\" WHERE \"FirstName\" = :arg AND \"LastName\" = :arg", {"arrg" -> "Bob"})
+      var result = Foo.select("SELECT * FROM Foo WHERE FirstName = :arg AND LastName = :arg", {"arrg" -> "Bob"})
       Assert.fail("Expected an IllegalArgumentException")
     } catch (e : IllegalArgumentException) {
       Assert.assertEquals("No value for the token arg was found in the map", e.Message)
@@ -208,16 +208,16 @@ class DBTypeInfoSelectTest {
     var foo = createFoo("Bob", "Bob")
     var foo2 = createFoo("Bob", "Other")
 
-    var result = Foo.select("SELECT * FROM \"Foo\" WHERE \"FirstName\" = '\\:arg' AND \"LastName\" = :arg", {"arg" -> "Bob"})
+    var result = Foo.select("SELECT * FROM Foo WHERE FirstName = '\\:arg' AND LastName = :arg", {"arg" -> "Bob"})
     Assert.assertEquals(0, result.Count)
   }
 
   @Test
   function testSelectWithStringNotStartingWithSelectStartFromThrowsIllegalArgumentException() {
     try {
-      Foo.select("SELECT id FROM \"Foo\" WHERE \"FirstName\" = 'Bob'")
+      Foo.select("SELECT id FROM Foo WHERE FirstName = 'Bob'")
     } catch (e : IllegalArgumentException) {
-      Assert.assertEquals("The select(String, Map) method must always be called with 'SELECT * FROM' as the start of the statement.  The sql passed in was SELECT id FROM \"Foo\" WHERE \"FirstName\" = 'Bob'", e.Message)
+      Assert.assertEquals("The select(String, Map) method must always be called with 'SELECT * FROM' as the start of the statement.  The sql passed in was SELECT id FROM Foo WHERE FirstName = 'Bob'", e.Message)
     }
   }
 
@@ -226,7 +226,7 @@ class DBTypeInfoSelectTest {
     var foo = createFoo("Bob", "Bob")
     var foo2 = createFoo("Bob", "Other")
 
-    var result = Foo.select("Select * From \"Foo\" WHERE \"FirstName\" = :arg AND \"LastName\" = :arg", {"arg" -> "Bob", "arg2" -> "Other", "arg3" -> "Hrm"})
+    var result = Foo.select("Select * From Foo WHERE FirstName = :arg AND LastName = :arg", {"arg" -> "Bob", "arg2" -> "Other", "arg3" -> "Hrm"})
     assertMatch(foo, result.get(0))
   }
 
@@ -320,7 +320,7 @@ class DBTypeInfoSelectTest {
     var foo = createFoo("Bob", "Bob")
     var foo2 = createFoo("Bob", "Other")
 
-    var result = Foo.selectWhere("\"FirstName\" = :arg AND \"LastName\" = :arg", {"arg" -> "Bob"})
+    var result = Foo.selectWhere("FirstName = :arg AND LastName = :arg", {"arg" -> "Bob"})
     Assert.assertEquals(1, result.Count)
     assertMatch(foo, result.get(0))
   }
@@ -330,7 +330,7 @@ class DBTypeInfoSelectTest {
     var foo = createFoo("Bob", "Bob")
     var foo2 = createFoo("Bob", "Other")
 
-    var result = Foo.selectWhere("\"FirstName\" = :arg AND \"LastName\" = :arg", {"arg" -> "Bob", "arg2" -> "Other", "arg3" -> "Hrm"})
+    var result = Foo.selectWhere("FirstName = :arg AND LastName = :arg", {"arg" -> "Bob", "arg2" -> "Other", "arg3" -> "Hrm"})
     Assert.assertEquals(1, result.Count)
     assertMatch(foo, result.get(0))
   }
@@ -340,7 +340,7 @@ class DBTypeInfoSelectTest {
     var foo = createFoo("Bob", "Bob")
     var foo2 = createFoo("Bob", "Other")
 
-    var result = Foo.selectWhere("\"FirstName\" = ':arg' AND \"LastName\" = ':arg'")
+    var result = Foo.selectWhere("FirstName = ':arg' AND LastName = ':arg'")
     Assert.assertEquals(0, result.Count)
   }
 
@@ -350,7 +350,7 @@ class DBTypeInfoSelectTest {
     var foo2 = createFoo("Bob", "Other")
 
     try {
-      var result = Foo.selectWhere("\"FirstName\" = :arg AND \"LastName\" = :arg", {"arrg" -> "Bob"})
+      var result = Foo.selectWhere("FirstName = :arg AND LastName = :arg", {"arrg" -> "Bob"})
       Assert.fail("Expected an IllegalArgumentException")
     } catch (e : IllegalArgumentException) {
       Assert.assertEquals("No value for the token arg was found in the map", e.Message)
@@ -362,20 +362,20 @@ class DBTypeInfoSelectTest {
     var foo = createFoo("Bob", "Bob")
     var foo2 = createFoo("Bob", "Other")
 
-    var result = Foo.selectWhere("\"FirstName\" = '\\:arg' AND \"LastName\" = :arg", {"arg" -> "Bob"})
+    var result = Foo.selectWhere("FirstName = '\\:arg' AND LastName = :arg", {"arg" -> "Bob"})
     Assert.assertEquals(0, result.Count)
   }
 
   @Test
   function testSelectWhereStartingWithSelectThrowsIllegalArgumentException() {
-    assertException(\ -> Foo.selectWhere("SELECT * FROM \"Foo\" WHERE \"FirstName\" = 'Bob'"),
+    assertException(\ -> Foo.selectWhere("SELECT * FROM Foo WHERE FirstName = 'Bob'"),
         IllegalArgumentException,
         "The selectWhere(String, Map) method should only be called with the WHERE clause of a query.  To specify the full SQL for the query, use the select(String, Map) method instead.")
   }
 
   @Test
   function testSelectWhereStartingWithSelectInAlternateCaseThrowsIllegalArgumentException() {
-    assertException(\ -> Foo.selectWhere("Select * from \"Foo\" WHERE \"FirstName\" = 'Bob'"),
+    assertException(\ -> Foo.selectWhere("Select * from Foo WHERE FirstName = 'Bob'"),
         IllegalArgumentException,
         "The selectWhere(String, Map) method should only be called with the WHERE clause of a query.  To specify the full SQL for the query, use the select(String, Map) method instead.")
   }
@@ -425,7 +425,7 @@ class DBTypeInfoSelectTest {
     var foo2 = new Foo(){:Bar = bar2, :FirstName = "Alice"}
     foo2.update()
 
-    var result = Bar.count("SELECT count(*) as count FROM Bar INNER JOIN \"Foo\" ON \"Foo\".\"Bar_id\" = Bar.\"id\" WHERE \"Foo\".\"FirstName\" = :arg", {"arg" -> "Bob"})
+    var result = Bar.count("SELECT count(*) as count FROM Bar INNER JOIN Foo ON Foo.Bar_id = Bar.id WHERE Foo.FirstName = :arg", {"arg" -> "Bob"})
     Assert.assertEquals(1, result)
   }
 
@@ -434,7 +434,7 @@ class DBTypeInfoSelectTest {
     var foo = createFoo("Bob", "Bob")
     var foo2 = createFoo("Bob", "Other")
 
-    var result = Foo.count("SELECT count(*) as count FROM \"Foo\" WHERE \"FirstName\" = :arg AND \"LastName\" = :arg", {"arg" -> "Bob"})
+    var result = Foo.count("SELECT count(*) as count FROM Foo WHERE FirstName = :arg AND LastName = :arg", {"arg" -> "Bob"})
     Assert.assertEquals(1, result)
   }
 
@@ -443,7 +443,7 @@ class DBTypeInfoSelectTest {
     var foo = createFoo("Bob", "Bob")
     var foo2 = createFoo("Bob", "Other")
 
-    var result = Foo.count("SELECT count(*) as count FROM \"Foo\" WHERE \"FirstName\" = :arg AND \"LastName\" = :arg", {"arg" -> "Bob", "arg2" -> "Other", "arg3" -> "Hrm"})
+    var result = Foo.count("SELECT count(*) as count FROM Foo WHERE FirstName = :arg AND LastName = :arg", {"arg" -> "Bob", "arg2" -> "Other", "arg3" -> "Hrm"})
     Assert.assertEquals(1, result)
   }
 
@@ -452,7 +452,7 @@ class DBTypeInfoSelectTest {
     var foo = createFoo("Bob", "Bob")
     var foo2 = createFoo("Bob", "Other")
 
-    var result = Foo.count("SELECT count(*) as count FROM \"Foo\" WHERE \"FirstName\" = ':arg' AND \"LastName\" = ':arg'")
+    var result = Foo.count("SELECT count(*) as count FROM Foo WHERE FirstName = ':arg' AND LastName = ':arg'")
     Assert.assertEquals(0, result)
   }
 
@@ -462,7 +462,7 @@ class DBTypeInfoSelectTest {
     var foo2 = createFoo("Bob", "Other")
 
     try {
-      var result = Foo.count("SELECT count(*) as count FROM \"Foo\" WHERE \"FirstName\" = :arg AND \"LastName\" = :arg", {"arrg" -> "Bob"})
+      var result = Foo.count("SELECT count(*) as count FROM Foo WHERE FirstName = :arg AND LastName = :arg", {"arrg" -> "Bob"})
       Assert.fail("Expected an IllegalArgumentException")
     } catch (e : IllegalArgumentException) {
       Assert.assertEquals("No value for the token arg was found in the map", e.Message)
@@ -474,16 +474,16 @@ class DBTypeInfoSelectTest {
     var foo = createFoo("Bob", "Bob")
     var foo2 = createFoo("Bob", "Other")
 
-    var result = Foo.count("SELECT count(*) as count FROM \"Foo\" WHERE \"FirstName\" = '\\:arg' AND \"LastName\" = :arg", {"arg" -> "Bob"})
+    var result = Foo.count("SELECT count(*) as count FROM Foo WHERE FirstName = '\\:arg' AND LastName = :arg", {"arg" -> "Bob"})
     Assert.assertEquals(0, result)
   }
 
   @Test
   function testCountWithStringNotStartingWithSelectCountStarAsCountFromThrowsIllegalArgumentException() {
     try {
-      Foo.count("SELECT id FROM \"Foo\" WHERE \"FirstName\" = 'Bob'")
+      Foo.count("SELECT id FROM Foo WHERE FirstName = 'Bob'")
     } catch (e : IllegalArgumentException) {
-      Assert.assertEquals("The count(String, Map) method must always be called with 'SELECT count(*) as count FROM' as the start of the statement.  The sql passed in was SELECT id FROM \"Foo\" WHERE \"FirstName\" = 'Bob'", e.Message)
+      Assert.assertEquals("The count(String, Map) method must always be called with 'SELECT count(*) as count FROM' as the start of the statement.  The sql passed in was SELECT id FROM Foo WHERE FirstName = 'Bob'", e.Message)
     }
   }
 
@@ -530,7 +530,7 @@ class DBTypeInfoSelectTest {
     var foo = createFoo("Bob", "Bob")
     var foo2 = createFoo("Bob", "Other")
 
-    var result = Foo.countWhere("\"FirstName\" = :arg AND \"LastName\" = :arg", {"arg" -> "Bob"})
+    var result = Foo.countWhere("FirstName = :arg AND LastName = :arg", {"arg" -> "Bob"})
     Assert.assertEquals(1, result)
   }
 
@@ -539,7 +539,7 @@ class DBTypeInfoSelectTest {
     var foo = createFoo("Bob", "Bob")
     var foo2 = createFoo("Bob", "Other")
 
-    var result = Foo.countWhere("\"FirstName\" = :arg AND \"LastName\" = :arg", {"arg" -> "Bob", "arg2" -> "Other", "arg3" -> "Hrm"})
+    var result = Foo.countWhere("FirstName = :arg AND LastName = :arg", {"arg" -> "Bob", "arg2" -> "Other", "arg3" -> "Hrm"})
     Assert.assertEquals(1, result)
   }
 
@@ -548,7 +548,7 @@ class DBTypeInfoSelectTest {
     var foo = createFoo("Bob", "Bob")
     var foo2 = createFoo("Bob", "Other")
 
-    var result = Foo.countWhere("\"FirstName\" = ':arg' AND \"LastName\" = ':arg'")
+    var result = Foo.countWhere("FirstName = ':arg' AND LastName = ':arg'")
     Assert.assertEquals(0, result)
   }
 
@@ -558,7 +558,7 @@ class DBTypeInfoSelectTest {
     var foo2 = createFoo("Bob", "Other")
 
     try {
-      var result = Foo.countWhere("\"FirstName\" = :arg AND \"LastName\" = :arg", {"arrg" -> "Bob"})
+      var result = Foo.countWhere("FirstName = :arg AND LastName = :arg", {"arrg" -> "Bob"})
       Assert.fail("Expected an IllegalArgumentException")
     } catch (e : IllegalArgumentException) {
       Assert.assertEquals("No value for the token arg was found in the map", e.Message)
@@ -570,20 +570,20 @@ class DBTypeInfoSelectTest {
     var foo = createFoo("Bob", "Bob")
     var foo2 = createFoo("Bob", "Other")
 
-    var result = Foo.countWhere("\"FirstName\" = '\\:arg' AND \"LastName\" = :arg", {"arg" -> "Bob"})
+    var result = Foo.countWhere("FirstName = '\\:arg' AND LastName = :arg", {"arg" -> "Bob"})
     Assert.assertEquals(0, result)
   }
 
   @Test
   function testCountWhereWithStringStartingWithSelectThrowsIllegalArgumentException() {
-    assertException(\ -> Foo.countWhere("SELECT count(*) as count FROM \"Foo\" WHERE \"FirstName\" = 'Bob'"),
+    assertException(\ -> Foo.countWhere("SELECT count(*) as count FROM Foo WHERE FirstName = 'Bob'"),
         IllegalArgumentException,
         "The countWhere(String, Map) method should only be called with the WHERE clause of a query.  To specify the full SQL for the query, use the count(String, Map) method instead.")
   }
 
   @Test
   function testCountWhereWithStringStartingWithSelectInAlternateCaseThrowsIllegalArgumentException() {
-    assertException(\ -> Foo.countWhere("select count(*) as count FROM \"Foo\" WHERE \"FirstName\" = 'Bob'"),
+    assertException(\ -> Foo.countWhere("select count(*) as count FROM Foo WHERE FirstName = 'Bob'"),
         IllegalArgumentException,
         "The countWhere(String, Map) method should only be called with the WHERE clause of a query.  To specify the full SQL for the query, use the count(String, Map) method instead.")
   }

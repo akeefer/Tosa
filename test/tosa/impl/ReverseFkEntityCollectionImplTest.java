@@ -486,9 +486,9 @@ public class ReverseFkEntityCollectionImplTest {
   private int countMatchesInDB(IDBObject foo, IDBObject bar) {
     String sql = SimpleSqlBuilder.substitute("SELECT count(*) as count FROM ${fooTable} WHERE ${idColumn} = ${fooId} AND ${barColumn} = ${barId}",
         "fooTable", foo.getDBTable(),
-        "idColumn", "\"id\"",
+        "idColumn", "id",
         "fooId", foo.getId(),
-        "barColumn", "\"Bar_id\"",
+        "barColumn", "Bar_id",
         "barId", bar.getId());
     return new QueryExecutorImpl(getDB()).count("", sql);
   }
