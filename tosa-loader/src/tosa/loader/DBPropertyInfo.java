@@ -6,13 +6,10 @@ import gw.lang.reflect.IType;
 import gw.lang.reflect.ITypeInfo;
 import gw.lang.reflect.PropertyInfoBase;
 import gw.lang.reflect.TypeSystem;
-import tosa.CachedDBObject;
 import tosa.api.IDBColumn;
 import tosa.api.IDBObject;
 import tosa.dbmd.DBColumnImpl;
-import tosa.db.execution.QueryExecutor;
 
-import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 
@@ -99,18 +96,18 @@ public class DBPropertyInfo extends PropertyInfoBase {
     @Override
       public void setValue(Object ctx, Object value) {
         if (_column.isFK()) {
-          ((CachedDBObject) ctx).setFkValue(getColumnName(), (IDBObject) value);
+          ((IDBObject) ctx).setFkValue(getColumnName(), (IDBObject) value);
         } else {
-          ((CachedDBObject) ctx).setColumnValue(getColumnName(), value);
+          ((IDBObject) ctx).setColumnValue(getColumnName(), value);
         }
       }
 
       @Override
       public Object getValue(Object ctx) {
         if (_column.isFK()) {
-          return ((CachedDBObject) ctx).getFkValue(getColumnName());
+          return ((IDBObject) ctx).getFkValue(getColumnName());
         } else {
-          return ((CachedDBObject) ctx).getColumnValue(getColumnName());
+          return ((IDBObject) ctx).getColumnValue(getColumnName());
         }
       }
   }

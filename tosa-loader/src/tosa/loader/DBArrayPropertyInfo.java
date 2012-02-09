@@ -14,16 +14,10 @@ import gw.lang.reflect.IType;
 import gw.lang.reflect.ITypeInfo;
 import gw.lang.reflect.PropertyInfoBase;
 import gw.lang.reflect.TypeSystem;
-import gw.lang.reflect.java.IJavaType;
-import tosa.CachedDBObject;
 import tosa.api.EntityCollection;
 import tosa.api.IDBArray;
-import tosa.api.IDBColumn;
-import tosa.api.IDBTable;
-import tosa.db.execution.QueryExecutor;
+import tosa.api.IDBObject;
 
-import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -78,7 +72,7 @@ public class DBArrayPropertyInfo extends PropertyInfoBase {
   private class DBArrayPropertyAccessor implements IPropertyAccessor {
     @Override
     public Object getValue(Object ctx) {
-      CachedDBObject dbObject = (CachedDBObject) ctx;
+      IDBObject dbObject = (IDBObject) ctx;
       return dbObject.getArray(_dbArray);
     }
 

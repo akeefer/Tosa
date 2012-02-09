@@ -1,25 +1,13 @@
 package tosa.db.execution;
 
-import gw.lang.reflect.IPropertyInfo;
-import gw.lang.reflect.features.PropertyReference;
-import gw.lang.reflect.java.IJavaType;
-import gw.util.GosuStringUtil;
-import org.slf4j.profiler.Profiler;
-import tosa.CachedDBObject;
-import tosa.api.*;
-import tosa.loader.DBPropertyInfo;
-import tosa.loader.DBTypeInfo;
+import gw.lang.reflect.ReflectUtil;
+import tosa.api.IDBColumn;
+import tosa.api.IDBObject;
+import tosa.api.IDBTable;
 import tosa.loader.IDBType;
-import tosa.loader.Util;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.sql.Clob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -32,8 +20,9 @@ public class QueryExecutor {
 
   // TODO - AHK - Kill this/move it somewhere else
 
-  public static CachedDBObject buildObject(IDBType type, ResultSet resultSet) throws SQLException {
-    CachedDBObject obj = new CachedDBObject(type, false);
+  public static IDBObject buildObject(IDBType type, ResultSet resultSet) throws SQLException {
+    // TODO - AHK - This is cleeaarrrlly a hack
+    IDBObject obj = ReflectUtil.construct("tosa.CachedDBObject", type, false);
     IDBTable table = type.getTable();
     for (IDBColumn column : table.getColumns()) {
       Object resultObject = column.getColumnType().readFromResultSet(resultSet, table.getName() + "." + column.getName());

@@ -30,4 +30,6 @@ public interface DBTypeInfoDelegate {
   Object selectWhere(IDBType dbType, String sql, Map<String, Object> params);
   
   Object selectLike(IDBType dbType, IDBObject template);
+  
+  IDBObject newInstance(IDBType dbType, boolean newInstance);
 }

@@ -5,6 +5,7 @@ uses tosa.loader.IDBType
 uses tosa.api.IDBObject
 uses java.util.Map
 uses tosa.api.CoreFinder
+uses tosa.CachedDBObject
 
 /**
  * Created by IntelliJ IDEA.
@@ -51,4 +52,7 @@ class DBTypeInfoDelegateImpl implements DBTypeInfoDelegate {
     return new CoreFinder(dbType).selectLike(template)
   }
 
+  override function newInstance(dbType : IDBType, isNew : boolean) : IDBObject {
+    return new CachedDBObject(dbType, isNew)
+  }
 }

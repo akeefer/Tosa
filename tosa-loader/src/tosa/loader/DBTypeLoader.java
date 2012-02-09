@@ -10,7 +10,7 @@ import gw.lang.reflect.module.IModule;
 import gw.util.GosuClassUtil;
 import gw.util.Pair;
 import gw.util.concurrent.LockingLazyVar;
-import tosa.CachedDBObject;
+import tosa.api.IDBObject;
 import tosa.api.IDBTable;
 import tosa.api.IDatabase;
 import tosa.dbmd.DatabaseImpl;
@@ -18,7 +18,13 @@ import tosa.impl.md.DatabaseImplSource;
 
 import java.io.File;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class DBTypeLoader extends BaseService implements IExtendedTypeLoader {
 
@@ -192,8 +198,8 @@ public class DBTypeLoader extends BaseService implements IExtendedTypeLoader {
   @Override
   public IType getIntrinsicTypeFromObject(Object object) {
     // TODO - AHK - This probably needs to work for the Transaction object as well
-    if (object instanceof CachedDBObject) {
-      CachedDBObject dbObj = (CachedDBObject) object;
+    if (object instanceof IDBObject) {
+      IDBObject dbObj = (IDBObject) object;
       return dbObj.getIntrinsicType();
     } else {
       return null;

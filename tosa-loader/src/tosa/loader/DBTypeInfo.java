@@ -1,11 +1,19 @@
 package tosa.loader;
 
 import gw.internal.gosu.parser.expressions.NullExpression;
-import gw.lang.reflect.*;
+import gw.lang.reflect.ConstructorInfoBuilder;
+import gw.lang.reflect.IConstructorHandler;
+import gw.lang.reflect.IMethodCallHandler;
+import gw.lang.reflect.IPropertyInfo;
+import gw.lang.reflect.IType;
+import gw.lang.reflect.ITypeInfo;
+import gw.lang.reflect.ReflectUtil;
+import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.java.JavaTypes;
 import gw.util.concurrent.LockingLazyVar;
-import tosa.CachedDBObject;
-import tosa.api.*;
+import tosa.api.IDBArray;
+import tosa.api.IDBColumn;
+import tosa.api.IDBObject;
 import tosa.dbmd.DBColumnImpl;
 
 import java.util.Map;
@@ -169,7 +177,7 @@ public class DBTypeInfo extends TosaBaseTypeInfo implements ITypeInfo {
         .withConstructorHandler(new IConstructorHandler() {
           @Override
           public Object newInstance(Object... args) {
-            return new CachedDBObject(getDBType(), true);
+            return getDelegate().newInstance(getDBType(), true);
           }
         }).build(this));
 

@@ -1,8 +1,13 @@
 package tosa.impl;
 
+import gw.lang.reflect.ReflectUtil;
 import org.slf4j.profiler.Profiler;
-import tosa.CachedDBObject;
-import tosa.api.*;
+import tosa.api.IDBColumn;
+import tosa.api.IDBObject;
+import tosa.api.IDBTable;
+import tosa.api.IDatabase;
+import tosa.api.IPreparedStatementParameter;
+import tosa.api.IQueryResultProcessor;
 import tosa.loader.IDBType;
 import tosa.loader.Util;
 
@@ -122,13 +127,14 @@ public class QueryExecutorImpl implements QueryExecutor {
     }
 
     @Override
-    public CachedDBObject processResult(ResultSet result) throws SQLException {
+    public IDBObject processResult(ResultSet result) throws SQLException {
       return buildObject(_type, result);
     }
   }
 
-  public static CachedDBObject buildObject(IDBType type, ResultSet resultSet) throws SQLException {
-    CachedDBObject obj = new CachedDBObject(type, false);
+  public static IDBObject buildObject(IDBType type, ResultSet resultSet) throws SQLException {
+    // TODO - AHK - This is cleeaarrrllly a horrendous hack
+    IDBObject obj = ReflectUtil.construct("tosa.CachedDBObject", type, false);
     IDBTable table = type.getTable();
     for (IDBColumn column : table.getColumns()) {
       Object resultObject = column.getColumnType().readFromResultSet(resultSet, table.getName() + "." + column.getName());
