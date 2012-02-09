@@ -1,22 +1,19 @@
 package tosa.impl;
 
 import gw.lang.reflect.TypeSystem;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import test.TestEnv;
 import tosa.CachedDBObject;
+import tosa.TosaDBTestBase;
+import tosa.api.DBLocator;
 import tosa.api.IDBColumn;
 import tosa.api.IDBObject;
 import tosa.api.IDBTable;
 import tosa.dbmd.DatabaseImpl;
-import tosa.impl.md.DatabaseImplSource;
 import tosa.loader.IDBType;
 
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -25,17 +22,7 @@ import static org.junit.Assert.*;
  * Time: 3:17 PM
  * To change this template use File | Settings | File Templates.
  */
-public class JoinArrayEntityCollectionImplTest {
-
-  @BeforeClass
-  static public void resetDB() {
-    TestEnv.init();
-    getDB().getDBUpgrader().recreateTables();
-  }
-
-  private static DatabaseImpl getDB() {
-    return (DatabaseImpl) DatabaseImplSource.getInstance().getDatabase("test.testdb");
-  }
+public class JoinArrayEntityCollectionImplTest extends TosaDBTestBase {
 
   private IDBObject createAndCommitFoo() {
     IDBObject foo = new CachedDBObject((IDBType) TypeSystem.getByFullName("test.testdb.Foo"), true);

@@ -1,19 +1,15 @@
 package tosa.impl;
 
 import gw.lang.reflect.TypeSystem;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import test.TestEnv;
 import tosa.CachedDBObject;
+import tosa.TosaDBTestBase;
 import tosa.api.IDBObject;
-import tosa.dbmd.DatabaseImpl;
-import tosa.impl.md.DatabaseImplSource;
 import tosa.loader.DBTypeInfo;
 import tosa.loader.IDBType;
 
 import java.util.Iterator;
 
-import static org.junit.Assert.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -22,17 +18,7 @@ import static org.junit.Assert.*;
  * Time: 3:17 PM
  * To change this template use File | Settings | File Templates.
  */
-public class ReverseFkEntityCollectionImplTest {
-
-  @BeforeClass
-  static public void resetDB() {
-    TestEnv.init();
-    getDB().getDBUpgrader().recreateTables();
-  }
-
-  private static DatabaseImpl getDB() {
-    return (DatabaseImpl) DatabaseImplSource.getInstance().getDatabase("test.testdb");
-  }
+public class ReverseFkEntityCollectionImplTest extends TosaDBTestBase {
 
   private IDBObject createAndCommitBar() {
     IDBObject bar = new CachedDBObject((IDBType) TypeSystem.getByFullName("test.testdb.Bar"), true);

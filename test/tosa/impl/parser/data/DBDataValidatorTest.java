@@ -1,14 +1,13 @@
 package tosa.impl.parser.data;
 
 import org.junit.Test;
+import tosa.TosaTestBase;
 import tosa.impl.md.ValidationResult;
 import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
 import tosa.loader.parser.mysql.NewMySQL51Parser;
 
 import java.util.List;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -17,7 +16,7 @@ import static org.junit.Assert.*;
  * Time: 10:34 PM
  * To change this template use File | Settings | File Templates.
  */
-public class DBDataValidatorTest {
+public class DBDataValidatorTest extends TosaTestBase {
 
   private DBData parse(String ddl) {
     List<TableData> tables = new NewMySQL51Parser().parseDDLFile(ddl);

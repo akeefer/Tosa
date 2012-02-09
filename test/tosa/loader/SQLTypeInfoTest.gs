@@ -14,29 +14,9 @@ uses test.testdb.*
 uses test.query.*
 uses gw.lang.reflect.TypeSystem
 uses tosa.impl.md.DatabaseImplSource
+uses tosa.TosaDBTestBase
 
-class SQLTypeInfoTest {
-  @BeforeClass
-  static function beforeTestClass() {
-    print("*** Before class")
-    TosaTestDBInit.createDatabase()
-  }
-
-  private function deleteAllData() {
-    clearTable("Bar")
-    clearTable("Foo")
-    clearTable("ForOrderByTests")
-    clearTable("ForGroupByTests")
-    clearTable("ForNumericTests")
-  }
-
-  private function clearTable(tableName : String) {
-    print("Clearing table ${tableName}")
-    var dbTypeData = DatabaseImplSource.getInstance().getDatabase( "test.testdb" )
-    var connection = dbTypeData.Connection.connect()
-    connection.createStatement().executeUpdate( "DELETE FROM ${tableName}" )
-    connection.close()
-  }
+class SQLTypeInfoTest extends TosaDBTestBase {
 
   private function importSampleData() {
     var bar = new Bar(){:Date = sqlDate("4/22/2009"), :Misc = "misc"}
@@ -72,9 +52,8 @@ class SQLTypeInfoTest {
     return new java.sql.Date(new java.util.Date(s).Time)
   }
 
-  @Before
-  function beforeTestMethod() {
-    deleteAllData()
+  override function beforeTestMethod() {
+    super.beforeTestMethod()
     importSampleData()
   }
 

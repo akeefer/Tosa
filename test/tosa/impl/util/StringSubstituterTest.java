@@ -1,12 +1,10 @@
 package tosa.impl.util;
 
 import org.junit.Test;
-import sun.security.jca.GetInstance;
+import tosa.TosaTestBase;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -15,7 +13,7 @@ import static org.junit.Assert.*;
  * Time: 10:16 AM
  * To change this template use File | Settings | File Templates.
  */
-public class StringSubstituterTest {
+public class StringSubstituterTest extends TosaTestBase {
 
   @Test
   public void testInputWithNoSubstitutionTokens() {
