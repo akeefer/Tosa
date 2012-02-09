@@ -275,7 +275,7 @@ class DBTypeInfoTest extends TosaDBTestBase {
   @Test
   function testSelectAllWithPaging() {
       var fromPage1 = test.testdb.SortPage.selectAll().orderBy(SortPage#id).page(0, 10).toList()
-      var fromPage2 = test.testdb.SortPage.selectAll().orderBy(SortPage#id).page(10, 10).toList()
+      var fromPage2 = test.testdb.SortPage.selectAll().orderBy(SortPage#id).page(1, 10).toList()
       assertEquals(20, fromPage1.Count)
       assertEquals(10, fromPage2.Count)
       assertEquals(fromPage1[10].Id, fromPage2[0].Id)
@@ -284,7 +284,7 @@ class DBTypeInfoTest extends TosaDBTestBase {
   @Test
   function testSelectAllWithOrderByAndPaging() {
     var fromPage1 = test.testdb.SortPage.selectAll().orderBy(SortPage#Number).page(0, 10).toList()
-    var fromPage2 = test.testdb.SortPage.selectAll().orderBy(SortPage#Number).page(10, 10).toList()
+    var fromPage2 = test.testdb.SortPage.selectAll().orderBy(SortPage#Number).page(1, 10).toList()
     assertEquals(20, fromPage1.Count)
     assertEquals(10, fromPage2.Count)
     assertEquals(fromPage1[10].Id, fromPage2[0].Id)

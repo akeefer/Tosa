@@ -17,6 +17,8 @@ uses tosa.dbmd.PreparedStatementParameterImpl
 uses java.sql.Types
 uses java.util.NoSuchElementException
 uses tosa.api.IDBColumn
+uses java.lang.IllegalStateException
+uses java.lang.IllegalArgumentException
 
 /**
  * Created by IntelliJ IDEA.
@@ -33,7 +35,6 @@ public class QueryResultImpl<T> implements QueryResult<T> {
   var _db : IDatabase
   var _resultProcessor : IQueryResultProcessor<T>
 
-  // TODO - AHK - Paging, all that stuff
   var _results : List<T>
   var _orderBys : List<OrderByInfo>
 
@@ -63,14 +64,24 @@ public class QueryResultImpl<T> implements QueryResult<T> {
   }
 
   override function orderBySql(sql : String): QueryResult<T> {
-    // TODO - AHK - Throw if the query has already been evaluated
+    if (sql.toLowerCase().trim().startsWith("order by")) {
+      throw new IllegalArgumentException("orderBySql should never be called with sql starting with ORDER BY:  the ORDER BY keywords will automatically be added in when the query is generated")
+    }
+
+    _results = null
     _orderBys.add(new OrderByInfo(sql))
     return this
   }
 
   override function orderBy(sortColumn : IPropertyReference<IDBObject, Object>, sortDirection: QueryResult.SortDirection): QueryResult<T> {
-    // TODO - AHK - Throw if the query has already been evaluated
+    _results = null
     _orderBys.add(new OrderByInfo(sortColumn, sortDirection))
+    return this
+  }
+
+  override function clearOrderBys() : QueryResult<T> {
+    _results = null
+    _orderBys.clear()
     return this
   }
 
@@ -81,11 +92,41 @@ public class QueryResultImpl<T> implements QueryResult<T> {
     if (startOffset > 0 and startPage > 0) {
       throw "the call to page can specify either startPage or startOffset, but not both"
     }
-    // TODO - AHK - Lots more argument validation
-    var realStartOffset = (startOffset > 0 ? startOffset : pageSize * startOffset)
-    _pagingInfo = new PagingInfo(startPage, pageSize)
+
+    if (startOffset < 0 or startPage < 0) {
+      throw "startOffset and startPage are not allowed to have negative values"
+    }
+
+    if (pageSize <= 0) {
+      throw "pageSize must be a value greater than 0"
+    }
+
+    var realStartOffset = (startOffset > 0 ? startOffset : pageSize * startPage)
+    _pagingInfo = new PagingInfo(realStartOffset, pageSize)
     _results = null
     return this
+  }
+
+  override function clearPaging() : QueryResult<T> {
+    _results = null
+    _pagingInfo = null
+    return this
+  }
+
+  override function clear() : QueryResult<T> {
+    _results = null
+    _pagingInfo = null
+    _orderBys.clear()
+    return this
+  }
+
+  override function clone() : QueryResult<T> {
+    var clone = new QueryResultImpl<T>(_profilerTag, _originalQuery, _parameters, _db, _resultProcessor)
+    clone._orderBys.addAll(_orderBys)
+    if (_pagingInfo != null) {
+      clone._pagingInfo = _pagingInfo.clone()
+    }
+    return clone
   }
 
   override function iterator(): Iterator <T> {
@@ -105,7 +146,7 @@ public class QueryResultImpl<T> implements QueryResult<T> {
     if (_pagingInfo != null) {
       if (_pagingInfo.containsIndex(idx)) {
         maybeLoadResults()
-        return _results.get(idx - _pagingInfo._currentOffset)
+        return _results.get(idx - (_pagingInfo._currentOffset - _pagingInfo._startOffset))
       } else {
         // For now, we just keep one page of results.  If they ask for a result
         // on a different page, we load that page and throw out the old one
@@ -155,6 +196,7 @@ public class QueryResultImpl<T> implements QueryResult<T> {
   private function executeQuery() : List<T> {
     var profiler = Util.newProfiler(_profilerTag)
     var sqlAndParameters = computeSql()
+    print(">>>>>" + sqlAndParameters.Sql + " (" + Arrays.asList(sqlAndParameters.Parameters) + ")")
     profiler.start(sqlAndParameters.Sql + " (" + Arrays.asList(sqlAndParameters.Parameters) + ")")
     try {
       return _db.getDBExecutionKernel().executeSelect(sqlAndParameters.Sql,
@@ -209,7 +251,14 @@ public class QueryResultImpl<T> implements QueryResult<T> {
 
     construct(startOffsetArg : int, pageSizeArg : int) {
       _startOffset = startOffsetArg
+      _currentOffset = _startOffset
       _pageSize = pageSizeArg
+    }
+    
+    function clone() : PagingInfo {
+      var result = new PagingInfo(_startOffset, _pageSize)
+      result._currentOffset = _currentOffset
+      return result
     }
     
     function containsIndex(idx : int) : boolean {

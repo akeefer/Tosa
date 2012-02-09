@@ -10,6 +10,7 @@ uses org.junit.runners.Suite.SuiteClasses
     tosa.impl.JoinArrayEntityCollectionImplTest,
     tosa.impl.ReverseFkEntityCollectionImplTest,
     tosa.impl.parser.data.DBDataValidatorTest,
+    tosa.impl.query.QueryResultImplTest,
     tosa.impl.util.StringSubstituterTest,
     tosa.loader.DatabaseAccessTypeTest,
     tosa.loader.DBTypeInfoSelectTest,
