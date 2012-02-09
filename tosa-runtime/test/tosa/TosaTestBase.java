@@ -11,6 +11,17 @@ import junit.framework.Assert;
  */
 public class TosaTestBase {
 
+  protected void assertException(Runnable runnable, Class exceptionType) {
+    try {
+      runnable.run();
+      fail("Expected an exception of type " + exceptionType.getSimpleName());
+    } catch (Exception e) {
+      assert(exceptionType.isAssignableFrom(e.getClass()));
+    }
+  }
+  
+  // Pass-throughs to Assert
+  
   protected void assertEquals(int expected, int actual) {
     Assert.assertEquals(expected, actual);
   }

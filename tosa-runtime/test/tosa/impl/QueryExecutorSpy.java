@@ -14,7 +14,7 @@ import java.util.List;
 * Time: 9:37 AM
 * To change this template use File | Settings | File Templates.
 */
-class QueryExecutorSpy implements QueryExecutor {
+public class QueryExecutorSpy implements QueryExecutor {
 
   private QueryExecutorImpl _delegate;
   private String _count;

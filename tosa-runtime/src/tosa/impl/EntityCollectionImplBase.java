@@ -87,6 +87,14 @@ public abstract class EntityCollectionImplBase<T extends IDBObject> implements E
     _cachedResults = null;
   }
 
+  /**
+   * This is an internal implementation method exposed only for the sake of testing
+   * @param queryExecutor
+   */
+  public void setQueryExecutor(QueryExecutor queryExecutor) {
+    _queryExecutor = queryExecutor;
+  }
+
   // --------------- Abstract Protected Methods
 
   protected abstract int issueCountQuery();
