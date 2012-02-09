@@ -256,9 +256,10 @@ public class QueryResultImpl<T> implements QueryResult<T> {
     }
     
     function clone() : PagingInfo {
-      var result = new PagingInfo(_startOffset, _pageSize)
-      result._currentOffset = _currentOffset
-      return result
+      // Note that this intentionally DOES NOT copy the _currentOffset.  We
+      // don't want any current state about where in the result set we're
+      // iterating to bleed through into a clone
+      return new PagingInfo(_startOffset, _pageSize)
     }
     
     function containsIndex(idx : int) : boolean {
