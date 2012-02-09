@@ -19,11 +19,9 @@ import java.sql.SQLException;
  */
 public class TransactionTypeInfo extends TosaBaseTypeInfo {
 
-  private IMethodInfo _commitMethod;
-  private IPropertyInfo _lockProperty;
   private ThreadLocal<Lock> _lock = new ThreadLocal<Lock>();
 
-  public TransactionTypeInfo(TransactionType type) {
+  public TransactionTypeInfo(ITransactionType type) {
     super(type);
 
     createMethod("commit", params(), JavaTypes.pVOID(), Modifiers.PublicStatic,

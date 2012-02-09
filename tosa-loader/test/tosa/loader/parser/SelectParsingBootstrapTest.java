@@ -1,7 +1,6 @@
 package tosa.loader.parser;
 
 import org.junit.Test;
-import tosa.loader.parser.mysql.MySQL51SQLParser;
 import tosa.loader.parser.tree.SelectStatement;
 import tosa.loader.parser.tree.VariableExpression;
 

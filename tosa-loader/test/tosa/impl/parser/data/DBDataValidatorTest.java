@@ -5,7 +5,7 @@ import tosa.TosaLoaderTestBase;
 import tosa.impl.md.ValidationResult;
 import tosa.loader.data.DBData;
 import tosa.loader.data.TableData;
-import tosa.loader.parser.mysql.NewMySQL51Parser;
+import tosa.loader.parser.mysql.MySQL51Parser;
 
 import java.util.List;
 
@@ -19,7 +19,7 @@ import java.util.List;
 public class DBDataValidatorTest extends TosaLoaderTestBase {
 
   private DBData parse(String ddl) {
-    List<TableData> tables = new NewMySQL51Parser().parseDDLFile(ddl);
+    List<TableData> tables = new MySQL51Parser().parseDDLFile(ddl);
     return new DBData("test.testdb", tables, null);
   }
 

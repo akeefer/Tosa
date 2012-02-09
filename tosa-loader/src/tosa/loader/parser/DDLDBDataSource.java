@@ -3,14 +3,12 @@ package tosa.loader.parser;
 import gw.fs.IFile;
 import gw.lang.reflect.module.IModule;
 import gw.util.Pair;
-import org.slf4j.LoggerFactory;
 import tosa.impl.md.ValidationResult;
 import tosa.impl.parser.data.DBDataValidator;
 import tosa.loader.data.DBData;
 import tosa.loader.data.IDBDataSource;
 import tosa.loader.data.TableData;
-import tosa.loader.parser.mysql.MySQL51SQLParser;
-import tosa.loader.parser.mysql.NewMySQL51Parser;
+import tosa.loader.parser.mysql.MySQL51Parser;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,7 +29,7 @@ public class DDLDBDataSource implements IDBDataSource {
       // TODO - AHK - Lots o' error handling
       // TODO - AHK - Select the correct parser somehow
       String path = module.pathRelativeToRoot(ddlFile.getSecond());
-      List<TableData> tables = new NewMySQL51Parser().parseDDLFile(readFile(ddlFile.getSecond()));
+      List<TableData> tables = new MySQL51Parser().parseDDLFile(readFile(ddlFile.getSecond()));
       String fileName = ddlFile.getFirst();
       String namespace = fileName.substring(0, fileName.length() - ".ddl".length()).replace("/", ".");
       DBData dbData = new DBData(namespace, tables, ddlFile.getSecond());

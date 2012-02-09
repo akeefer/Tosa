@@ -21,11 +21,11 @@ import java.util.List;
  * Time: 10:41 PM
  * To change this template use File | Settings | File Templates.
  */
-public class NewMySQL51Parser implements ISQLParser, SQLParserConstants {
+public class MySQL51Parser implements ISQLParser, SQLParserConstants {
 
   @Override
   public List<TableData> parseDDLFile(String fileContents) {
-    List<CreateTableStatement> createTableStatements = new CreateTableParser().parseSQLFile(fileContents);
+    List<CreateTableStatement> createTableStatements = new MySQL51CreateTableParser().parseSQLFile(fileContents);
     return transformCreateTableStatements(createTableStatements);
   }
 
@@ -231,101 +231,4 @@ public class NewMySQL51Parser implements ISQLParser, SQLParserConstants {
 
     return null;
   }
-
-  private String stripQuotes(String str) {
-    if (str.startsWith("\"")) {
-      str = str.substring(1);
-    }
-    if (str.endsWith("\"")) {
-      str = str.substring(0, str.length() - 1);
-    }
-    return str;
-  }
-
-  /*
-
-  private DBColumnTypeImpl parseCharacterColumnType() {
-    if (accept(CHAR, BYTE) || accept(BINARY)) {
-      Integer length = parseLength();
-      return new DBColumnTypeImpl(BINARY, BINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BINARY);
-    } else if (accept(CHAR) || accept(CHARACTER)) {
-      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
-      if ("binary".equals(characterTypeAttributes._charSet)) {
-        return new DBColumnTypeImpl(BINARY, BINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BINARY);
-      } else {
-        return new DBColumnTypeImpl(CHAR, CHAR, DBColumnTypeImpl.STRING_ITYPE, Types.CHAR);
-      }
-    } else if (accept(NATIONAL, CHAR) || accept(NCHAR)) {
-      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
-      return new DBColumnTypeImpl(NCHAR, NCHAR, DBColumnTypeImpl.STRING_ITYPE, Types.CHAR);
-    } else if (accept(VARCHAR)) {
-      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
-      if ("binary".equals(characterTypeAttributes._charSet)) {
-        return new DBColumnTypeImpl(VARBINARY, VARBINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.VARBINARY);
-      } else {
-        return new DBColumnTypeImpl(VARCHAR, VARCHAR, DBColumnTypeImpl.STRING_ITYPE, Types.VARCHAR);
-      }
-    } else if (accept(VARBINARY)) {
-      Integer length = parseLength();
-      return new DBColumnTypeImpl(VARBINARY, VARBINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.VARBINARY);
-    } else if (accept(TINYBLOB)) {
-      // Max length is 255
-      return new DBColumnTypeImpl(TINYBLOB, TINYBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
-    } else if (accept(BLOB)) {
-      // Max length is 2^16 - 1 if not otherwise specified
-      Integer length = parseLength();
-      return new DBColumnTypeImpl(BLOB, BLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
-    } else if (accept(MEDIUMBLOB)) {
-      // Max length is 2^24 - 1
-      return new DBColumnTypeImpl(MEDIUMBLOB, MEDIUMBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
-    } else if (accept(LONGBLOB)) {
-      // Max length is 2^32 - 1
-      return new DBColumnTypeImpl(LONGBLOB, LONGBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
-    } else if (accept(TINYTEXT)) {
-      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
-      // Max length is 255
-      if ("binary".equals(characterTypeAttributes._charSet)) {
-        return new DBColumnTypeImpl(TINYBLOB, TINYBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
-      } else {
-        return new DBColumnTypeImpl(TINYTEXT, TINYTEXT, DBColumnTypeImpl.STRING_ITYPE, Types.CLOB);
-      }
-    } else if (accept(TEXT)) {
-      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
-      // Max length is 2^16 - 1 if not otherwise specified
-      if ("binary".equals(characterTypeAttributes._charSet)) {
-        return new DBColumnTypeImpl(BLOB, BLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
-      } else {
-        return new DBColumnTypeImpl(TEXT, TEXT, DBColumnTypeImpl.STRING_ITYPE, Types.CLOB);
-      }
-    } else if (accept(MEDIUMTEXT)) {
-      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
-      // Max length is 2^24 - 1
-      if ("binary".equals(characterTypeAttributes._charSet)) {
-        return new DBColumnTypeImpl(MEDIUMBLOB, MEDIUMBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
-      } else {
-        return new DBColumnTypeImpl(MEDIUMTEXT, MEDIUMTEXT, DBColumnTypeImpl.STRING_ITYPE, Types.CLOB);
-      }
-    } else if (accept(LONGTEXT)) {
-      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
-      // Max length is 2^32 - 1
-      if ("binary".equals(characterTypeAttributes._charSet)) {
-        return new DBColumnTypeImpl(LONGBLOB, LONGBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
-      } else {
-        return new DBColumnTypeImpl(LONGTEXT, LONGTEXT, DBColumnTypeImpl.STRING_ITYPE, Types.CLOB);
-      }
-    } else if (accept(ENUM)) {
-      List<String> values = parseEnumOrSetValueList();
-      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
-      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + ENUM);
-      return null;
-    } else if (accept(SET)) {
-      List<String> values = parseEnumOrSetValueList();
-      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
-      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + SET);
-      return null;
-    } else {
-      return null;
-    }
-  }
-*/
 }

@@ -89,9 +89,9 @@ public class DBTypeLoader extends BaseService implements IExtendedTypeLoader {
     IType rVal = null;
     if (TransactionType.TYPE_NAME.equals(relativeName)) {
       // TODO - AHK - Turn that into a type reference
-      rVal = new TransactionType(databaseImpl, this);
+      rVal = new TransactionType(databaseImpl, this).getTypeReference();
     } else if (DatabaseAccessType.TYPE_NAME.equals(relativeName)) {
-      rVal = new DatabaseAccessType(databaseImpl, this);
+      rVal = new DatabaseAccessType(databaseImpl, this).getTypeReference();
     } else {
       IDBTable dbTable = databaseImpl.getTable(relativeName);
       if (dbTable != null) {

@@ -29,7 +29,7 @@ public class TransactionType extends TypeBase implements ITransactionType {
   public TransactionType(DatabaseImpl databaseImpl, DBTypeLoader dbTypeLoader) {
     _databaseImpl = databaseImpl;
     _typeLoader = dbTypeLoader;
-    _typeInfo = new TransactionTypeInfo(this);
+    _typeInfo = new TransactionTypeInfo(getTypeReference());
   }
 
   public ITransactionType getTypeReference() {
