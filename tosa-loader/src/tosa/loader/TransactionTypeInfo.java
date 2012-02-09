@@ -1,25 +1,14 @@
 package tosa.loader;
 
-import gw.lang.reflect.BaseTypeInfo;
 import gw.lang.reflect.IMethodCallHandler;
 import gw.lang.reflect.IMethodInfo;
 import gw.lang.reflect.IPropertyAccessor;
 import gw.lang.reflect.IPropertyInfo;
-import gw.lang.reflect.IType;
-import gw.lang.reflect.MethodInfoBuilder;
-import gw.lang.reflect.PropertyInfoBuilder;
 import gw.lang.reflect.TypeSystem;
-import gw.lang.reflect.java.IJavaType;
 import gw.lang.reflect.java.JavaTypes;
-import tosa.ConnectionWrapper;
-import tosa.DBConnection;
 import tosa.api.IDBConnection;
 
-import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.

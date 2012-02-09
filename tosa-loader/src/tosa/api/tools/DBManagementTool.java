@@ -1,22 +1,14 @@
 package tosa.api.tools;
 
-import gw.fs.IDirectory;
-import gw.lang.init.GosuInitialization;
-import gw.lang.reflect.ITypeLoader;
-import gw.lang.reflect.TypeSystem;
 import gw.lang.Gosu;
 import gw.util.GosuExceptionUtil;
-import tosa.DBConnection;
 import tosa.api.DBLocator;
 import tosa.api.IDatabase;
-import tosa.loader.DBTypeLoader;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.

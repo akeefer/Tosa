@@ -23,11 +23,11 @@ public class DatabaseAccessType extends TypeBase implements IDatabaseAccessType 
 
   public static final String TYPE_NAME = "Database";
 
-  private DatabaseImpl _databaseImpl;
+  private IDatabase _databaseImpl;
   private DatabaseAccessTypeInfo _typeInfo;
   private DBTypeLoader _typeLoader;
 
-  public DatabaseAccessType(DatabaseImpl databaseImpl, DBTypeLoader dbTypeLoader) {
+  public DatabaseAccessType(IDatabase databaseImpl, DBTypeLoader dbTypeLoader) {
     _databaseImpl = databaseImpl;
     _typeLoader = dbTypeLoader;
     _typeInfo = new DatabaseAccessTypeInfo(getTypeReference());

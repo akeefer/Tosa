@@ -1,13 +1,6 @@
 package tosa.api;
 
-import tosa.DBConnection;
-import tosa.loader.data.DBData;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * This interface represents a particular database that the application has access to.  From here,

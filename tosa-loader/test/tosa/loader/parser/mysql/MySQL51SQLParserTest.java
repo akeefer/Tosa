@@ -1,15 +1,14 @@
 package tosa.loader.parser.mysql;
 
-import junit.framework.TestCase;
 import org.junit.Test;
-import tosa.DBConnection;
 import tosa.loader.data.ColumnData;
 import tosa.loader.data.DBColumnTypeImpl;
 import tosa.loader.data.TableData;
 
 import java.sql.Types;
 import java.util.List;
-import static org.junit.Assert.*;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests for the tosa.loader.parser.mysql.MySQL51ParserTest class.
