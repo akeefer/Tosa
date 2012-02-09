@@ -195,35 +195,4 @@ public class DBTypeInfo extends TosaBaseTypeInfo implements ITypeInfo {
   private IDBType getDBType() {
     return ((IDBType) getOwnersType());
   }
-
-  @Override
-  protected IType substituteDelegatedParameterType(IType paramType) {
-    return substituteType(paramType);
-  }
-
-  @Override
-  protected IType substituteDelegatedReturnType(IType returnType) {
-    return substituteType(returnType);
-  }
-
-  private IType substituteType(IType type) {
-    IType dbObjectType = TypeSystem.get(IDBObject.class);
-    if (type.equals(dbObjectType)) {
-      return getDBType();
-    } else if (type.isParameterizedType()) {
-      IType[] parameters = type.getTypeParameters();
-      IType[] substitutedParameters = new IType[parameters.length];
-      for (int i = 0; i < parameters.length; i++) {
-        substitutedParameters[i] = substituteType(parameters[i]);
-      }
-      return type.getGenericType().getParameterizedType(substitutedParameters);
-    } else {
-      return type;
-    }
-  }
-
-  @Override
-  protected Object getFirstArgForDelegatedMethods() {
-    return getDBType();
-  }
 }
