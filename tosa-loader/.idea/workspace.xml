@@ -1,0 +1,1143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="3f818df3-36ed-4a3b-9d86-9fe7f790d8fb" name="Default" comment="">
+      <change type="DELETED" beforePath="C:\projects\Tosa\.idea\.name" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\.idea\ant.xml" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\.idea\codeStyleSettings.xml" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\.idea\compiler.xml" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\.idea\copyright\profiles_settings.xml" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\.idea\encodings.xml" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\.idea\libraries\Maven__ch_qos_cal10n_cal10n_api_0_7_4.xml" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\.idea\libraries\Maven__com_h2database_h2_1_3_146.xml" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\.idea\libraries\Maven__commons_dbcp_commons_dbcp_1_4.xml" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\.idea\libraries\Maven__commons_pool_commons_pool_1_5_4.xml" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\.idea\libraries\Maven__junit_junit_4_8_2.xml" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\.idea\libraries\Maven__mysql_mysql_connector_java_5_1_14.xml" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\.idea\libraries\Maven__org_slf4j_slf4j_api_1_6_1.xml" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\.idea\libraries\Maven__org_slf4j_slf4j_ext_1_6_1.xml" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\.idea\modules.xml" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\.idea\scopes\scope_settings.xml" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\.idea\uiDesigner.xml" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\.idea\vcs.xml" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\build.vark" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\pom.xml" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\CachedDBObject.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\ConnectionWrapper.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\DBConnection.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\api\CoreFinder.gs" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\api\DBLocator.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\api\EntityCollection.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\api\IDBArray.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\api\IDBColumn.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\api\IDBColumnType.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\api\IDBConnection.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\api\IDBExecutionKernel.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\api\IDBFkArray.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\api\IDBJoinArray.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\api\IDBObject.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\api\IDBTable.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\api\IDBUpgrader.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\api\IDatabase.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\api\IPreparedStatementParameter.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\api\IQueryResultProcessor.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\api\QueryResult.gs" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\api\tools\DBManagementTool.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\db\execution\DBExecutionKernelImpl.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\db\execution\DBUpgraderImpl.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\db\execution\QueryExecutor.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\db\execution\QueryExecutor.java.orig" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\dbmd\DBColumnImpl.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\dbmd\DBTableImpl.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\dbmd\DatabaseImpl.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\dbmd\PreparedStatementParameterImpl.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\impl\EntityCollectionImplBase.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\impl\JoinArrayEntityCollectionImpl.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\impl\QueryExecutor.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\impl\QueryExecutorImpl.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\impl\ReverseFkEntityCollectionImpl.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\impl\SimpleSqlBuilder.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\impl\md\DBFkArrayImpl.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\impl\md\DBJoinArrayImpl.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\impl\md\DatabaseImplSource.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\impl\md\DatabaseImplValidator.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\impl\md\ValidationResult.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\impl\parser\data\DBDataValidator.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\impl\query\QueryResultImpl.gs" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\impl\query\SqlStringSubstituter.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\impl\util\StringSubstituter.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\DBArrayPropertyInfo.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\DBPropertyInfo.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\DBType.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\DBTypeDelegate.gs" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\DBTypeInfo.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\DBTypeLoader.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\DatabaseAccessType.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\DatabaseAccessTypeDelegate.gs" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\DatabaseAccessTypeInfo.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\IDBType.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\IDatabaseAccessType.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\ISQLType.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\ITransactionType.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\SQLFileInfo.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\SQLParameterInfo.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\SQLType.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\SQLTypeInfo.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\StructInstance.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\StructPropInfo.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\StructType.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\StructTypeInfo.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\TosaBaseTypeInfo.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\TransactionType.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\TransactionTypeInfo.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\Util.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\data\ColumnData.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\data\DBColumnTypeImpl.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\data\DBData.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\data\DBData.java.orig" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\data\IDBColumnTypePersistenceHandler.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\data\IDBDataSource.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\data\TableData.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\data\types\DateColumnTypePersistenceHandler.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\data\types\GenericDBColumnTypePersistenceHandler.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\data\types\TimestampColumnTypePersistenceHandler.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\DDLDBDataSource.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\DDLDBDataSource.java.orig" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\ISQLParser.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\QueryParser.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\SQLParseException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\SQLParserConstants.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\SQLParserFactory.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\SQLTokenizer.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\Token.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\TokenType.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\Tokenizer.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\mysql\CreateTableParser.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\mysql\MySQL51SQLParser.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\mysql\NewMySQL51Parser.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\postgres\Postgres84SQLParser.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\postgres\Postgres84SQLParser.java.orig" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\AbsExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\AsteriskSelectList.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\BetweenPredicate.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\BooleanIsNotExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\CharacterSetExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\CharacterTypeAttribute.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\CheckExpressionDefinition.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\CollateExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\ColumnDataType.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\ColumnDefinition.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\ColumnLengthExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\ColumnOptionExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\ColumnReference.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\ColumnSelectList.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\ComparisonPredicate.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\ConcatenationExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\CountAllExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\CreateTableStatement.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\DefaultValueExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\DerivedColumn.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\ExistsPredicate.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\GenericFunctionCall.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\GroupByClause.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\IMightApply.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\IRootParseElement.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\InListExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\InPredicate.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\IndexColumnName.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\IndexName.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\IndexType.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\IndexTypeExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\IsNotNullPredicate.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\JoinCondition.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\KeyBlockSizeIndexOption.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\LikePredicate.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\ModExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\NumericDataTypeModifier.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\OrderByClause.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\QualifiedAsteriskSelectList.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\QualifiedJoin.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\QuantifiedComparison.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\QuantifierModifier.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\SQLAdditiveExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\SQLAndExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\SQLMultiplicitiveExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\SQLNotExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\SQLNumericLiteral.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\SQLOptionalExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\SQLOrExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\SQLParenthesizedExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\SQLParseError.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\SQLParsedElement.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\SQLSignedExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\SelectStatement.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\SetFunctionExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\SimpleTableReference.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\SortSpecification.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\StringCaseChangeExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\StringLiteralExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\SubSelectExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\TableConstraintDefinition.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\TableExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\TableFromClause.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\UnexpectedTokenExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\UniquePredicate.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\VariableExpression.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\WhereClause.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\src\tosa\loader\parser\tree\WithParserIndexOption.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\GosuInitHelper.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\GosuTestRunner.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\GosuTestWrapper.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\ITestWrapper.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\TestEnv.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\TosaScratchSuite.gs" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\TosaSuite.gs" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleAbsQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleAddQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleBetweenQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleComparisonIsFalseQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleComparisonIsTrueQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleComparisonQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleComparisonQueryWithVar.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleExistsQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleFullOuterJoinQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleFunctionCallInSelectListQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleFunctionCallInWhereQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleGroupByCountQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleGroupByQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleInQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleInQueryWithList.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleInQueryWithSubSelect.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleInnerJoinQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleJoinQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleJoinQueryWithQualifiedAsterisk.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleLeftOuterJoinQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleLikeQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleLikeWithConcatQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleModQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleOptionalAndQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleOptionalOrQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleOptionalQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleQueryWithComments.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleQueryWithQuantifiedAllComparison.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleQueryWithQuantifiedSomeComparison.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleQueryWithSpecificCols.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleRightOuterJoinQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleSimpleOrderByDescQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleSimpleOrderByMultipleColsQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleSimpleOrderByQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleSimpleOrderByWithWhereQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleSubtractQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleUniqueQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\query\SampleUpperQuery.sql" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\test\testdb.ddl" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\tosa\TosaDBTestBase.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\tosa\TosaTestBase.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\tosa\endtoend\OverallCollectionAPITest.gs" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\tosa\impl\JoinArrayEntityCollectionImplTest.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\tosa\impl\QueryExecutorSpy.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\tosa\impl\ReverseFkEntityCollectionImplTest.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\tosa\impl\parser\data\DBDataValidatorTest.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\tosa\impl\query\QueryResultImplTest.gs" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\tosa\impl\util\StringSubstituterTest.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\tosa\loader\DBTypeInfoSelectTest.gs" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\tosa\loader\DBTypeInfoTest.gs" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\tosa\loader\DatabaseAccessTypeTest.gs" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\tosa\loader\SQLTypeInfoTest.gs" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\tosa\loader\SQLTypeTest.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\tosa\loader\TosaTestDBInit.gs" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\tosa\loader\parser\SelectParsingBootstrapTest.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\tosa\loader\parser\TokenizerTest.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\tosa\loader\parser\mysql\MySQL51SQLParserTest.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\Tosa\test\tosa\scripts\dbtltest.gsp" afterPath="" />
+    </list>
+    <ignored path="Tosa.iws" />
+    <ignored path=".idea/workspace.xml" />
+    <option name="TRACKING_ENABLED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ChangesViewManager" flattened_view="true" show_ignored="false" />
+  <component name="CreatePatchCommitExecutor">
+    <option name="PATCH_PATH" value="" />
+  </component>
+  <component name="DaemonCodeAnalyzer">
+    <disable_hints />
+  </component>
+  <component name="DebuggerManager">
+    <breakpoint_any>
+      <breakpoint>
+        <option name="NOTIFY_CAUGHT" value="true" />
+        <option name="NOTIFY_UNCAUGHT" value="true" />
+        <option name="ENABLED" value="false" />
+        <option name="LOG_ENABLED" value="false" />
+        <option name="LOG_EXPRESSION_ENABLED" value="false" />
+        <option name="SUSPEND_POLICY" value="SuspendAll" />
+        <option name="COUNT_FILTER_ENABLED" value="false" />
+        <option name="COUNT_FILTER" value="0" />
+        <option name="CONDITION_ENABLED" value="false" />
+        <option name="CLASS_FILTERS_ENABLED" value="false" />
+        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
+        <option name="CONDITION" value="" />
+        <option name="LOG_MESSAGE" value="" />
+      </breakpoint>
+      <breakpoint>
+        <option name="NOTIFY_CAUGHT" value="true" />
+        <option name="NOTIFY_UNCAUGHT" value="true" />
+        <option name="ENABLED" value="false" />
+        <option name="LOG_ENABLED" value="false" />
+        <option name="LOG_EXPRESSION_ENABLED" value="false" />
+        <option name="SUSPEND_POLICY" value="SuspendAll" />
+        <option name="COUNT_FILTER_ENABLED" value="false" />
+        <option name="COUNT_FILTER" value="0" />
+        <option name="CONDITION_ENABLED" value="false" />
+        <option name="CLASS_FILTERS_ENABLED" value="false" />
+        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
+        <option name="CONDITION" value="" />
+        <option name="LOG_MESSAGE" value="" />
+      </breakpoint>
+    </breakpoint_any>
+    <breakpoint_rules />
+    <ui_properties />
+  </component>
+  <component name="FavoritesManager">
+    <favorites_list name="Tosa" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf>
+      <file leaf-file-name="DBLocator.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/tosa/api/DBLocator.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="20" column="90" selection-start="550" selection-end="550" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="DatabaseImplSource.java" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/tosa/impl/md/DatabaseImplSource.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="67" column="80" selection-start="1964" selection-end="1964" vertical-scroll-proportion="0.63119835">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="TypeSystem.class" pinned="false" current="false" current-in-tab="false">
+        <entry file="jar://$USER_HOME$/.IdeaIC11/config/plugins/Gosu/lib/gosu-core-api-0.9-7.jar!/gw/lang/reflect/TypeSystem.class">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="229" column="61" selection-start="13723" selection-end="13723" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="IDBDataSource.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/tosa/loader/data/IDBDataSource.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="19" column="0" selection-start="408" selection-end="408" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="DDLDBDataSource.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/tosa/loader/parser/DDLDBDataSource.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="27" column="29" selection-start="804" selection-end="804" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Map.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="jar://C:/Program Files/Java/jdk1.6.0_26/src.zip!/java/util/Map.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="304" column="18" selection-start="14798" selection-end="14798" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="TosaLoaderSuite.gs" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/test/test/TosaLoaderSuite.gs">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="12" column="51" selection-start="271" selection-end="271" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="TokenizerTest.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/test/tosa/loader/parser/TokenizerTest.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="6" column="13" selection-start="101" selection-end="101" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="DBDataValidatorTest.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/test/tosa/impl/parser/data/DBDataValidatorTest.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="18" column="13" selection-start="431" selection-end="431" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="StringSubstituterTest.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/test/tosa/impl/util/StringSubstituterTest.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="59" column="57" selection-start="2467" selection-end="2467" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="FindManager">
+    <FindUsagesManager>
+      <setting name="OPEN_NEW_TAB" value="false" />
+    </FindUsagesManager>
+  </component>
+  <component name="Git.Settings">
+    <option name="CHECKOUT_INCLUDE_TAGS" value="false" />
+    <option name="UPDATE_CHANGES_POLICY" value="STASH" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="changedFiles">
+      <list>
+        <option value="$PROJECT_DIR$/tosa/src/tosa/api/QueryResult.java" />
+        <option value="$PROJECT_DIR$/tosa/src/tosa/impl/query/QueryResultImpl.java" />
+        <option value="$PROJECT_DIR$/tosa-test/test-src/tosa/loader/DBTypeInfoTest.gs" />
+        <option value="$PROJECT_DIR$/src/tosa/loader/DBTypeDelegate.gs" />
+        <option value="$PROJECT_DIR$/src/tosa/loader/IDBType.java" />
+        <option value="$PROJECT_DIR$/src/tosa/api/CoreFinder.gs" />
+        <option value="$PROJECT_DIR$/src/tosa/api/QueryResult.gs" />
+        <option value="$PROJECT_DIR$/test/tosa/loader/DBTypeInfoTest.gs" />
+        <option value="$PROJECT_DIR$/src/tosa/impl/query/QueryResultImpl.gs" />
+        <option value="$PROJECT_DIR$/src/tosa/loader/TosaBaseTypeInfo.java" />
+        <option value="$PROJECT_DIR$/src/tosa/loader/DBTypeInfo.java" />
+        <option value="$PROJECT_DIR$/test/test/TosaSuite.gs" />
+        <option value="$PROJECT_DIR$/test/test/TosaScratchSuite.gs" />
+        <option value="$PROJECT_DIR$/pom.xml" />
+        <option value="$PROJECT_DIR$/test/tosa/TosaLoaderTestBase.java" />
+        <option value="$PROJECT_DIR$/src/tosa/impl/md/DatabaseImplSource.java" />
+      </list>
+    </option>
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="importingSettings">
+      <MavenImportingSettings>
+        <option name="importAutomatically" value="true" />
+        <option name="keepSourceFolders" value="false" />
+      </MavenImportingSettings>
+    </option>
+  </component>
+  <component name="MavenRunner">
+    <option name="jreName" value="#JAVA_INTERNAL" />
+  </component>
+  <component name="ModuleEditorState">
+    <option name="LAST_EDITED_MODULE_NAME" />
+    <option name="LAST_EDITED_TAB_NAME" />
+  </component>
+  <component name="ProjectFrameBounds">
+    <option name="x" value="-8" />
+    <option name="y" value="-8" />
+    <option name="width" value="1616" />
+    <option name="height" value="1176" />
+  </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <OptionsSetting value="true" id="Add" />
+    <OptionsSetting value="true" id="Remove" />
+    <OptionsSetting value="true" id="Checkout" />
+    <OptionsSetting value="true" id="Update" />
+    <OptionsSetting value="true" id="Status" />
+    <OptionsSetting value="true" id="Edit" />
+    <ConfirmationsSetting value="0" id="Add" />
+    <ConfirmationsSetting value="0" id="Remove" />
+  </component>
+  <component name="ProjectReloadState">
+    <option name="STATE" value="0" />
+  </component>
+  <component name="ProjectView">
+    <navigator currentView="ProjectPane" proportions="" version="1" splitterProportion="0.5">
+      <flattenPackages />
+      <showMembers />
+      <showModules />
+      <showLibraryContents />
+      <hideEmptyPackages />
+      <abbreviatePackageNames />
+      <autoscrollToSource />
+      <autoscrollFromSource />
+      <sortByType />
+    </navigator>
+    <panes>
+      <pane id="Scope" />
+      <pane id="PackagesPane">
+        <subPane>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tosa" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tosa" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewModuleNode" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
+      </pane>
+      <pane id="ProjectPane">
+        <subPane>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tosa" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tosa" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tosa-loader" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tosa" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tosa-loader" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="test" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tosa" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tosa" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tosa-loader" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="test" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tosa" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="parser" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tosa" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tosa-loader" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="test" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tosa" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="impl" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="util" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tosa" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tosa-loader" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="test" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tosa" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="impl" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="data" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tosa" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tosa-loader" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="test" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="test" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
+      </pane>
+      <pane id="Favorites" />
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="project.structure.last.edited" value="Project" />
+    <property name="GoToFile.includeJavaFiles" value="false" />
+    <property name="project.structure.proportion" value="0.0" />
+    <property name="GoToClass.toSaveIncludeLibraries" value="false" />
+    <property name="recentsLimit" value="5" />
+    <property name="MemberChooser.sorted" value="false" />
+    <property name="MemberChooser.showClasses" value="true" />
+    <property name="project.structure.side.proportion" value="0.0" />
+    <property name="GoToClass.includeLibraries" value="false" />
+    <property name="MemberChooser.copyJavadoc" value="false" />
+    <property name="GoToClass.includeJavaFiles" value="false" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="tosa.impl.query" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\projects\Tosa\tosa\src\tosa\loader" />
+    </key>
+  </component>
+  <component name="RunManager" selected="JUnit.TosaLoaderSuite">
+    <configuration default="false" name="OverallCollectionAPITest" type="JUnit" factoryName="JUnit" temporary="true">
+      <module name="tosa" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PACKAGE_NAME" value="tosa.endtoend" />
+      <option name="MAIN_CLASS_NAME" value="tosa.endtoend.OverallCollectionAPITest" />
+      <option name="METHOD_NAME" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="moduleWithDependencies" />
+      </option>
+      <envs />
+      <patterns />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="" />
+        <option name="TRANSPORT" value="0" />
+        <option name="LOCAL" value="true" />
+      </RunnerSettings>
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Debug" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
+    <configuration default="false" name="OverallCollectionAPITest.testArrayAdditionToExistingObjectIsImmediateInTheDatabase" type="JUnit" factoryName="JUnit" temporary="true">
+      <module name="tosa" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PACKAGE_NAME" value="tosa.endtoend" />
+      <option name="MAIN_CLASS_NAME" value="tosa.endtoend.OverallCollectionAPITest" />
+      <option name="METHOD_NAME" value="testArrayAdditionToExistingObjectIsImmediateInTheDatabase" />
+      <option name="TEST_OBJECT" value="method" />
+      <option name="VM_PARAMETERS" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="moduleWithDependencies" />
+      </option>
+      <envs />
+      <patterns />
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
+    <configuration default="false" name="DBTypeInfoTest.testFindPaged" type="JUnit" factoryName="JUnit" temporary="true">
+      <module name="tosa" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PACKAGE_NAME" value="tosa.loader" />
+      <option name="MAIN_CLASS_NAME" value="tosa.loader.DBTypeInfoTest" />
+      <option name="METHOD_NAME" value="testFindPaged" />
+      <option name="TEST_OBJECT" value="method" />
+      <option name="VM_PARAMETERS" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="moduleWithDependencies" />
+      </option>
+      <envs />
+      <patterns />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="" />
+        <option name="TRANSPORT" value="0" />
+        <option name="LOCAL" value="true" />
+      </RunnerSettings>
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Debug" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
+    <configuration default="false" name="DBTypeInfoTest.testSelectAllWithOrderByAndPaging" type="JUnit" factoryName="JUnit" temporary="true">
+      <module name="tosa" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PACKAGE_NAME" value="tosa.loader" />
+      <option name="MAIN_CLASS_NAME" value="tosa.loader.DBTypeInfoTest" />
+      <option name="METHOD_NAME" value="testSelectAllWithOrderByAndPaging" />
+      <option name="TEST_OBJECT" value="method" />
+      <option name="VM_PARAMETERS" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="moduleWithDependencies" />
+      </option>
+      <envs />
+      <patterns />
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
+    <configuration default="false" name="TosaLoaderSuite" type="JUnit" factoryName="JUnit" temporary="true">
+      <module name="tosa" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PACKAGE_NAME" value="test" />
+      <option name="MAIN_CLASS_NAME" value="test.TosaLoaderSuite" />
+      <option name="METHOD_NAME" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="moduleWithDependencies" />
+      </option>
+      <envs />
+      <patterns />
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
+    <configuration default="true" type="Remote" factoryName="Remote">
+      <option name="USE_SOCKET_TRANSPORT" value="true" />
+      <option name="SERVER_MODE" value="false" />
+      <option name="SHMEM_ADDRESS" value="javadebug" />
+      <option name="HOST" value="localhost" />
+      <option name="PORT" value="5005" />
+      <method>
+        <option name="AntTarget" enabled="false" />
+        <option name="BuildArtifacts" enabled="false" />
+        <option name="Maven.BeforeRunTask" enabled="false" />
+      </method>
+    </configuration>
+    <configuration default="true" type="Applet" factoryName="Applet">
+      <module name="" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="HTML_FILE_NAME" />
+      <option name="HTML_USED" value="false" />
+      <option name="WIDTH" value="400" />
+      <option name="HEIGHT" value="300" />
+      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
+      <option name="VM_PARAMETERS" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <method>
+        <option name="AntTarget" enabled="false" />
+        <option name="BuildArtifacts" enabled="false" />
+        <option name="Make" enabled="true" />
+        <option name="Maven.BeforeRunTask" enabled="false" />
+      </method>
+    </configuration>
+    <configuration default="true" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" />
+      <option name="VM_PARAMETERS" />
+      <option name="PROGRAM_PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="" />
+      <envs />
+      <method>
+        <option name="AntTarget" enabled="false" />
+        <option name="BuildArtifacts" enabled="false" />
+        <option name="Make" enabled="true" />
+        <option name="Maven.BeforeRunTask" enabled="false" />
+      </method>
+    </configuration>
+    <configuration default="true" type="JUnit" factoryName="JUnit">
+      <module name="" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PACKAGE_NAME" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="METHOD_NAME" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="moduleWithDependencies" />
+      </option>
+      <envs />
+      <patterns />
+      <method>
+        <option name="AntTarget" enabled="false" />
+        <option name="BuildArtifacts" enabled="false" />
+        <option name="Make" enabled="true" />
+        <option name="Maven.BeforeRunTask" enabled="false" />
+      </method>
+    </configuration>
+    <list size="5">
+      <item index="0" class="java.lang.String" itemvalue="JUnit.OverallCollectionAPITest" />
+      <item index="1" class="java.lang.String" itemvalue="JUnit.OverallCollectionAPITest.testArrayAdditionToExistingObjectIsImmediateInTheDatabase" />
+      <item index="2" class="java.lang.String" itemvalue="JUnit.DBTypeInfoTest.testFindPaged" />
+      <item index="3" class="java.lang.String" itemvalue="JUnit.DBTypeInfoTest.testSelectAllWithOrderByAndPaging" />
+      <item index="4" class="java.lang.String" itemvalue="JUnit.TosaLoaderSuite" />
+    </list>
+    <configuration name="&lt;template&gt;" type="WebApp" default="true" selected="false">
+      <Host>localhost</Host>
+      <Port>5050</Port>
+    </configuration>
+  </component>
+  <component name="ShelveChangesManager" show_recycled="false" />
+  <component name="SvnConfiguration" maxAnnotateRevisions="500">
+    <option name="USER" value="" />
+    <option name="PASSWORD" value="" />
+    <option name="mySSHConnectionTimeout" value="30000" />
+    <option name="mySSHReadTimeout" value="30000" />
+    <option name="LAST_MERGED_REVISION" />
+    <option name="MERGE_DRY_RUN" value="false" />
+    <option name="MERGE_DIFF_USE_ANCESTRY" value="true" />
+    <option name="UPDATE_LOCK_ON_DEMAND" value="false" />
+    <option name="IGNORE_SPACES_IN_MERGE" value="false" />
+    <option name="DETECT_NESTED_COPIES" value="true" />
+    <option name="CHECK_NESTED_FOR_QUICK_MERGE" value="false" />
+    <option name="IGNORE_SPACES_IN_ANNOTATE" value="true" />
+    <option name="SHOW_MERGE_SOURCES_IN_ANNOTATE" value="true" />
+    <option name="FORCE_UPDATE" value="false" />
+    <configuration useDefault="true">C:\Users\Alan\AppData\Roaming\Subversion</configuration>
+    <myIsUseDefaultProxy>false</myIsUseDefaultProxy>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="3f818df3-36ed-4a3b-9d86-9fe7f790d8fb" name="Default" comment="" />
+      <created>1311783656468</created>
+      <updated>1311783656468</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="-8" y="-8" width="1616" height="1176" extended-state="6" />
+    <editor active="true" />
+    <layout>
+      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.44346115" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39921337" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3048181" sideWeight="0.4977434" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3284169" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3284169" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
+      <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32946485" sideWeight="0.6715831" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.30355427" sideWeight="0.4977434" order="2" side_tool="false" content_ui="tabs" x="1646" y="182" width="1515" height="659" />
+      <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3284169" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+    </layout>
+  </component>
+  <component name="VcsContentAnnotationSettings">
+    <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="true" />
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="true" />
+    <option name="CHECK_NEW_TODO" value="true" />
+    <option name="myTodoPanelSettings">
+      <value>
+        <are-packages-shown value="false" />
+        <are-modules-shown value="false" />
+        <flatten-packages value="false" />
+        <is-autoscroll-to-source value="false" />
+      </value>
+    </option>
+    <option name="PERFORM_UPDATE_IN_BACKGROUND" value="true" />
+    <option name="PERFORM_COMMIT_IN_BACKGROUND" value="true" />
+    <option name="PERFORM_EDIT_IN_BACKGROUND" value="true" />
+    <option name="PERFORM_CHECKOUT_IN_BACKGROUND" value="true" />
+    <option name="PERFORM_ADD_REMOVE_IN_BACKGROUND" value="true" />
+    <option name="PERFORM_ROLLBACK_IN_BACKGROUND" value="false" />
+    <option name="CHECK_LOCALLY_CHANGED_CONFLICTS_IN_BACKGROUND" value="false" />
+    <option name="ENABLE_BACKGROUND_PROCESSES" value="false" />
+    <option name="CHANGED_ON_SERVER_INTERVAL" value="60" />
+    <option name="SHOW_ONLY_CHANGED_IN_SELECTION_DIFF" value="true" />
+    <option name="CHECK_COMMIT_MESSAGE_SPELLING" value="true" />
+    <option name="DEFAULT_PATCH_EXTENSION" value="patch" />
+    <option name="SHORT_DIFF_HORISONTALLY" value="true" />
+    <option name="SHORT_DIFF_EXTRA_LINES" value="2" />
+    <option name="SOFT_WRAPS_IN_SHORT_DIFF" value="true" />
+    <option name="INCLUDE_TEXT_INTO_PATCH" value="false" />
+    <option name="INCLUDE_TEXT_INTO_SHELF" value="false" />
+    <option name="CREATE_PATCH_EXPAND_DETAILS_DEFAULT" value="true" />
+    <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
+    <option name="LAST_COMMIT_MESSAGE" />
+    <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
+    <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="false" />
+    <option name="CHECK_FILES_UP_TO_DATE_BEFORE_COMMIT" value="false" />
+    <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="false" />
+    <option name="REFORMAT_BEFORE_FILE_COMMIT" value="false" />
+    <option name="FILE_HISTORY_DIALOG_COMMENTS_SPLITTER_PROPORTION" value="0.8" />
+    <option name="FILE_HISTORY_DIALOG_SPLITTER_PROPORTION" value="0.5" />
+    <option name="ACTIVE_VCS_NAME" />
+    <option name="UPDATE_GROUP_BY_PACKAGES" value="false" />
+    <option name="UPDATE_GROUP_BY_CHANGELIST" value="false" />
+    <option name="SHOW_FILE_HISTORY_AS_TREE" value="false" />
+    <option name="FILE_HISTORY_SPLITTER_PROPORTION" value="0.6" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager />
+  </component>
+  <component name="antWorkspaceConfiguration">
+    <option name="IS_AUTOSCROLL_TO_SOURCE" value="false" />
+    <option name="FILTER_TARGETS" value="false" />
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/src/tosa/loader/DBTypeInfo.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="28" column="26" selection-start="778" selection-end="778" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/build.vark">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/tosa/TosaLoaderTestBase.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="11" column="13" selection-start="212" selection-end="212" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/tosa/api/tools/DBManagementTool.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="102" column="30" selection-start="2990" selection-end="2990" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/tosa/loader/parser/SelectParsingBootstrapTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="11" column="13" selection-start="274" selection-end="274" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pom.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="16" column="56" selection-start="554" selection-end="554" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/tosa/api/DBLocator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="20" column="90" selection-start="550" selection-end="550" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/tosa/loader/data/IDBDataSource.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="19" column="0" selection-start="408" selection-end="408" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/tosa/loader/parser/DDLDBDataSource.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="27" column="29" selection-start="804" selection-end="804" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.6.0_26/src.zip!/java/util/Map.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="304" column="18" selection-start="14798" selection-end="14798" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/test/TosaLoaderSuite.gs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="12" column="51" selection-start="271" selection-end="271" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/tosa/loader/parser/TokenizerTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="6" column="13" selection-start="101" selection-end="101" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/tosa/impl/parser/data/DBDataValidatorTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="18" column="13" selection-start="431" selection-end="431" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/tosa/impl/util/StringSubstituterTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="59" column="57" selection-start="2467" selection-end="2467" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$USER_HOME$/.IdeaIC11/config/plugins/Gosu/lib/gosu-core-api-0.9-7.jar!/gw/lang/reflect/TypeSystem.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="229" column="61" selection-start="13723" selection-end="13723" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/tosa/impl/md/DatabaseImplSource.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="67" column="80" selection-start="1964" selection-end="1964" vertical-scroll-proportion="0.63119835">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+  </component>
+  <component name="masterDetails">
+    <states>
+      <state key="ArtifactsStructureConfigurable.UI">
+        <settings>
+          <artifact-editor />
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="FacetStructureConfigurable.UI">
+        <settings>
+          <last-edited>No facets are configured</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="GlobalLibrariesConfigurable.UI">
+        <settings>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="JdkListConfigurable.UI">
+        <settings>
+          <last-edited>Default Gosu SDK</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ModuleStructureConfigurable.UI">
+        <settings>
+          <last-edited>tosa</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ProjectLibrariesConfigurable.UI">
+        <settings>
+          <last-edited>Maven: ch.qos.cal10n:cal10n-api:0.7.4</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+    </states>
+  </component>
+</project>
+
