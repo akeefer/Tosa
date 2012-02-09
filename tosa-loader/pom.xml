@@ -83,7 +83,7 @@
         <groupId>org.gosu-lang</groupId>
         <artifactId>maven-gosu-plugin</artifactId>
         <configuration>
-          <gosuVersion>0.9-SNAPSHOT</gosuVersion>
+          <gosuVersion>0.9-7</gosuVersion>
           <includeImpl>true</includeImpl> <!-- TODO: naughty, naughty -->
         </configuration>
       </plugin>
