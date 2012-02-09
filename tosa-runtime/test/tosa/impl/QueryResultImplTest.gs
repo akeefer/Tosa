@@ -1,4 +1,4 @@
-package tosa.impl.query
+package tosa.impl
 
 uses tosa.TosaDBTestBase
 uses org.junit.Test

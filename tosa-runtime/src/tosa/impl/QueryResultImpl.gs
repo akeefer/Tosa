@@ -1,4 +1,4 @@
-package tosa.impl.query
+package tosa.impl
 
 uses tosa.api.QueryResult
 uses tosa.api.IPreparedStatementParameter

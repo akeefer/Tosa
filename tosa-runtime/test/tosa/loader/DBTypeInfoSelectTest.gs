@@ -364,20 +364,20 @@ class DBTypeInfoSelectTest extends TosaDBTestBase {
   function testCountWithNoWhereClauseCountsAllBars() {
     var bar = createBar("4/22/2009", "misc")
     var bar2 = createBar("4/23/2009", "other")
-    assertEquals(2, Bar.count("SELECT count(*) as count FROM Bar"))
+    assertEquals(2l, Bar.count("SELECT count(*) as count FROM Bar"))
   }
 
   @Test
   function testCountThatMatchesNothingReturnsZero() {
     var bar = createBar("4/22/2009", "misc")
-    assertEquals(0, Bar.count("SELECT count(*) as count FROM Bar WHERE Misc = 'nosuchvalue'"))
+    assertEquals(0l, Bar.count("SELECT count(*) as count FROM Bar WHERE Misc = 'nosuchvalue'"))
   }
 
   @Test
   function testCountWithOneParam() {
     var bar = createBar("4/22/2009", "misc")
     var bar2 = createBar("4/23/2009", "other")
-    assertEquals(1, Bar.count("SELECT count(*) as count FROM Bar WHERE Misc = :arg", {"arg" -> "misc"}))
+    assertEquals(1l, Bar.count("SELECT count(*) as count FROM Bar WHERE Misc = :arg", {"arg" -> "misc"}))
   }
 
   @Test

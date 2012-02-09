@@ -9,7 +9,7 @@ uses org.junit.runners.Suite.SuiteClasses
 @SuiteClasses({
     tosa.impl.JoinArrayEntityCollectionImplTest,
     tosa.impl.ReverseFkEntityCollectionImplTest,
-    tosa.impl.query.QueryResultImplTest,
+    tosa.impl.QueryResultImplTest,
     tosa.loader.DatabaseAccessTypeTest,
     tosa.loader.DBTypeInfoSelectTest,
     tosa.loader.DBTypeInfoTest,

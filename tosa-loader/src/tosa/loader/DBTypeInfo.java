@@ -3,9 +3,12 @@ package tosa.loader;
 import gw.internal.gosu.parser.expressions.NullExpression;
 import gw.lang.reflect.*;
 import gw.lang.reflect.java.JavaTypes;
+import gw.util.concurrent.LockingLazyVar;
 import tosa.CachedDBObject;
 import tosa.api.*;
 import tosa.dbmd.DBColumnImpl;
+
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -18,115 +21,140 @@ public class DBTypeInfo extends TosaBaseTypeInfo implements ITypeInfo {
 
   public static final String ID_COLUMN = "id";
 
+  private LockingLazyVar<DBTypeInfoDelegate> _delegate = new LockingLazyVar<DBTypeInfoDelegate>() {
+    @Override
+    protected DBTypeInfoDelegate init() {
+      return (DBTypeInfoDelegate) ReflectUtil.construct("tosa.impl.loader.DBTypeInfoDelegateImpl");
+    }
+  };
+
+  private DBTypeInfoDelegate getDelegate() {
+    return _delegate.get();
+  }
+  
   public DBTypeInfo(IDBType dbType) {
     super(dbType);
-
-    delegateStaticMethods(TypeSystem.getByFullName("tosa.loader.DBTypeDelegate"));
     
-//    createMethod(
-//            "fromId",
-//            params(param("id", JavaTypes.pLONG(), "the id")),
-//            getDBType(),
-//            Modifiers.PublicStatic,
-//            "Foo",
-//            new IMethodCallHandler() {
-//              @Override
-//              public Object handleCall(Object context, Object... params) {
-//                return _delegate.fromId(params[0]);
-//              }
-//            });
-//
-//    createMethod(
-//            "count",
-//            params(param("sql", JavaTypes.STRING(), "the sql for the count query"),
-//                   param("params", JavaTypes.MAP().getParameterizedType(JavaTypes.STRING(), JavaTypes.OBJECT()), "parameters", NullExpression.instance())),
-//            JavaTypes.pLONG(),
-//            Modifiers.PublicStatic,
-//            "Foo",
-//            new IMethodCallHandler() {
-//              @Override
-//              public Object handleCall(Object context, Object... params) {
-//                return _delegate.count(params[0], params[1]);
-//              }
-//            });
-//
-//    createMethod(
-//            "countAll",
-//            params(),
-//            JavaTypes.pLONG(),
-//            Modifiers.PublicStatic,
-//            "Foo",
-//            new IMethodCallHandler() {
-//              @Override
-//              public Object handleCall(Object context, Object... params) {
-//                return _delegate.countAll();
-//              }
-//            });
-//
-//    createMethod(
-//            "countWhere",
-//            params(param("sql", JavaTypes.STRING(), "the sql for the WHERE clause in the count query"),
-//                    param("params", JavaTypes.MAP().getParameterizedType(JavaTypes.STRING(), JavaTypes.OBJECT()), "parameters", NullExpression.instance())),
-//            JavaTypes.pLONG(),
-//            Modifiers.PublicStatic,
-//            "Foo",
-//            new IMethodCallHandler() {
-//              @Override
-//              public Object handleCall(Object context, Object... params) {
-//                return _delegate.countWhere(params[0], params[1]);
-//              }
-//            });
-//
-//    createMethod(
-//            "countLike",
-//            params(param("template", getDBType(), "the template to use in forming the WHERE clause for the count query")),
-//            JavaTypes.pLONG(),
-//            Modifiers.PublicStatic,
-//            "Foo",
-//            new IMethodCallHandler() {
-//              @Override
-//              public Object handleCall(Object context, Object... params) {
-//                return _delegate.countLike(params[0]);
-//              }
-//            });
-    
-    /*
-  static function fromId(dbType : IDBType, id : long) : IDBObject {
-    return new CoreFinder(dbType).fromId(id)
-  }
+    createMethod(
+            "fromId",
+            params(param("id", JavaTypes.pLONG(), "the id of the object to find")),
+            getDBType(),
+            Modifiers.PublicStatic,
+            "TODO",
+            new IMethodCallHandler() {
+              @Override
+              public Object handleCall(Object context, Object... params) {
+                return getDelegate().fromId(getDBType(), (Long) params[0]);
+              }
+            });
 
-  static function count(dbType : IDBType, sql : String, params : Map<String, Object> = null) : long {
-    return new CoreFinder(dbType).count(sql, params)
-  }
+    createMethod(
+            "count",
+            params(param("sql", JavaTypes.STRING(), "the sql for the count query"),
+                   param("params", JavaTypes.MAP().getParameterizedType(JavaTypes.STRING(), JavaTypes.OBJECT()), "parameters", NullExpression.instance())),
+            JavaTypes.pLONG(),
+            Modifiers.PublicStatic,
+            "TODO",
+            new IMethodCallHandler() {
+              @Override
+              public Object handleCall(Object context, Object... params) {
+                return getDelegate().count(getDBType(), (String) params[0], (Map<String, Object>) params[1]);
+              }
+            });
 
-  static function countAll(dbType : IDBType) : long {
-    return new CoreFinder(dbType).countAll()
-  }
+    createMethod(
+            "countAll",
+            params(),
+            JavaTypes.pLONG(),
+            Modifiers.PublicStatic,
+            "TODO",
+            new IMethodCallHandler() {
+              @Override
+              public Object handleCall(Object context, Object... params) {
+                return getDelegate().countAll(getDBType());
+              }
+            });
 
-  static function countWhere(dbType : IDBType, sql : String, params : Map<String, Object> = null) : long {
-    return new CoreFinder(dbType).countWhere(sql, params)
-  }
+    createMethod(
+            "countWhere",
+            params(param("sql", JavaTypes.STRING(), "the sql for the WHERE clause in the count query"),
+                    param("params", JavaTypes.MAP().getParameterizedType(JavaTypes.STRING(), JavaTypes.OBJECT()), "parameters", NullExpression.instance())),
+            JavaTypes.pLONG(),
+            Modifiers.PublicStatic,
+            "TODO",
+            new IMethodCallHandler() {
+              @Override
+              public Object handleCall(Object context, Object... params) {
+                return getDelegate().countWhere(getDBType(), (String) params[0], (Map<String, Object>) params[1]);
+              }
+            });
 
-  static function countLike(dbType : IDBType, template: IDBObject) : long {
-    return new CoreFinder(dbType).countLike(template)
-  }
+    createMethod(
+            "countLike",
+            params(param("template", getDBType(), "the template to use in forming the WHERE clause for the count query")),
+            JavaTypes.pLONG(),
+            Modifiers.PublicStatic,
+            "TODO",
+            new IMethodCallHandler() {
+              @Override
+              public Object handleCall(Object context, Object... params) {
+                return getDelegate().countLike(getDBType(), (IDBObject) params[0]);
+              }
+            });
 
-  static function select(dbType : IDBType, sql : String, params : Map<String, Object> = null) : QueryResult<IDBObject> {
-    return new CoreFinder(dbType).select(sql, params)
-  }
+    createMethod(
+            "select",
+            params(param("sql", JavaTypes.STRING(), "the sql for the query"),
+                    param("params", JavaTypes.MAP().getParameterizedType(JavaTypes.STRING(), JavaTypes.OBJECT()), "parameters", NullExpression.instance())),
+            TypeSystem.getByFullName("tosa.api.QueryResult").getParameterizedType(getDBType()),
+            Modifiers.PublicStatic,
+            "TODO",
+            new IMethodCallHandler() {
+              @Override
+              public Object handleCall(Object context, Object... params) {
+                return getDelegate().select(getDBType(), (String) params[0], (Map<String, Object>) params[1]);
+              }
+            });
 
-  static function selectAll(dbType : IDBType) : QueryResult<IDBObject> {
-    return new CoreFinder(dbType).selectAll()
-  }
+    createMethod(
+            "selectAll",
+            params(),
+            TypeSystem.getByFullName("tosa.api.QueryResult").getParameterizedType(getDBType()),
+            Modifiers.PublicStatic,
+            "TODO",
+            new IMethodCallHandler() {
+              @Override
+              public Object handleCall(Object context, Object... params) {
+                return getDelegate().selectAll(getDBType());
+              }
+            });
 
-  static function selectWhere(dbType : IDBType, sql : String, params : Map<String, Object> = null) : QueryResult<IDBObject> {
-    return new CoreFinder(dbType).selectWhere(sql, params)
-  }
+    createMethod(
+            "selectWhere",
+            params(param("sql", JavaTypes.STRING(), "the sql for the WHERE clause of the query"),
+                    param("params", JavaTypes.MAP().getParameterizedType(JavaTypes.STRING(), JavaTypes.OBJECT()), "parameters", NullExpression.instance())),
+            TypeSystem.getByFullName("tosa.api.QueryResult").getParameterizedType(getDBType()),
+            Modifiers.PublicStatic,
+            "TODO",
+            new IMethodCallHandler() {
+              @Override
+              public Object handleCall(Object context, Object... params) {
+                return getDelegate().selectWhere(getDBType(), (String) params[0], (Map<String, Object>) params[1]);
+              }
+            });
 
-  static function selectLike(dbType : IDBType, template : IDBObject) : QueryResult<IDBObject> {
-    return new CoreFinder(dbType).selectLike(template)
-  }*/
-
+    createMethod(
+            "selectLike",
+            params(param("template", getDBType(), "the template to use in forming the WHERE clause for the query")),
+            TypeSystem.getByFullName("tosa.api.QueryResult").getParameterizedType(getDBType()),
+            Modifiers.PublicStatic,
+            "TODO",
+            new IMethodCallHandler() {
+              @Override
+              public Object handleCall(Object context, Object... params) {
+                return getDelegate().selectLike(getDBType(), (IDBObject) params[0]);
+              }
+            });
 
     for (IDBColumn column : dbType.getTable().getColumns()) {
       // TODO - AHK - Ideally this cast wouldn't be necessary

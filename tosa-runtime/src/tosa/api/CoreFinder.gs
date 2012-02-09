@@ -8,7 +8,7 @@ uses gw.lang.reflect.features.PropertyReference
 uses tosa.loader.Util
 uses java.util.Arrays
 uses java.lang.IllegalStateException
-uses tosa.impl.query.QueryResultImpl
+uses tosa.impl.QueryResultImpl
 uses java.sql.ResultSet
 uses tosa.CachedDBObject
 
