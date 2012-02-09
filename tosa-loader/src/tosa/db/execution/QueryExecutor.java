@@ -1,9 +1,9 @@
 package tosa.db.execution;
 
-import gw.lang.reflect.ReflectUtil;
 import tosa.api.IDBColumn;
 import tosa.api.IDBObject;
 import tosa.api.IDBTable;
+import tosa.impl.RuntimeBridge;
 import tosa.loader.IDBType;
 
 import java.sql.ResultSet;
@@ -21,8 +21,7 @@ public class QueryExecutor {
   // TODO - AHK - Kill this/move it somewhere else
 
   public static IDBObject buildObject(IDBType type, ResultSet resultSet) throws SQLException {
-    // TODO - AHK - This is cleeaarrrlly a hack
-    IDBObject obj = ReflectUtil.construct("tosa.CachedDBObject", type, false);
+    IDBObject obj = RuntimeBridge.createDBObject(type, false);
     IDBTable table = type.getTable();
     for (IDBColumn column : table.getColumns()) {
       Object resultObject = column.getColumnType().readFromResultSet(resultSet, table.getName() + "." + column.getName());

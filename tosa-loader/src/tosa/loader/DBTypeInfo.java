@@ -5,9 +5,7 @@ import gw.lang.reflect.ConstructorInfoBuilder;
 import gw.lang.reflect.IConstructorHandler;
 import gw.lang.reflect.IMethodCallHandler;
 import gw.lang.reflect.IPropertyInfo;
-import gw.lang.reflect.IType;
 import gw.lang.reflect.ITypeInfo;
-import gw.lang.reflect.ReflectUtil;
 import gw.lang.reflect.TypeSystem;
 import gw.lang.reflect.java.JavaTypes;
 import gw.util.concurrent.LockingLazyVar;
@@ -15,6 +13,7 @@ import tosa.api.IDBArray;
 import tosa.api.IDBColumn;
 import tosa.api.IDBObject;
 import tosa.dbmd.DBColumnImpl;
+import tosa.impl.RuntimeBridge;
 
 import java.util.Map;
 
@@ -32,7 +31,7 @@ public class DBTypeInfo extends TosaBaseTypeInfo implements ITypeInfo {
   private LockingLazyVar<DBTypeInfoDelegate> _delegate = new LockingLazyVar<DBTypeInfoDelegate>() {
     @Override
     protected DBTypeInfoDelegate init() {
-      return (DBTypeInfoDelegate) ReflectUtil.construct("tosa.impl.loader.DBTypeInfoDelegateImpl");
+      return RuntimeBridge.createTypeInfoDelegate();
     }
   };
 

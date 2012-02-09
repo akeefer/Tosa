@@ -1,6 +1,5 @@
 package tosa.impl;
 
-import gw.lang.reflect.ReflectUtil;
 import org.slf4j.profiler.Profiler;
 import tosa.api.IDBColumn;
 import tosa.api.IDBObject;
@@ -133,8 +132,7 @@ public class QueryExecutorImpl implements QueryExecutor {
   }
 
   public static IDBObject buildObject(IDBType type, ResultSet resultSet) throws SQLException {
-    // TODO - AHK - This is cleeaarrrllly a horrendous hack
-    IDBObject obj = ReflectUtil.construct("tosa.CachedDBObject", type, false);
+    IDBObject obj = RuntimeBridge.createDBObject(type, false);
     IDBTable table = type.getTable();
     for (IDBColumn column : table.getColumns()) {
       Object resultObject = column.getColumnType().readFromResultSet(resultSet, table.getName() + "." + column.getName());

@@ -2,7 +2,6 @@ package tosa.dbmd;
 
 import gw.fs.IFile;
 import gw.lang.reflect.module.IModule;
-import tosa.DBConnection;
 import tosa.api.IDBColumn;
 import tosa.api.IDBConnection;
 import tosa.api.IDBExecutionKernel;
@@ -12,6 +11,7 @@ import tosa.api.IDatabase;
 import tosa.api.IPreparedStatementParameter;
 import tosa.db.execution.DBExecutionKernelImpl;
 import tosa.db.execution.DBUpgraderImpl;
+import tosa.impl.RuntimeBridge;
 import tosa.impl.md.DBFkArrayImpl;
 import tosa.impl.md.DBJoinArrayImpl;
 import tosa.loader.data.DBData;
@@ -34,7 +34,7 @@ public class DatabaseImpl implements IDatabase {
   private final String _namespace;
   private final DBData _dbData;
   private final Map<String, DBTableImpl> _tables;
-  private DBConnection _connection;
+  private IDBConnection _connection;
   private final DBExecutionKernelImpl _executionKernel;
   private String _jdbcUrl;
   private IModule _module;
@@ -179,7 +179,7 @@ public class DatabaseImpl implements IDatabase {
     // TODO - AHK - Check for MySql ANSI_QUOTES string?
     _jdbcUrl = url;
     // TODO - AHK - Synchronization
-    _connection = new DBConnection(url, _module);
+    _connection = RuntimeBridge.createConnection(url, _module);
   }
 
   @Override
