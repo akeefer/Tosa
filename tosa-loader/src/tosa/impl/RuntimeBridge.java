@@ -3,7 +3,10 @@ package tosa.impl;
 import gw.lang.reflect.ReflectUtil;
 import gw.lang.reflect.module.IModule;
 import tosa.api.IDBConnection;
+import tosa.api.IDBExecutionKernel;
 import tosa.api.IDBObject;
+import tosa.api.IDBUpgrader;
+import tosa.api.IDatabase;
 import tosa.loader.DBTypeInfoDelegate;
 import tosa.loader.IDBType;
 
@@ -27,5 +30,13 @@ public class RuntimeBridge {
 
   public static DBTypeInfoDelegate createTypeInfoDelegate() {
     return ReflectUtil.construct("tosa.impl.loader.DBTypeInfoDelegateImpl");
+  }
+  
+  public static IDBExecutionKernel createExecutionKernel(IDatabase database) {
+    return ReflectUtil.construct("tosa.db.execution.DBExecutionKernelImpl", database);
+  }
+
+  public static IDBUpgrader createUpgrader(IDatabase database) {
+    return ReflectUtil.construct("tosa.db.execution.DBUpgraderImpl", database);
   }
 }

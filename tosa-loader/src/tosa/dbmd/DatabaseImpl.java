@@ -2,6 +2,7 @@ package tosa.dbmd;
 
 import gw.fs.IFile;
 import gw.lang.reflect.module.IModule;
+import gw.util.concurrent.LockingLazyVar;
 import tosa.api.IDBColumn;
 import tosa.api.IDBConnection;
 import tosa.api.IDBExecutionKernel;
@@ -9,8 +10,6 @@ import tosa.api.IDBTable;
 import tosa.api.IDBUpgrader;
 import tosa.api.IDatabase;
 import tosa.api.IPreparedStatementParameter;
-import tosa.db.execution.DBExecutionKernelImpl;
-import tosa.db.execution.DBUpgraderImpl;
 import tosa.impl.RuntimeBridge;
 import tosa.impl.md.DBFkArrayImpl;
 import tosa.impl.md.DBJoinArrayImpl;
@@ -35,9 +34,17 @@ public class DatabaseImpl implements IDatabase {
   private final DBData _dbData;
   private final Map<String, DBTableImpl> _tables;
   private IDBConnection _connection;
-  private final DBExecutionKernelImpl _executionKernel;
   private String _jdbcUrl;
   private IModule _module;
+
+  // TODO - AHK - This could either be a lazy-var, or theoretically we could always
+  // just try to construct the thing and then fail if we can't
+  private LockingLazyVar<IDBExecutionKernel> _executionKernel = new LockingLazyVar<IDBExecutionKernel>() {
+    @Override
+    protected IDBExecutionKernel init() {
+      return RuntimeBridge.createExecutionKernel(DatabaseImpl.this);
+    }
+  };
 
   public DatabaseImpl(String namespace, DBData dbData, IModule module) {
     _namespace = namespace;
@@ -50,7 +57,6 @@ public class DatabaseImpl implements IDatabase {
     _tables = Collections.unmodifiableMap(tables);
 
     _connection = null;
-    _executionKernel = new DBExecutionKernelImpl(this);
   }
 
   @Override
@@ -84,13 +90,13 @@ public class DatabaseImpl implements IDatabase {
 
   @Override
   public IDBExecutionKernel getDBExecutionKernel() {
-    return _executionKernel;
+    return _executionKernel.get();
   }
 
   @Override
   public IDBUpgrader getDBUpgrader() {
     // TODO - AHK - Should we create this every time, or keep a handle to it?
-    return new DBUpgraderImpl(this);
+    return RuntimeBridge.createUpgrader(this);
   }
 
   public IFile getDdlFile() {
