@@ -7,6 +7,8 @@ uses org.junit.runners.Suite.SuiteClasses
 @RunWith(Suite)
 @SuiteClasses({
     tosa.impl.parser.data.DBDataValidatorTest,
-    tosa.impl.util.StringSubstituterTest
+    tosa.impl.util.StringSubstituterTest,
+    tosa.loader.parser.mysql.MySQL51SQLParserTest,
+    tosa.loader.parser.TokenizerTest
 })
 public class TosaLoaderSuite {}
