@@ -1,6 +1,7 @@
 # Compilation artifacts #
 tosa-loader/target
 tosa-runtime/target
+tosa-loader/classes
 
 # IntelliJ Workspace - This will differ per user#
 tosa-loader/.idea/workspace.xml
