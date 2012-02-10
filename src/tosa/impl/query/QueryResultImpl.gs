@@ -107,6 +107,21 @@ public class QueryResultImpl<T> implements QueryResult<T> {
     return this
   }
 
+  override function loadPage(pageNumber : int) : List<T> {
+    if (_pagingInfo == null) {
+      maybeLoadResults()
+      return new ArrayList<T>(_results)
+    } else {
+      // Invalidate results if necessary
+      if (_pagingInfo._currentOffset != pageNumber * _pagingInfo._pageSize) {
+        _results = null
+        _pagingInfo._currentOffset = pageNumber * _pagingInfo._pageSize
+      }
+      maybeLoadResults()
+      return new ArrayList<T>(_results)
+    }
+  }
+
   override function clearPaging() : QueryResult<T> {
     _results = null
     _pagingInfo = null
