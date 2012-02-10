@@ -3,6 +3,7 @@ package tosa.impl;
 import gw.lang.reflect.IType;
 import gw.lang.reflect.ReflectUtil;
 import gw.util.GosuRefactorUtil;
+import gw.util.concurrent.LocklessLazyVar;
 import tosa.api.EntityCollection;
 import tosa.api.IDBArray;
 import tosa.api.IDBObject;
@@ -19,12 +20,25 @@ import tosa.loader.IDBType;
  */
 public class CachedDBObject implements IDBObject {
 
+  // We've got a factory that we can just call through to, and a lazy static instance of that factory,
+  // so that we don't have to reflectively-construct the delegate every time we create one of these objects
+  public static interface DelegateFactory {
+    Delegate createDelegate(IDBType type, boolean isNew, CachedDBObject owner);
+  }
+
+  private static LocklessLazyVar<DelegateFactory> DELEGATE_FACTORY = new LocklessLazyVar<DelegateFactory>() {
+    @Override
+    protected DelegateFactory init() {
+      return ReflectUtil.construct("tosa.impl.CachedDBObjectDelegateFactoryImpl");
+    }
+  };
+
   private IDBType _type;
-  private CachedDBObjectDelegate _delegate;
+  private Delegate _delegate;
   
   public CachedDBObject(IDBType type, boolean isNew) {
     _type = type;
-    _delegate = createDelegate(type, isNew);
+    _delegate = DELEGATE_FACTORY.get().createDelegate(type, isNew, this);
   }
   
   @Override
@@ -115,8 +129,29 @@ public class CachedDBObject implements IDBObject {
     return _delegate.toString();
   }
 
-  private CachedDBObjectDelegate createDelegate(IDBType type, boolean isNew) {
-    // TODO - AHK - Optimize this
-    return ReflectUtil.construct("tosa.impl.CachedDBObjectDelegateImpl", type, isNew, this);
+  public interface Delegate {
+    tosa.api.IDBTable getDBTable();
+
+    java.lang.Object getColumnValue(java.lang.String s);
+
+    void setColumnValue(java.lang.String s, java.lang.Object o);
+
+    tosa.api.IDBObject getFkValue(java.lang.String s);
+
+    void setFkValue(java.lang.String s, tosa.api.IDBObject idbObject);
+
+    tosa.api.EntityCollection getArray(java.lang.String s);
+
+    tosa.api.EntityCollection getArray(tosa.api.IDBArray idbArray);
+
+    java.lang.Long getId();
+
+    java.lang.Long toID();
+
+    boolean isNew();
+
+    void update();
+
+    void delete();
   }
 }

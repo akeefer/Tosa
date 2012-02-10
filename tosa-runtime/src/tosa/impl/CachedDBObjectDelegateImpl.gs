@@ -27,7 +27,7 @@ uses java.lang.StringBuilder
  * Time: 2:57 PM
  * To change this template use File | Settings | File Templates.
  */
-class CachedDBObjectDelegateImpl implements CachedDBObjectDelegate {
+class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
   private var _columns : Map<String, Object>;
   private var _cachedFks : Map<String, IDBObject>;
   private var _cachedArrays : Map<String, EntityCollection>;
