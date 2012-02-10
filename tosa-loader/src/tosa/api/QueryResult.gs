@@ -111,6 +111,16 @@ public interface QueryResult<T> extends Iterable<T> {
   function page(startPage : int = 0, pageSize : int = 100, startOffset : int = 0) : QueryResult<T>
 
   /**
+   * Loads the specified page into a List.  If this query hasn't been paged, this will
+   * load all results regardless of the pageNumber argument specified.
+   *
+   * @param pageNumber the page number to load, which defaults to 0
+   *
+   * @return the results corresponding to the specified page
+   */
+  function loadPage(pageNumber : int = 0) : List<T>
+
+  /**
    * Clears any paging information applied to this QueryResult.
    *
    * Calling this method will invalidate any already-loaded results, causing them to be reloaded from the

@@ -88,7 +88,7 @@
         <groupId>org.gosu-lang</groupId>
         <artifactId>maven-gosu-plugin</artifactId>
         <configuration>
-          <gosuVersion>0.9-7</gosuVersion>
+          <gosuVersion>0.9-8</gosuVersion>
           <includeImpl>true</includeImpl> <!-- TODO: naughty, naughty -->
         </configuration>
       </plugin>
