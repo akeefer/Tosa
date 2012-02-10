@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact build-on-make="true" name="dummy-artifact">
+    <output-path>$PROJECT_DIR$/classes/artifacts/dummy_artifact</output-path>
+    <properties id="ant-postprocessing">
+      <options enabled="true">
+        <file>file://$PROJECT_DIR$/build.xml</file>
+        <target>mvn-install</target>
+      </options>
+    </properties>
+    <root id="root">
+      <element id="dir-copy" path="$PROJECT_DIR$/src" />
+    </root>
+  </artifact>
+</component>
