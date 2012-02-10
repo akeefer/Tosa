@@ -4,7 +4,6 @@ uses tosa.TosaDBTestBase
 uses org.junit.Test
 uses tosa.api.CoreFinder
 uses tosa.api.IDBObject
-uses tosa.CachedDBObject
 uses gw.lang.reflect.TypeSystem
 uses tosa.loader.IDBType
 uses gw.lang.reflect.ReflectUtil

@@ -5,7 +5,7 @@ uses tosa.loader.IDBType
 uses tosa.api.IDBObject
 uses java.util.Map
 uses tosa.api.CoreFinder
-uses tosa.CachedDBObject
+uses tosa.impl.CachedDBObject
 
 /**
  * Created by IntelliJ IDEA.

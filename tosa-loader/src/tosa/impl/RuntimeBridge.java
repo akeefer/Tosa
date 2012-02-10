@@ -25,7 +25,7 @@ public class RuntimeBridge {
 
   // TODO - AHK - Ideally we'd completely kill the need for this in tosa-loader
   public static IDBObject createDBObject(IDBType type, boolean isNew) {
-    return ReflectUtil.construct("tosa.CachedDBObject", type, isNew);
+    return ReflectUtil.construct("tosa.impl.CachedDBObject", type, isNew);
   }
 
   public static DBTypeInfoDelegate createTypeInfoDelegate() {

@@ -10,7 +10,7 @@ uses java.util.Arrays
 uses java.lang.IllegalStateException
 uses tosa.impl.QueryResultImpl
 uses java.sql.ResultSet
-uses tosa.CachedDBObject
+uses tosa.impl.CachedDBObject
 
 /**
  */
