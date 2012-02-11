@@ -1,5 +1,6 @@
 package tosa.loader.parser;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import tosa.loader.parser.mysql.MySQL51SQLParser;
 import tosa.loader.parser.tree.SelectStatement;
@@ -9,6 +10,7 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
+@Ignore
 public class SelectParsingBootstrapTest {
   @Test public void bootstrapSelectTest() {
     QueryParser parser = new QueryParser(Token.tokenize("SELECT * FROM foo WHERE foo.bar = 10"), null);

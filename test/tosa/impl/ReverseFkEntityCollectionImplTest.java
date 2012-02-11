@@ -1,6 +1,7 @@
 package tosa.impl;
 
 import gw.lang.reflect.TypeSystem;
+import org.junit.Ignore;
 import org.junit.Test;
 import tosa.CachedDBObject;
 import tosa.TosaDBTestBase;
@@ -18,6 +19,7 @@ import java.util.Iterator;
  * Time: 3:17 PM
  * To change this template use File | Settings | File Templates.
  */
+@Ignore
 public class ReverseFkEntityCollectionImplTest extends TosaDBTestBase {
 
   private IDBObject createAndCommitBar() {
