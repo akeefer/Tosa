@@ -8,6 +8,7 @@ import gw.lang.reflect.java.JavaTypes;
 import gw.util.GosuExceptionUtil;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import test.TestEnv;
 import tosa.api.IDBConnection;
@@ -31,6 +32,7 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
+@Ignore
 public class SQLTypeTest {
 
   @BeforeClass
