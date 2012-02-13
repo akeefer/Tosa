@@ -1,10 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.gosu-lang.tosa</groupId>
   <artifactId>tosa-loader</artifactId>
-  <version>0.1-SNAPSHOT</version>
+  <version>0.2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>Tosa Typeloader</name>
@@ -22,6 +21,12 @@
       <url>http://gosu-lang.org/repositories/m2/releases</url>
     </repository>
   </repositories>
+
+  <scm>
+    <connection>scm:git:git@github.com:gosu-lang/Tosa.git</connection>
+    <url>scm:git:git@github.com:gosu-lang/Tosa.git</url>
+    <developerConnection>scm:git:git@github.com:gosu-lang/Tosa.git</developerConnection>
+  </scm>
 
   <dependencies>
     <dependency>
