@@ -14,6 +14,7 @@ uses org.junit.runners.Suite.SuiteClasses
     tosa.loader.DatabaseAccessTypeTest,
     tosa.loader.DBTypeInfoSelectTest,
     tosa.loader.DBTypeInfoTest,
-    tosa.loader.SQLTypeInfoTest
+    tosa.loader.SQLTypeInfoTest,
+    tosa.loader.SQLTypeTest
 })
 public class TosaSuite {}
