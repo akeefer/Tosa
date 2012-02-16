@@ -1,34 +1,35 @@
-package tosa.impl;
+package tosa.impl
 
-import tosa.api.EntityCollection;
-import tosa.api.IDBObject;
-import tosa.loader.IDBType;
-
-import java.util.Iterator;
-import java.util.List;
+uses tosa.loader.IDBType
+uses tosa.api.IDBObject
+uses tosa.api.EntityCollection
+uses java.util.Iterator
+uses java.lang.UnsupportedOperationException
+uses java.lang.IndexOutOfBoundsException
+uses java.lang.IllegalArgumentException
+uses java.lang.IllegalStateException
 
 /**
  * Created by IntelliJ IDEA.
- * User: alan
- * Date: 5/8/11
- * Time: 3:11 PM
+ * User: Alan
+ * Date: 2/15/12
+ * Time: 11:38 PM
  * To change this template use File | Settings | File Templates.
  */
-public abstract class EntityCollectionImplBase<T extends IDBObject> implements EntityCollection<T> {
+abstract class EntityCollectionImplBase<T extends IDBObject> implements EntityCollection<T> {
 
-  protected IDBObject _owner;
-  protected IDBType _fkType;
-  protected QueryExecutor _queryExecutor;
-  protected List<T> _cachedResults;
+  protected var _owner : IDBObject
+  protected var _fkType : IDBType
+  protected var _queryExecutor : QueryExecutor
+  protected var _cachedResults : List<T>
 
-  protected EntityCollectionImplBase(IDBObject owner, IDBType fkType, QueryExecutor queryExecutor) {
+  protected construct(owner : IDBObject, fkType : IDBType, queryExecutor : QueryExecutor) {
     _owner = owner;
     _fkType = fkType;
     _queryExecutor = queryExecutor;
   }
 
-  @Override
-  public int size() {
+  override function size() : int {
     if (_cachedResults == null) {
       return issueCountQuery();
     } else {
@@ -36,14 +37,12 @@ public abstract class EntityCollectionImplBase<T extends IDBObject> implements E
     }
   }
 
-  @Override
-  public Iterator<T> iterator() {
+  override function iterator() : Iterator<T> {
     loadResultsIfNecessary();
     return new EntityCollectionImplIterator(_cachedResults.iterator());
   }
 
-  @Override
-  public T get(int index) {
+  override function get(index : int) : T {
     loadResultsIfNecessary();
     if (index < 0 || index > _cachedResults.size() - 1) {
       throw new IndexOutOfBoundsException("Index " + index + " is invalid for an ReverseFkEntityCollectionImpl of size " + _cachedResults.size());
@@ -51,8 +50,7 @@ public abstract class EntityCollectionImplBase<T extends IDBObject> implements E
     return _cachedResults.get(index);
   }
 
-  @Override
-  public void add(T element) {
+  override function add(element : T) {
     if (!_fkType.isAssignableFrom(element.getIntrinsicType())) {
       throw new IllegalArgumentException("An element of type " + element.getIntrinsicType() + " cannot be added to a collection of type " + _fkType);
     }
@@ -64,8 +62,7 @@ public abstract class EntityCollectionImplBase<T extends IDBObject> implements E
     addImpl(element);
   }
 
-  @Override
-  public void remove(T element) {
+  override function remove(element : T) {
     if (!_fkType.isAssignableFrom(element.getIntrinsicType())) {
       throw new IllegalArgumentException("An element of type " + element.getIntrinsicType() + " cannot be added to a collection of type " + _fkType);
     }
@@ -77,13 +74,11 @@ public abstract class EntityCollectionImplBase<T extends IDBObject> implements E
     removeImpl(element);
   }
 
-  @Override
-  public void load() {
+  override function load() {
     loadResultsIfNecessary();
   }
 
-  @Override
-  public void unload() {
+  override function unload() {
     _cachedResults = null;
   }
 
@@ -91,48 +86,44 @@ public abstract class EntityCollectionImplBase<T extends IDBObject> implements E
    * This is an internal implementation method exposed only for the sake of testing
    * @param queryExecutor
    */
-  public void setQueryExecutor(QueryExecutor queryExecutor) {
+  function setQueryExecutor(queryExecutor : QueryExecutor) {
     _queryExecutor = queryExecutor;
   }
 
   // --------------- Abstract Protected Methods
 
-  protected abstract int issueCountQuery();
+  protected abstract function issueCountQuery() : int
 
-  protected abstract List<T> loadResults();
+  protected abstract function loadResults() : List<T>;
 
-  protected abstract void addImpl(T element);
+  protected abstract function addImpl(element : T);
 
-  protected abstract void removeImpl(T element);
+  protected abstract function removeImpl(element : T);
 
   // -------------- Private Methods
 
-  private void loadResultsIfNecessary() {
+  private function loadResultsIfNecessary() {
     if (_cachedResults == null) {
-      _cachedResults = loadResults();
+      _cachedResults = loadResults()
     }
   }
 
   private class EntityCollectionImplIterator implements Iterator<T> {
-    Iterator<T> _wrappedIterator;
+    delegate _wrappedIterator represents Iterator<T>
 
-    private EntityCollectionImplIterator(Iterator<T> wrappedIterator) {
+    private construct(wrappedIterator : Iterator<T>) {
       _wrappedIterator = wrappedIterator;
     }
 
-    @Override
-    public boolean hasNext() {
-      return _wrappedIterator.hasNext();
+    // AHK - This shouldn't be necessary, but there's a Gosu bug that appears to prevent it from being
+    // delegated properly.  Note that hasNext() is delegated just fine
+    override function next() : T {
+      return _wrappedIterator.next()
     }
 
-    @Override
-    public T next() {
-      return _wrappedIterator.next();
-    }
-
-    @Override
-    public void remove() {
+    override function remove() {
       throw new UnsupportedOperationException();
     }
   }
+
 }
