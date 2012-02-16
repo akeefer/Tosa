@@ -115,7 +115,7 @@ class CoreFinder<T extends IDBObject> {
 
   // ---------------------- Private Helper Methods ------------------------------------
 
-  private static function subIfNecessary(sql : String, prefix : String, params : Map<String, Object>) : SqlAndParams {
+  private static function subIfNecessary(sql : String, prefix : String, params : Map<String, Object>) : SqlStringSubstituter.SqlAndParams {
     var queryString : String
     var paramArray : Object[]
     if (sql == null || sql.Empty) {
@@ -129,15 +129,14 @@ class CoreFinder<T extends IDBObject> {
       queryString = (prefix == null ? sql : prefix + " WHERE " + sql)
       paramArray = {}
     }
-    return new SqlAndParams(queryString, paramArray)
+    return new SqlStringSubstituter.SqlAndParams(queryString, paramArray)
   }
 
-  private static function sub(input : String, tokenValues : Map<String, Object>) : SqlAndParams {
-    var pair = SqlStringSubstituter.substitute(input, tokenValues)
-    return new SqlAndParams(pair.First, pair.Second)
+  private static function sub(input : String, tokenValues : Map<String, Object>) : SqlStringSubstituter.SqlAndParams {
+    return SqlStringSubstituter.substitute(input, tokenValues)
   }
 
-  private static function buildWhereClause(template : IDBObject) : SqlAndParams {
+  private static function buildWhereClause(template : IDBObject) : SqlStringSubstituter.SqlAndParams {
     var clauses : List<String> = {}
     var params : List<Object> = {}
     if (template != null) {
@@ -146,30 +145,20 @@ class CoreFinder<T extends IDBObject> {
         if (value != null) {
           var result = sub(":column = :value", {"column" -> column, "value" -> value})
           clauses.add(result.Sql)
-          params.add(result.Params[0])
+          params.add(result.ParamObjects[0])
         }
       }
     }
 
     if (not clauses.Empty) {
-      return new SqlAndParams(" WHERE " + clauses.join(" AND "), params.toTypedArray())
+      return new SqlStringSubstituter.SqlAndParams(" WHERE " + clauses.join(" AND "), params.toTypedArray())
     } else {
       // TODO - AHK - Should we just leave the clause out entirely?
-      return new SqlAndParams(" WHERE 1 = 1", params.toTypedArray())
+      return new SqlStringSubstituter.SqlAndParams(" WHERE 1 = 1", params.toTypedArray())
     }
   }
 
-  private static class SqlAndParams {
-    private var _sql : String as Sql
-    private var _params : Object[] as Params
-
-    construct(sqlArg : String, paramsArg : Object[]) {
-      _sql = sqlArg
-      _params = paramsArg
-    }
-  }
-
-  private function countImpl(profilerTag : String, sqlStatement : String, parameters : Object[]) : long {
+  private function countImpl(profilerTag : String, sqlStatement : String, parameters : IPreparedStatementParameter[]) : long {
     // TODO - AHK - Verify that it starts with "SELECT count(*) as count"
     var profiler = Util.newProfiler(profilerTag)
     profiler.start(sqlStatement + " (" + Arrays.asList(parameters) + ")");
@@ -177,7 +166,7 @@ class CoreFinder<T extends IDBObject> {
       var results = _dbType.Table.Database.DBExecutionKernel.executeSelect(
           sqlStatement,
           \ resultSet -> resultSet.getInt("count"),
-          parameters.map(\p -> wrapParameter(p)));
+          parameters);
       if (results.size() == 0) {
         return 0;
       } else if (results.size() == 1) {
@@ -190,30 +179,14 @@ class CoreFinder<T extends IDBObject> {
     }
   }
 
-  private function selectEntity(profilerTag : String, sqlStatement : String, parameters : Object[]) : QueryResult<IDBObject> {
+  private function selectEntity(profilerTag : String, sqlStatement : String, parameters : IPreparedStatementParameter[]) : QueryResult<IDBObject> {
     // TODO - AHK - Validate the input string here?
     return new QueryResultImpl<IDBObject>(
         profilerTag,
         sqlStatement,
-        parameters.map(\p -> wrapParameter(p)),
+        parameters,
         _dbType.Table.Database,
         \r -> buildObject(_dbType, r));
-  }
-
-  private function wrapParameter(objectParameter : Object) : IPreparedStatementParameter {
-    if (objectParameter == null) {
-      throw new IllegalArgumentException("Query methods cannot be called with null passed in for a prepared statement parameter.  " +
-              "You almost certainly want to generate a query explicitly with X IS NULL or X IS NOT NULL rather than " +
-              "using X = ? or X <> ? and passing null as the bind variable.");
-    }
-
-    if (objectParameter typeis IPreparedStatementParameter) {
-      return (IPreparedStatementParameter) objectParameter;
-    } else {
-      // TODO - AHK - The problem is that in order to send NULL as a value, we need to
-      // know what the matching column type is . . .
-      return \ s, i -> s.setObject(i, objectParameter)
-    }
   }
 
   static function buildObject(type : IDBType, resultSet : ResultSet) : CachedDBObject {

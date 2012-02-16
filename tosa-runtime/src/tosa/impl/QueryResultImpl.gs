@@ -19,6 +19,7 @@ uses java.util.NoSuchElementException
 uses tosa.api.IDBColumn
 uses java.lang.IllegalStateException
 uses java.lang.IllegalArgumentException
+uses tosa.impl.query.SqlStringSubstituter
 
 /**
  * Created by IntelliJ IDEA.
@@ -181,7 +182,7 @@ public class QueryResultImpl<T> implements QueryResult<T> {
     }
   }
 
-  private function computeSql() : SqlAndParameters {
+  private function computeSql() : SqlStringSubstituter.SqlAndParams {
     var query = _originalQuery
     var parameters = _parameters
     
@@ -198,7 +199,7 @@ public class QueryResultImpl<T> implements QueryResult<T> {
       parameters = newParameters.toTypedArray()
     }
 
-    return new SqlAndParameters(query, parameters)
+    return new SqlStringSubstituter.SqlAndParams(query, parameters)
   }
   
   private function buildOrderByClause() : String {
@@ -211,12 +212,11 @@ public class QueryResultImpl<T> implements QueryResult<T> {
   private function executeQuery() : List<T> {
     var profiler = Util.newProfiler(_profilerTag)
     var sqlAndParameters = computeSql()
-    print(">>>>>" + sqlAndParameters.Sql + " (" + Arrays.asList(sqlAndParameters.Parameters) + ")")
-    profiler.start(sqlAndParameters.Sql + " (" + Arrays.asList(sqlAndParameters.Parameters) + ")")
+    profiler.start(sqlAndParameters.Sql + " (" + Arrays.asList(sqlAndParameters.Params) + ")")
     try {
       return _db.getDBExecutionKernel().executeSelect(sqlAndParameters.Sql,
           _resultProcessor,
-          sqlAndParameters.Parameters)
+          sqlAndParameters.Params)
     } finally {
       profiler.stop()
     }
@@ -294,16 +294,6 @@ public class QueryResultImpl<T> implements QueryResult<T> {
 
     function resetToInitialOffset() {
       _currentOffset = _startOffset
-    }
-  }
-
-  private class SqlAndParameters {
-    var _sql : String as Sql
-    var _parameters : IPreparedStatementParameter[] as Parameters
-
-    construct(sqlArg : String, parametersArg : IPreparedStatementParameter[]) {
-      _sql = sqlArg
-      _parameters = parametersArg
     }
   }
   

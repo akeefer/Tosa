@@ -4,6 +4,8 @@ uses tosa.api.IDBObject
 uses tosa.api.IDBColumn
 uses tosa.loader.IDBType
 uses java.lang.IllegalArgumentException
+uses tosa.impl.query.SqlStringSubstituter
+uses tosa.api.IPreparedStatementParameter
 
 /**
  * Created by IntelliJ IDEA.
@@ -58,13 +60,13 @@ class JoinArrayEntityCollectionImpl<T extends IDBObject> extends EntityCollectio
         element.update();
       }
 
-      var sql = SimpleSqlBuilder.substitute("INSERT INTO \${joinTable} (\${srcFk}, \${targetFk}) VALUES (?, ?)",
-          "joinTable", _srcColumn.getTable(),
-          "srcFk", _srcColumn,
-          "targetFk", _targetColumn);
-      var srcParam = _srcColumn.wrapParameterValue(_owner.getId());
-      var targetParam = _targetColumn.wrapParameterValue(element.getId());
-      _queryExecutor.insert("JoinArrayEntityCollectionImpl.addImpl()", sql, {srcParam, targetParam});
+      var sql = SqlStringSubstituter.substitute("INSERT INTO :joinTable (:srcColumn, :targetColumn) VALUES (:srcId, :targetId)",
+          {"joinTable" ->_srcColumn.getTable(),
+           "srcColumn" -> _srcColumn,
+           "targetColumn" -> _targetColumn,
+           "srcId" -> _owner.Id,
+           "targetId" -> element.Id});
+      _queryExecutor.insert("JoinArrayEntityCollectionImpl.addImpl()", sql.Sql, sql.Params)
 
       if (_cachedResults != null) {
         _cachedResults.add(element);
