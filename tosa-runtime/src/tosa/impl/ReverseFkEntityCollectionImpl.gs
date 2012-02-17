@@ -5,6 +5,7 @@ uses tosa.api.IDBColumn
 uses tosa.loader.IDBType
 uses tosa.loader.DBTypeInfo
 uses java.lang.IllegalArgumentException
+uses tosa.impl.query.SqlStringSubstituter
 
 /**
  * Created by IntelliJ IDEA.
@@ -23,21 +24,21 @@ class ReverseFkEntityCollectionImpl<T extends IDBObject> extends EntityCollectio
   }
 
   override protected function issueCountQuery() : int{
-    var text = SimpleSqlBuilder.substitute("SELECT count(*) as count FROM \${fkTable} WHERE \${fkColumn} = ?",
-        "fkTable", _fkType.getTable(),
-        "fkColumn", _fkColumn);
-    var param = _fkColumn.wrapParameterValue(_owner.getColumnValue(DBTypeInfo.ID_COLUMN));
-    return _queryExecutor.count("ReverseFkEntityCollectionImpl.size()", text, {param});
+    var text = SqlStringSubstituter.substitute("SELECT count(*) as count FROM :fkTable WHERE :fkColumn = :fkId",
+        {"fkTable" -> _fkType.getTable(),
+         "fkColumn" -> _fkColumn,
+         "fkId" -> _owner.Id})
+    return _queryExecutor.count("ReverseFkEntityCollectionImpl.size()", text.Sql, text.Params)
   }
 
   override protected function loadResults() : List<T> {
     var idColumn = _fkColumn.getTable().getColumn(DBTypeInfo.ID_COLUMN);
-    var sql = SimpleSqlBuilder.substitute("SELECT * FROM \${fkTable} WHERE \${fkColumn} = ? ORDER BY \${idColumn}",
-        "fkTable", _fkColumn.getTable(),
-        "fkColumn", _fkColumn,
-        "idColumn", idColumn);
-    var param = _fkColumn.wrapParameterValue(_owner.getColumnValue(DBTypeInfo.ID_COLUMN));
-    return _queryExecutor.selectEntity("ReverseFkEntityCollectionImpl.loadResultsIfNecessary()", _fkType, sql, {param}) as List<T>
+    var sql = SqlStringSubstituter.substitute("SELECT * FROM :fkTable WHERE :fkColumn = :fkId ORDER BY :idColumn",
+        {"fkTable" ->_fkColumn.getTable(),
+         "fkColumn" -> _fkColumn,
+         "idColumn" -> idColumn,
+         "fkId" -> _owner.Id})
+    return _queryExecutor.selectEntity("ReverseFkEntityCollectionImpl.loadResultsIfNecessary()", _fkType, sql.Sql, sql.Params) as List<T>
   }
 
   protected override function addImpl(element : T) {
@@ -51,13 +52,13 @@ class ReverseFkEntityCollectionImpl<T extends IDBObject> extends EntityCollectio
       } else {
         // For entities already in the database, we issue the update statement in the database directly
         var idColumn = _fkColumn.getTable().getColumn(DBTypeInfo.ID_COLUMN);
-        var updateSql = SimpleSqlBuilder.substitute("UPDATE \${fkTable} SET \${fkColumn} = ? WHERE \${idColumn} = ?",
-            "fkTable", _fkColumn.getTable(),
-            "fkColumn", _fkColumn,
-            "idColumn", idColumn);
-        var fkParam = idColumn.wrapParameterValue(_owner.getColumnValue(DBTypeInfo.ID_COLUMN));
-        var idParam = idColumn.wrapParameterValue(element.getColumnValue(DBTypeInfo.ID_COLUMN));
-        _queryExecutor.update("ReverseFkEntityCollectionImpl.add()", updateSql, {fkParam, idParam});
+        var updateSql = SqlStringSubstituter.substitute("UPDATE :fkTable SET :fkColumn = :fkId WHERE :idColumn = :id",
+            {"fkTable" -> _fkColumn.getTable(),
+             "fkColumn" -> _fkColumn,
+             "idColumn" -> idColumn,
+             "fkId" -> _owner.Id,
+             "id" -> element.Id});
+        _queryExecutor.update("ReverseFkEntityCollectionImpl.add()", updateSql.Sql, updateSql.Params);
       }
       if (_cachedResults != null) {
         // TODO - AHK - Unclear if the list should be re-sorted, or if it should be added in insertion order
@@ -78,13 +79,13 @@ class ReverseFkEntityCollectionImpl<T extends IDBObject> extends EntityCollectio
     }
 
     element.setFkValue(_fkColumn.getName(), null);
-    var idColumn = _fkColumn.getTable().getColumn(DBTypeInfo.ID_COLUMN);
-    var updateSql = SimpleSqlBuilder.substitute("UPDATE \${fkTable} SET \${fkColumn} = NULL WHERE \${idColumn} = ?",
-        "fkTable", _fkColumn.getTable(),
-        "fkColumn", _fkColumn,
-        "idColumn", idColumn);
-    var idParam = idColumn.wrapParameterValue(element.getColumnValue(DBTypeInfo.ID_COLUMN));
-    _queryExecutor.update("ReverseFkEntityCollectionImpl.remove()", updateSql, {idParam});
+    var idColumn = _fkColumn.getTable().getColumn(DBTypeInfo.ID_COLUMN)
+    var updateSql = SqlStringSubstituter.substitute("UPDATE :fkTable SET :fkColumn = NULL WHERE :idColumn = :id",
+        {"fkTable" -> _fkColumn.getTable(),
+         "fkColumn" -> _fkColumn,
+         "idColumn" -> idColumn,
+         "id" -> element.Id})
+    _queryExecutor.update("ReverseFkEntityCollectionImpl.remove()", updateSql.Sql, updateSql.Params);
 
     if (_cachedResults != null) {
       // The _cachedResults might contain a different pointer, so we have to match up by id
