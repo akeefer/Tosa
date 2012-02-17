@@ -7,8 +7,9 @@ import tosa.impl.md.ValidationResult;
 import tosa.impl.parser.data.DBDataValidator;
 import tosa.loader.data.DBData;
 import tosa.loader.data.IDBDataSource;
+import tosa.loader.data.DDLDataTransformer;
 import tosa.loader.data.TableData;
-import tosa.loader.parser.mysql.MySQL51Parser;
+import tosa.loader.parser.tree.CreateTableStatement;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,9 +28,11 @@ public class DDLDBDataSource implements IDBDataSource {
     Map<String, DBData> results = new HashMap<String, DBData>();
     for (Pair<String, IFile> ddlFile : module.getFileRepository().findAllFilesByExtension(".ddl")) {
       // TODO - AHK - Lots o' error handling
-      // TODO - AHK - Select the correct parser somehow
       String path = module.pathRelativeToRoot(ddlFile.getSecond());
-      List<TableData> tables = new MySQL51Parser().parseDDLFile(readFile(ddlFile.getSecond()));
+      String source = readFile(ddlFile.getSecond());
+      Token token = Token.tokenize(source);
+      List<CreateTableStatement> createTableStatements = new DDLParser(token).parseDDL();
+      List<TableData> tables = new DDLDataTransformer().transformParseTree(createTableStatements);
       String fileName = ddlFile.getFirst();
       String namespace = fileName.substring(0, fileName.length() - ".ddl".length()).replace("/", ".");
       DBData dbData = new DBData(namespace, tables, ddlFile.getSecond());

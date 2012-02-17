@@ -1,8 +1,9 @@
 package tosa.loader.parser.tree;
 
 import gw.lang.reflect.IType;
-import gw.lang.reflect.java.IJavaType;
 import gw.lang.reflect.java.JavaTypes;
+import tosa.api.IDBColumnType;
+import tosa.loader.data.DBColumnTypeImpl;
 
 import java.util.Map;
 
@@ -42,8 +43,8 @@ public class SQLOrExpression extends SQLParsedElement implements IMightApply {
   }
 
   @Override
-  public IType getVarTypeForChild() {
-    return JavaTypes.BOOLEAN();
+  public IDBColumnType getVarTypeForChild() {
+    return DBColumnTypeImpl.BOOLEAN;
   }
 
   @Override

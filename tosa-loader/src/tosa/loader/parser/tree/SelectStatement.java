@@ -18,8 +18,8 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
   private SQLParsedElement _selectList;
   private TableExpression _tableExpr;
   private SQLParsedElement _orderBy;
-  private List<SQLParameterInfo> _parameters;
   private List<VariableExpression> _variables;
+  private DBData _dbData;
 
   public SelectStatement(Token start, SQLParsedElement quantifier, SQLParsedElement selectList, TableExpression tableExpr, SQLParsedElement orderBy) {
     super(start, quantifier, selectList, tableExpr, orderBy);
@@ -47,30 +47,12 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
   public void verify(DBData dbData) {
     super.verify(dbData);
     _variables = determineVariables(dbData);
-    _parameters = determineParameters(dbData);
-  }
-
-  private List<SQLParameterInfo> determineParameters(DBData dbData) {
-    Map<String, SQLParameterInfo> pis = new LinkedHashMap<String, SQLParameterInfo>();
-    for (VariableExpression var : _variables) {
-      SQLParameterInfo pi = pis.get(var.getName());
-      if (pi == null) {
-        pi = new SQLParameterInfo(var.getName());
-        pis.put(var.getName(), pi);
-      }
-      pi.addVariableExpression(var);
-    }
-    return new ArrayList<SQLParameterInfo>(pis.values());
   }
 
   private List<VariableExpression> determineVariables(DBData dbData) {
     List<VariableExpression> vars = findDescendents(VariableExpression.class);
     Collections.sort(vars, SQLParsedElement.OFFSET_COMPARATOR);
     return vars;
-  }
-
-  public List<SQLParameterInfo> getParameters() {
-    return _parameters;
   }
 
   @Override
@@ -147,4 +129,11 @@ public class SelectStatement extends SQLParsedElement implements IRootParseEleme
     return cols;
   }
 
+  public void setDBData(DBData data) {
+    _dbData = data;
+  }
+
+  public DBData getDBData() {
+    return _dbData;
+  }
 }

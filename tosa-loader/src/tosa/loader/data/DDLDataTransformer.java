@@ -1,9 +1,6 @@
-package tosa.loader.parser.mysql;
+package tosa.loader.data;
 
 import org.slf4j.LoggerFactory;
-import tosa.loader.data.ColumnData;
-import tosa.loader.data.DBColumnTypeImpl;
-import tosa.loader.data.TableData;
 import tosa.loader.data.types.DateColumnTypePersistenceHandler;
 import tosa.loader.data.types.TimestampColumnTypePersistenceHandler;
 import tosa.loader.parser.ISQLParser;
@@ -21,11 +18,10 @@ import java.util.List;
  * Time: 10:41 PM
  * To change this template use File | Settings | File Templates.
  */
-public class MySQL51Parser implements ISQLParser, SQLParserConstants {
+public class DDLDataTransformer implements ISQLParser, SQLParserConstants {
 
   @Override
-  public List<TableData> parseDDLFile(String fileContents) {
-    List<CreateTableStatement> createTableStatements = new MySQL51CreateTableParser().parseSQLFile(fileContents);
+  public List<TableData> transformParseTree(List<CreateTableStatement> createTableStatements) {
     return transformCreateTableStatements(createTableStatements);
   }
 

@@ -1,6 +1,7 @@
 package tosa.loader.parser.tree;
 
 import gw.lang.reflect.IType;
+import tosa.api.IDBColumnType;
 import tosa.loader.parser.Token;
 
 import java.util.Map;
@@ -16,7 +17,7 @@ public class SQLSignedExpression extends SQLParsedElement{
   }
 
   @Override
-  public IType getVarTypeForChild() {
+  public IDBColumnType getVarTypeForChild() {
     return getParent().getVarTypeForChild();
   }
 

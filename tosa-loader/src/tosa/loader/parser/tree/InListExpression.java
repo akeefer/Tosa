@@ -16,11 +16,11 @@ public class InListExpression extends SQLParsedElement {
   }
 
   @Override
-  public IType getVarTypeForChild() {
+  public IDBColumnType getVarTypeForChild() {
     InPredicate parent = (InPredicate) getParent();
     IDBColumnType type = parent.getLHS().getDBType();
     if (type != null) {
-      return type.getGosuType();
+      return type;
     } else {
       return null;
     }

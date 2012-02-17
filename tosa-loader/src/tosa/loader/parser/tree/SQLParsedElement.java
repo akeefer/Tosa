@@ -1,8 +1,5 @@
 package tosa.loader.parser.tree;
 
-import gw.lang.reflect.IType;
-import gw.lang.reflect.java.IJavaType;
-import gw.lang.reflect.java.JavaTypes;
 import tosa.api.IDBColumnType;
 import tosa.loader.data.DBColumnTypeImpl;
 import tosa.loader.data.DBData;
@@ -96,6 +93,7 @@ public abstract class SQLParsedElement {
     }
 
     _errors.addAll(_first.collectTemporaryErrors(_last));
+    _dbType = DBColumnTypeImpl.OBJECT; // default to object
   }
 
   public Token firstToken() {
@@ -292,8 +290,8 @@ public abstract class SQLParsedElement {
     return defaultToken == INFER ? null : defaultToken;
   }
 
-  public IType getVarTypeForChild() {
-    return JavaTypes.STRING();
+  public IDBColumnType getVarTypeForChild() {
+    return DBColumnTypeImpl.STRING;
   }
 
 }

@@ -1,54 +1,7 @@
 package tosa.loader.parser;
 
 import tosa.loader.data.DBData;
-import tosa.loader.parser.tree.AbsExpression;
-import tosa.loader.parser.tree.AsteriskSelectList;
-import tosa.loader.parser.tree.BetweenPredicate;
-import tosa.loader.parser.tree.BooleanIsNotExpression;
-import tosa.loader.parser.tree.ColumnReference;
-import tosa.loader.parser.tree.ColumnSelectList;
-import tosa.loader.parser.tree.ComparisonPredicate;
-import tosa.loader.parser.tree.ConcatenationExpression;
-import tosa.loader.parser.tree.CountAllExpression;
-import tosa.loader.parser.tree.DerivedColumn;
-import tosa.loader.parser.tree.ExistsPredicate;
-import tosa.loader.parser.tree.GenericFunctionCall;
-import tosa.loader.parser.tree.GroupByClause;
-import tosa.loader.parser.tree.InListExpression;
-import tosa.loader.parser.tree.InPredicate;
-import tosa.loader.parser.tree.IsNotNullPredicate;
-import tosa.loader.parser.tree.JoinCondition;
-import tosa.loader.parser.tree.LikePredicate;
-import tosa.loader.parser.tree.ModExpression;
-import tosa.loader.parser.tree.OrderByClause;
-import tosa.loader.parser.tree.QualifiedAsteriskSelectList;
-import tosa.loader.parser.tree.QualifiedJoin;
-import tosa.loader.parser.tree.QuantifiedComparison;
-import tosa.loader.parser.tree.QuantifierModifier;
-import tosa.loader.parser.tree.SQLAdditiveExpression;
-import tosa.loader.parser.tree.SQLAndExpression;
-import tosa.loader.parser.tree.SQLMultiplicitiveExpression;
-import tosa.loader.parser.tree.SQLNotExpression;
-import tosa.loader.parser.tree.SQLNumericLiteral;
-import tosa.loader.parser.tree.SQLOptionalExpression;
-import tosa.loader.parser.tree.SQLOrExpression;
-import tosa.loader.parser.tree.SQLParenthesizedExpression;
-import tosa.loader.parser.tree.SQLParseError;
-import tosa.loader.parser.tree.SQLParsedElement;
-import tosa.loader.parser.tree.SQLSignedExpression;
-import tosa.loader.parser.tree.SelectStatement;
-import tosa.loader.parser.tree.SetFunctionExpression;
-import tosa.loader.parser.tree.SimpleTableReference;
-import tosa.loader.parser.tree.SortSpecification;
-import tosa.loader.parser.tree.StringCaseChangeExpression;
-import tosa.loader.parser.tree.StringLiteralExpression;
-import tosa.loader.parser.tree.SubSelectExpression;
-import tosa.loader.parser.tree.TableExpression;
-import tosa.loader.parser.tree.TableFromClause;
-import tosa.loader.parser.tree.UnexpectedTokenExpression;
-import tosa.loader.parser.tree.UniquePredicate;
-import tosa.loader.parser.tree.VariableExpression;
-import tosa.loader.parser.tree.WhereClause;
+import tosa.loader.parser.tree.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -56,12 +9,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class QueryParser implements SQLParserConstants {
-  private Token _currentToken;
+public class QueryParser extends SQLParserBase {
+
   private DBData _data;
 
   public QueryParser(Token token, DBData dbData) {
-    _currentToken = token.removeTokens( TokenType.COMMENT );
+    super(token.removeTokens( TokenType.COMMENT ));
     _data = dbData;
   }
 
@@ -69,12 +22,13 @@ public class QueryParser implements SQLParserConstants {
     SelectStatement select = parseSelect();
     if (select != null) {
       if (_data != null) {
+        select.setDBData(_data);
         select.resolveTypes(_data);
         select.resolveVars(_data);
         select.verify(_data);
       }
-      if (!_currentToken.isEOF()) {
-        select.addParseError(new SQLParseError(_currentToken, "Unexpected token : " + _currentToken.getValue()));
+      if (!isEOF()) {
+        select.addParseError(new SQLParseError(getCurrentToken(), "Unexpected token : " + getCurrentToken().getValue()));
       }
     }
     return select;
@@ -195,7 +149,7 @@ public class QueryParser implements SQLParserConstants {
     if (match(IS)) {
       boolean not = match(NOT);
       if (!(match(TRUE)|| match(FALSE))) {
-        _currentToken.addTemporaryError(new SQLParseError(_currentToken, "Expected TRUE or FALSE"));
+        getCurrentToken().addTemporaryError(new SQLParseError(getCurrentToken(), "Expected TRUE or FALSE"));
       }
       return new BooleanIsNotExpression(sqlParsedElement, lastMatch(), not);
     } else {
@@ -282,7 +236,6 @@ public class QueryParser implements SQLParserConstants {
     if (match(IS, NOT, NULL)) {
       return new IsNotNullPredicate(initialValue, lastMatch(), true);
     } else if (match(IS, NULL)) {
-      _currentToken = _currentToken.nextToken().nextToken();
       return new IsNotNullPredicate(initialValue, lastMatch(), false);
     } else {
       return null;
@@ -387,7 +340,7 @@ public class QueryParser implements SQLParserConstants {
     }
     SQLParsedElement bottom = parseRowValue();
     if (!match(AND)) {
-      bottom.addParseError(new SQLParseError(_currentToken, "Expected And"));
+      bottom.addParseError(new SQLParseError(getCurrentToken(), "Expected And"));
     }
     SQLParsedElement top = parseRowValue();
     return new BetweenPredicate(initialValue, bottom, top, not, symmetric, asymmetric);
@@ -546,7 +499,7 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parseGeneralFunctionExpression() {
-    if (_currentToken.isSymbol() && _currentToken.nextToken().match(OPEN_PAREN)) {
+    if (getCurrentToken().isSymbol() && getCurrentToken().nextToken().match(OPEN_PAREN)) {
       Token functionName = takeToken();
       Token paren = takeToken();
       List<SQLParsedElement> args = new ArrayList<SQLParsedElement>();
@@ -564,7 +517,7 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parseStringLiteral() {
-    if (_currentToken.isString()) {
+    if (getCurrentToken().isString()) {
       return new StringLiteralExpression(takeToken());
     } else {
       return null;
@@ -607,7 +560,7 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parseVariableReference() {
-    if (_currentToken.isSymbol() && _currentToken.getValue().startsWith(":")) {
+    if (getCurrentToken().isSymbol() && getCurrentToken().getValue().startsWith(":")) {
       return new VariableExpression(takeToken());
     } else {
       return null;
@@ -615,9 +568,9 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parseColumnReference() {
-    if (_currentToken.isSymbol() && !_currentToken.nextToken().match(OPEN_PAREN)) {
+    if (getCurrentToken().isSymbol() && !getCurrentToken().nextToken().match(OPEN_PAREN)) {
       Token base = takeToken();
-      if (match(".") && _currentToken.isSymbol()) {
+      if (match(".") && getCurrentToken().isSymbol()) {
         return new ColumnReference(base, takeToken());
       } else {
         return new ColumnReference(base);
@@ -626,14 +579,8 @@ public class QueryParser implements SQLParserConstants {
     return null;
   }
 
-  private Token takeToken() {
-    Token base = _currentToken;
-    _currentToken = _currentToken.nextToken();
-    return base;
-  }
-
   private SQLParsedElement parseNumericLiteral() {
-    if (_currentToken.isNumber()) {
+    if (getCurrentToken().isNumber()) {
       Token token = takeToken();
       if (token.getValue().contains(".")) {
         return new SQLNumericLiteral(token, new BigDecimal(token.getValue()));
@@ -748,9 +695,9 @@ public class QueryParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parseQualifiedAsterisk() {
-    if (_currentToken.isSymbol() &&
-      _currentToken.nextToken().match(DOT_OP) &&
-      _currentToken.nextToken().nextToken().match(ASTERISK)) {
+    if (getCurrentToken().isSymbol() &&
+      getCurrentToken().nextToken().match(DOT_OP) &&
+      getCurrentToken().nextToken().nextToken().match(ASTERISK)) {
       Token start = takeToken();
       takeToken();
       Token end = takeToken();
@@ -765,66 +712,6 @@ public class QueryParser implements SQLParserConstants {
       return new QuantifierModifier(lastMatch());
     } else {
       return null;
-    }
-  }
-
-  private boolean matchAny(String... tokens) {
-    for (String s : tokens) {
-      if (match(s)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private boolean match(String str) {
-    if (_currentToken.match(str)) {
-      _currentToken = _currentToken.nextToken();
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  private boolean match(String str1, String str2) {
-    if (_currentToken.match(str1) && _currentToken.nextToken().match(str2)) {
-      _currentToken = _currentToken.nextToken().nextToken();
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  private boolean peek(String str) {
-    return _currentToken.match(str);
-  }
-
-  private boolean peek(String str1, String str2) {
-    return _currentToken.match(str1) && _currentToken.nextToken().match(str2);
-  }
-
-  private boolean match(String str1, String str2, String str3) {
-    if (_currentToken.match(str1) &&
-      _currentToken.nextToken().match(str2) &&
-      _currentToken.nextToken().nextToken().match(str3)) {
-      _currentToken = _currentToken.nextToken().nextToken().nextToken();
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  private Token lastMatch() {
-    return _currentToken.previous();
-  }
-
-  private boolean expect(String str) {
-    if (match(str)) {
-      return true;
-    } else {
-      _currentToken.addTemporaryError(new SQLParseError(_currentToken, _currentToken, "Expected " + str));
-      _currentToken = _currentToken.nextToken();
-      return false;
     }
   }
 
