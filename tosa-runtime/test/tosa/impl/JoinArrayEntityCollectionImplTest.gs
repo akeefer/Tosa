@@ -12,6 +12,7 @@ uses tosa.api.EntityCollection
 uses java.lang.IllegalArgumentException
 uses java.util.HashSet
 uses java.lang.Long
+uses tosa.impl.query.SqlStringSubstituter
 
 /**
  * Created by IntelliJ IDEA.
@@ -431,12 +432,12 @@ class JoinArrayEntityCollectionImplTest extends TosaDBTestBase {
 //
   private function countMatchesInDB(foo : Foo, baz : Baz) : int {
     var joinTable = getDB().getTable("join_Foo_Baz")
-    var sql = SimpleSqlBuilder.substitute("SELECT count(*) as count FROM \${joinTable} WHERE \${fooColumn} = \${fooId} AND \${bazColumn} = \${bazId}",
-        "joinTable", joinTable,
-        "fooColumn", joinTable.getColumn("Foo_id"),
-        "fooId", foo.getId(),
-        "bazColumn", joinTable.getColumn("Baz_id"),
-        "bazId", baz.getId())
-    return new QueryExecutorImpl(getDB()).count("", sql, {})
+    var sql = SqlStringSubstituter.substitute("SELECT count(*) as count FROM :joinTable WHERE :fooColumn = :fooId AND :bazColumn = :bazId",
+        {"joinTable" -> joinTable,
+        "fooColumn" -> joinTable.getColumn("Foo_id"),
+        "fooId" -> foo.getId(),
+        "bazColumn" -> joinTable.getColumn("Baz_id"),
+        "bazId" -> baz.getId()})
+    return new QueryExecutorImpl(getDB()).count("", sql.Sql, sql.Params)
   }
 }

@@ -9,6 +9,7 @@ uses java.lang.UnsupportedOperationException
 uses java.lang.IllegalStateException
 uses java.lang.IllegalArgumentException
 uses tosa.api.EntityCollection
+uses tosa.impl.query.SqlStringSubstituter
 
 /**
  * Created by IntelliJ IDEA.
@@ -375,12 +376,10 @@ class ReverseFkEntityCollectionImplTest extends TosaDBTestBase {
   }
 
   private function countMatchesInDB(foo : Foo, bar : Bar) : int {
-    var sql = SimpleSqlBuilder.substitute("SELECT count(*) as count FROM \${fooTable} WHERE \${idColumn} = \${fooId} AND \${barColumn} = \${barId}",
-      "fooTable", foo.getDBTable(),
-      "idColumn", "id",
-      "fooId", foo.Id,
-      "barColumn", "Bar_id",
-      "barId", bar.Id);
-    return new QueryExecutorImpl(getDB()).count("", sql, {});
+    var sql = SqlStringSubstituter.substitute("SELECT count(*) as count FROM :fooTable WHERE id = :fooId AND Bar_id = :barId",
+      {"fooTable" -> foo.getDBTable(),
+       "fooId" -> foo.Id,
+       "barId" -> bar.Id});
+    return new QueryExecutorImpl(getDB()).count("", sql.Sql, sql.Params);
   }
 }
