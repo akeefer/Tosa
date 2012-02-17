@@ -19,6 +19,7 @@ uses tosa.api.IPreparedStatementParameter
 uses java.util.Collections
 uses java.util.ArrayList
 uses java.lang.StringBuilder
+uses tosa.impl.query.SqlStringSubstituter
 
 /**
  * Created by IntelliJ IDEA.
@@ -159,11 +160,7 @@ class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
         values.add("?");
         parameters[i] = pair._parameter;
       }
-      var query = SimpleSqlBuilder.substitute(
-          "INSERT INTO \${table} (\${columns}) VALUES (\${values})",
-          "table", getDBTable(),
-          "columns", columns,
-          "values", values);
+      var query = "INSERT INTO " + DBTable.PossiblyQuotedName + " (" + columns.map(\c -> c.PossiblyQuotedName).join(", ") + ") VALUES (" + values.join(", ") + ")"
       var id = _queryExecutor.insert(_type.getName() + ".update()", query, parameters);
       if (id != null) {
         _columns.put(DBTypeInfo.ID_COLUMN, id);
@@ -176,17 +173,12 @@ class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
         if (i > 0) {
           values.append(", ");
         }
-        values.append(SimpleSqlBuilder.substitute("\${column} = ?", "column", columnValues.get(i)._column));
+        values.append(columnValues.get(i)._column.PossiblyQuotedName).append(" = ?");
         params.add(columnValues.get(i)._parameter);
       }
       var idColumn = getDBTable().getColumn(DBTypeInfo.ID_COLUMN);
       params.add(idColumn.wrapParameterValue(getId()));
-      var query = SimpleSqlBuilder.substitute(
-          "UPDATE \${table} SET \${values} WHERE \${idColumn} = ?",
-          "table", getDBTable(),
-          "values", values.toString(),
-          "idColumn", idColumn
-      );
+      var query = "UPDATE " + DBTable.PossiblyQuotedName + " SET " + values + " WHERE " + idColumn.PossiblyQuotedName + " = ?"
       _queryExecutor.update(_type.getName() + ".update()", query, params.toArray(new IPreparedStatementParameter[params.size()]));
     }
   }
@@ -218,12 +210,12 @@ class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
   override function delete() {
     // TODO - AHK - Determine if we need to quote the table name or column names or not
     // TODO - AHK - What do we do if the table doesn't have an id?
-    var idColumn = getDBTable().getColumn(DBTypeInfo.ID_COLUMN);
-    var query = SimpleSqlBuilder.substitute(
-        "DELETE FROM \${table} WHERE \${idColumn} = ?",
-        "table", getDBTable(),
-        "idColumn", idColumn);
-    _queryExecutor.delete(_type.getName() + ".delete()", query, {idColumn.wrapParameterValue(getId())});
+    var idColumn = DBTable.getColumn(DBTypeInfo.ID_COLUMN);
+    var query = SqlStringSubstituter.substitute("DELETE FROM :table WHERE :idColumn = :id",
+        {"table" -> DBTable,
+         "idColumn" -> idColumn,
+         "id" -> Id});
+    _queryExecutor.delete(_type.getName() + ".delete()", query.Sql, query.Params);
   }
 
   override function toString() : String {
@@ -275,18 +267,18 @@ class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
     var idColumn = table.getColumn(DBTypeInfo.ID_COLUMN);
     // TODO - AHK - Need some better way to convert between the two
     var resultType = TypeSystem.getByFullName(table.getDatabase().getNamespace() + "." + table.getName()) as IDBType
-    var sql = SimpleSqlBuilder.substitute("SELECT * FROM \${table} WHERE \${idColumn} = ?",
-                                          "table", table,
-                                          "idColumn", idColumn);
-    var param = idColumn.wrapParameterValue(id);
+    var query = SqlStringSubstituter.substitute("SELECT * FROM :table WHERE :idColumn = :id",
+        {"table" -> table,
+         "idColumn" -> idColumn,
+         "id" -> id})
     // TODO - AHK - Fetch this from somewhere?
-    var results = new QueryExecutorImpl(table.getDatabase()).selectEntity("CachedDBObject.loadEntity()", resultType, sql, {param});
+    var results = new QueryExecutorImpl(table.getDatabase()).selectEntity("CachedDBObject.loadEntity()", resultType, query.Sql, query.Params);
     if (results.isEmpty()) {
       return null;
     } else if (results.size() == 1) {
       return results.get(0);
     } else {
-      throw new IllegalStateException("Expected to get one result back from query " + sql + " (" + param + ") but got " + results.size() );
+      throw new IllegalStateException("Expected to get one result back from query " + query.Sql + " (" + query.Params + ") but got " + results.size() );
     }
   }
 
