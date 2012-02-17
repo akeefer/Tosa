@@ -31,14 +31,14 @@ class JoinArrayEntityCollectionImpl<T extends IDBObject> extends EntityCollectio
               ") cannot be removed from the join array on " + _owner.getDBTable().getName() + "(" + _owner.getId() + ") as it's not currently in the array");
     }
 
-    var sql = SimpleSqlBuilder.substitute("DELETE FROM \${joinTable} WHERE \${srcFk} =? AND \${targetFk} = ?",
-          "joinTable", _srcColumn.getTable(),
-          "srcFk", _srcColumn,
-          "targetFk", _targetColumn);
+    var sql = SqlStringSubstituter.substitute("DELETE FROM :joinTable WHERE :srcColumn = :srcFk AND :targetColumn = :targetFk",
+        {"joinTable" -> _srcColumn.getTable(),
+          "srcColumn" ->_srcColumn,
+          "targetColumn" -> _targetColumn,
+          "srcFk" -> _owner.Id,
+          "targetFk" -> element.Id});
 
-    var srcParam = _srcColumn.wrapParameterValue(_owner.getId());
-    var targetParam = _targetColumn.wrapParameterValue(element.getId());
-    _queryExecutor.delete("JoinArrayEntityCollectionImpl.removeImpl()", sql, {srcParam, targetParam});
+    _queryExecutor.delete("JoinArrayEntityCollectionImpl.removeImpl()", sql.Sql, sql.Params);
 
     // If the results have already been loaded, we need to remove the element.  We can't do just .equals() or a pointer compare,
     // since the version in there might be different, so instead we want to compare ids
@@ -100,35 +100,39 @@ class JoinArrayEntityCollectionImpl<T extends IDBObject> extends EntityCollectio
 
       return false;
     } else {
-      var sql = SimpleSqlBuilder.substitute("SELECT count(*) as count FROM \${joinTable} WHERE \${srcFk} = ? AND \${targetFk} = ?",
-          "joinTable", _srcColumn.getTable(),
-          "srcFk", _srcColumn,
-          "targetFk", _targetColumn);
-      var srcFkParam = _srcColumn.wrapParameterValue(_owner.getId());
-      var targetFkParam = _srcColumn.wrapParameterValue(element.getId());
-      var numResults = _queryExecutor.count("JoinArrayEntityCollectionImpl.isAlreadyInArray()", sql, {srcFkParam, targetFkParam});
-      // TODO - AHK - Report an error if there's more than one result?
-      return numResults > 0;
+      if (element.New) {
+        return false
+      } else {
+        var sql = SqlStringSubstituter.substitute("SELECT count(*) as count FROM :joinTable WHERE :srcColumn = :srcFk AND :targetColumn = :targetFk",
+            {"joinTable" -> _srcColumn.getTable(),
+             "srcColumn" ->_srcColumn,
+             "targetColumn" -> _targetColumn,
+             "srcFk" -> _owner.Id,
+             "targetFk" -> element.Id});
+        var numResults = _queryExecutor.count("JoinArrayEntityCollectionImpl.isAlreadyInArray()", sql.Sql, sql.Params);
+        // TODO - AHK - Report an error if there's more than one result?
+        return numResults > 0;
+      }
     }
   }
 
   override protected function loadResults() : List<T> {
-    var sql = SimpleSqlBuilder.substitute("SELECT * FROM \${targetTable} INNER JOIN \${joinTable} as j ON j.\${targetFk} = \${targetTable}.\${id} WHERE j.\${srcFk} = ?",
-        "targetTable", _fkType.getTable(),
-        "joinTable", _srcColumn.getTable(),
-        "id", _fkType.getTable().getColumn("id"),
-        "targetFk", _targetColumn,
-        "srcFk", _srcColumn);
-    var param = _srcColumn.wrapParameterValue(_owner.getId());
-    return _queryExecutor.selectEntity("JoinArrayEntityCollectionImpl.loadResultsIfNecessary()", _fkType, sql, {param}) as List<T>
+    var sql = SqlStringSubstituter.substitute("SELECT * FROM :targetTable INNER JOIN :joinTable as j ON j.:targetColumn = :targetTable.:idColumn WHERE j.:srcColumn = :srcFk",
+        {"targetTable" -> _fkType.getTable(),
+         "joinTable" -> _srcColumn.getTable(),
+         "idColumn" -> _fkType.getTable().getColumn("id"),
+         "targetColumn" -> _targetColumn,
+         "srcColumn" -> _srcColumn,
+         "srcFk" -> _owner.Id})
+    return _queryExecutor.selectEntity("JoinArrayEntityCollectionImpl.loadResultsIfNecessary()", _fkType, sql.Sql, sql.Params) as List<T>
   }
 
   protected override function issueCountQuery() : int {
-    var sql = SimpleSqlBuilder.substitute("SELECT count(*) as count FROM \${joinTable} WHERE \${srcFk} = ?",
-          "joinTable", _srcColumn.getTable(),
-          "srcFk", _srcColumn);
-    var param = _srcColumn.wrapParameterValue(_owner.getId());
-    return _queryExecutor.count("JoinArrayEntityCollectionImpl.size()", sql, {param});
+    var sql = SqlStringSubstituter.substitute("SELECT count(*) as count FROM :joinTable WHERE :srcColumn = :srcFk",
+        {"joinTable" -> _srcColumn.getTable(),
+         "srcColumn" -> _srcColumn,
+         "srcFk" -> _owner.Id})
+    return _queryExecutor.count("JoinArrayEntityCollectionImpl.size()", sql.Sql, sql.Params)
   }
 
 }
