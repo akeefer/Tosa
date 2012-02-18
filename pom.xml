@@ -12,21 +12,21 @@
   <parent>
     <groupId>org.gosu-lang</groupId>
     <artifactId>gosu-project-parent</artifactId>
-    <version>2</version>
+    <version>4</version>
   </parent>
 
   <repositories>
     <repository>
       <id>gosu-lang.org-releases</id>
       <name>Official Gosu website (releases)</name>
-      <url>http://gosu-lang.org/repositories/m2/releases</url>
+      <url>http://gosu-lang.org/nexus/content/groups/releases</url>
     </repository>
   </repositories>
 
   <scm>
-    <connection>scm:git:git@github.com:gosu-lang/Tosa.git</connection>
-    <url>scm:git:git@github.com:gosu-lang/Tosa.git</url>
-    <developerConnection>scm:git:git@github.com:gosu-lang/Tosa.git</developerConnection>
+    <connection>scm:git:git@github.com:carsongross/Tosa.git</connection>
+    <url>scm:git:git@github.com:carsongross/Tosa.git</url>
+    <developerConnection>scm:git:git@github.com:carsongross/Tosa.git</developerConnection>
   </scm>
 
   <build>
@@ -36,7 +36,7 @@
           <groupId>org.gosu-lang</groupId>
           <artifactId>maven-gosu-plugin</artifactId>
           <configuration>
-            <gosuVersion>0.9-8</gosuVersion>
+            <gosuVersion>0.9-10</gosuVersion>
           </configuration>
         </plugin>
       </plugins>
