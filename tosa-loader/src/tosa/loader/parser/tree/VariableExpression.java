@@ -11,7 +11,6 @@ import java.util.Map;
 public class VariableExpression extends SQLParsedElement {
 
   private Token _name;
-  private boolean _list;
 
   public VariableExpression(Token name) {
     super(name);
@@ -20,7 +19,7 @@ public class VariableExpression extends SQLParsedElement {
 
   @Override
   protected void toSQL(boolean prettyPrint, int indent, StringBuilder sb, Map<String, Object> values) {
-    if (_list) {
+    if (isList()) {
       if (values == null) {
         sb.append("()");
       } else {
