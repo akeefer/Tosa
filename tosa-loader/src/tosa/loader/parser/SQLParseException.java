@@ -14,7 +14,7 @@ public class SQLParseException extends RuntimeException {
     Collections.sort(orderedErrors, new Comparator<SQLParseError>() {
       @Override
       public int compare(SQLParseError o1, SQLParseError o2) {
-        return o1.getStart().getStart() - o2.getStart().getStart();
+        return o1.getStart()  - o2.getStart();
       }
     });
     StringBuilder sb = new StringBuilder();
@@ -23,9 +23,9 @@ public class SQLParseException extends RuntimeException {
     sb.append(":\n\n");
     for (SQLParseError error : orderedErrors) {
       sb.append("  * line ");
-      sb.append(error.getStart().getLine());
+      sb.append(error.getStartToken().getLine());
       sb.append(", col ");
-      sb.append(error.getStart().getColumn());
+      sb.append(error.getStartToken().getColumn());
       sb.append(": ");
       sb.append(error.getMessage());
       sb.append("\n");

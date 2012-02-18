@@ -1,6 +1,7 @@
 package tosa.loader;
 
 import gw.lang.reflect.IEnhanceableType;
+import gw.lang.reflect.IProvidesCustomErrorInfo;
 import tosa.api.IDBTable;
 
 /**
@@ -10,6 +11,6 @@ import tosa.api.IDBTable;
  * Time: 10:36 PM
  * To change this template use File | Settings | File Templates.
  */
-public interface IDBType extends IEnhanceableType {
+public interface IDBType extends IEnhanceableType, IProvidesCustomErrorInfo {
   IDBTable getTable();
 }

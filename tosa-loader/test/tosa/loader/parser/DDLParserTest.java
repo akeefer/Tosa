@@ -1,8 +1,9 @@
-package tosa.loader.parser.mysql;
+package tosa.loader.parser;
 
 import org.junit.Test;
 import tosa.loader.data.ColumnData;
 import tosa.loader.data.DBColumnTypeImpl;
+import tosa.loader.data.DDLDataTransformer;
 import tosa.loader.data.TableData;
 
 import java.sql.Types;
@@ -13,7 +14,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Tests for the tosa.loader.parser.mysql.MySQL51ParserTest class.
  */
-public class MySQL51SQLParserTest {
+public class DDLParserTest {
 
   @Test
   public void simpleTableCreation() {
@@ -630,7 +631,7 @@ public class MySQL51SQLParserTest {
   }
 
   private List<TableData> parse(String sql) {
-    return new MySQL51Parser().parseDDLFile(sql);
+    return new DDLDataTransformer().transformParseTree(new DDLParser(Token.tokenize(sql)).parseDDL());
   }
 
   private static class TableAssertionData {

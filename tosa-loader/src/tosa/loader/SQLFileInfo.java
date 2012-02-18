@@ -5,6 +5,7 @@ import gw.util.GosuExceptionUtil;
 import gw.util.StreamUtil;
 import gw.util.concurrent.LockingLazyVar;
 import tosa.dbmd.DatabaseImpl;
+import tosa.loader.data.DBData;
 import tosa.loader.parser.QueryParser;
 import tosa.loader.parser.Token;
 import tosa.loader.parser.tree.*;
@@ -56,10 +57,6 @@ public class SQLFileInfo {
     return _select.get();
   }
 
-  public List<SQLParameterInfo> getParameterInfos() {
-    return _select.get().getParameters();
-  }
-
   public List<VariableExpression> getVariables() {
     return _select.get().getVariables();
   }
@@ -70,5 +67,9 @@ public class SQLFileInfo {
 
   public IFile getSqlFile() {
     return _sql;
+  }
+
+  public DBData getDBData() {
+    return _select.get().getDBData();
   }
 }

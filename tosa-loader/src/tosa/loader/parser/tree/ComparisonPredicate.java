@@ -1,6 +1,6 @@
 package tosa.loader.parser.tree;
 
-import gw.lang.reflect.IType;
+import tosa.api.IDBColumnType;
 import tosa.loader.data.DBColumnTypeImpl;
 import tosa.loader.data.DBData;
 import tosa.loader.parser.Token;
@@ -26,11 +26,11 @@ public class ComparisonPredicate extends SQLParsedElement{
   }
 
   @Override
-  public IType getVarTypeForChild() {
+  public IDBColumnType getVarTypeForChild() {
     if (_lhs.getDBType() != null) {
-      return _lhs.getDBType().getGosuType();
+      return _lhs.getDBType();
     } else if (_rhs.getDBType() != null) {
-      return _rhs.getDBType().getGosuType();
+      return _rhs.getDBType();
     } else {
       return null;
     }

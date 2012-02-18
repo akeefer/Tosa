@@ -6,12 +6,14 @@ import gw.lang.reflect.*;
 import gw.lang.reflect.java.IJavaType;
 import gw.lang.reflect.java.JavaTypes;
 import gw.util.GosuExceptionUtil;
+import gw.util.concurrent.LockingLazyVar;
 import org.slf4j.profiler.Profiler;
 import tosa.api.IPreparedStatementParameter;
 import tosa.api.IQueryResultProcessor;
 import tosa.db.execution.QueryExecutor;
 import tosa.dbmd.DatabaseImpl;
 import tosa.dbmd.PreparedStatementParameterImpl;
+import tosa.loader.data.DBData;
 import tosa.loader.parser.SQLParseException;
 import tosa.loader.parser.tree.*;
 
@@ -24,6 +26,13 @@ public class SQLTypeInfo extends BaseTypeInfo {
   private ISQLType _sqlType;
   private SQLParseException _sqlpe;
   private IMethodInfo _selectMethod;
+  private LockingLazyVar<List<SQLParameterInfo>> _parameters = new LockingLazyVar<List<SQLParameterInfo>>(){
+    @Override
+    protected List<SQLParameterInfo> init() {
+      List<VariableExpression> vars = _sqlType.getData().getVariables();
+      return determineParameters(_sqlType.getData().getDBData(), vars);
+    }
+  };
 
   public SQLTypeInfo(ISQLType sqlType) {
     super(sqlType);
@@ -88,13 +97,30 @@ public class SQLTypeInfo extends BaseTypeInfo {
   }
 
   private HashMap<String, Object> makeArgMap(Object[] args) {
-    List<SQLParameterInfo> pis = _sqlType.getData().getParameterInfos();
+    List<SQLParameterInfo> pis = getParameters();
     HashMap<String, Object> values = new HashMap<String, Object>();
     for (int i = 0; i < pis.size(); i++) {
       SQLParameterInfo pi = pis.get(i);
       values.put(pi.getName(), args[i]);
     }
     return values;
+  }
+
+  private List<SQLParameterInfo> getParameters() {
+    return _parameters.get();
+  }
+
+  private List<SQLParameterInfo> determineParameters(DBData dbData, List<VariableExpression> vars) {
+    Map<String, SQLParameterInfo> pis = new LinkedHashMap<String, SQLParameterInfo>();
+    for (VariableExpression var : vars) {
+      SQLParameterInfo pi = pis.get(var.getName());
+      if (pi == null) {
+        pi = new SQLParameterInfo(var.getName());
+        pis.put(var.getName(), pi);
+      }
+      pi.addVariableExpression(var);
+    }
+    return new ArrayList<SQLParameterInfo>(pis.values());
   }
 
   private IType getResultsType() {
@@ -149,7 +175,7 @@ public class SQLTypeInfo extends BaseTypeInfo {
 
   private ParameterInfoBuilder[] determineParameters() {
     ArrayList<ParameterInfoBuilder> builders = new ArrayList<ParameterInfoBuilder>();
-    List<SQLParameterInfo> pis = _sqlType.getData().getParameterInfos();
+    List<SQLParameterInfo> pis = getParameters();
     for (SQLParameterInfo pi : pis) {
       builders.add(new ParameterInfoBuilder().withName(pi.getName().substring(1)).withType(pi.getGosuType()).withDefValue(GosuShop.getNullExpressionInstance()));
     }

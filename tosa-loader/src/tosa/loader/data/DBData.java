@@ -1,6 +1,7 @@
 package tosa.loader.data;
 
 import gw.fs.IFile;
+import gw.util.concurrent.LockingLazyVar;
 
 import java.util.ArrayList;
 import java.util.Collections;

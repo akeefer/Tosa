@@ -1,6 +1,7 @@
 package tosa.loader.parser.tree;
 
 import gw.lang.reflect.IType;
+import tosa.api.IDBColumnType;
 
 import java.util.Map;
 
@@ -24,9 +25,9 @@ public class BetweenPredicate extends SQLParsedElement{
   }
 
   @Override
-  public IType getVarTypeForChild() {
+  public IDBColumnType getVarTypeForChild() {
     if (_lhs.getDBType() != null) {
-      return _lhs.getDBType().getGosuType();
+      return _lhs.getDBType();
     } else {
       return null;
     }

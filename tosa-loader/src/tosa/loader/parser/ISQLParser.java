@@ -1,6 +1,7 @@
 package tosa.loader.parser;
 
 import tosa.loader.data.DBData;
+import tosa.loader.parser.tree.CreateTableStatement;
 import tosa.loader.parser.tree.SelectStatement;
 import tosa.loader.data.TableData;
 
@@ -14,5 +15,5 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 public interface ISQLParser {
-  List<TableData> parseDDLFile(String fileContents);
+  List<TableData> transformParseTree(List<CreateTableStatement> createTableStatements);
 }

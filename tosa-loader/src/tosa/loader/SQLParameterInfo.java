@@ -27,10 +27,10 @@ public class SQLParameterInfo {
 
   public void addVariableExpression(VariableExpression var) {
     _varExpressions.add(var);
-    if (_type == null && var.getGosuType() != null) {
-      _type = var.getGosuType();
-    } else if (_type != null && var.getGosuType() != null) {
-      if (!_type.equals(var.getGosuType())) {
+    if (_type == null && var.getDBType().getGosuType() != null) {
+      _type = var.getDBType().getGosuType();
+    } else if (_type != null && var.getDBType().getGosuType() != null) {
+      if (!_type.equals(var.getDBType().getGosuType())) {
         _type = JavaTypes.OBJECT();
       }
     }

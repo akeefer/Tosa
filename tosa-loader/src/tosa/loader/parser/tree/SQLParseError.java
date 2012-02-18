@@ -1,32 +1,30 @@
 package tosa.loader.parser.tree;
 
+import gw.lang.reflect.IProvidesCustomErrorInfo;
 import tosa.loader.parser.Token;
 
-public class SQLParseError {
+public class SQLParseError extends IProvidesCustomErrorInfo.CustomErrorInfo {
 
-  private Token _start;
-  private Token _end;
-  private String _message;
+  Token _start;
+
+  public SQLParseError(Token token, String message, boolean warning) {
+    this(token, token, message, warning);
+  }
 
   public SQLParseError(Token token, String message) {
     this(token, token, message);
   }
 
   public SQLParseError(Token start, Token end, String message) {
+    this(start, end, message,  false);    
+  }
+  
+  public SQLParseError(Token start, Token end, String message, boolean warning) {
+    super(warning ? IProvidesCustomErrorInfo.ErrorLevel.WARNING : IProvidesCustomErrorInfo.ErrorLevel.ERROR, message, start.getStart(), end.getEnd());
     _start = start;
-    _end = end;
-    _message = message;
   }
 
-  public Token getStart() {
+  public Token getStartToken() {
     return _start;
-  }
-
-  public Token getEnd() {
-    return _end;
-  }
-
-  public String getMessage() {
-    return _message;
   }
 }

@@ -1,34 +1,40 @@
-package tosa.loader.parser.mysql;
+package tosa.loader.parser;
 
 import org.slf4j.LoggerFactory;
-import tosa.loader.parser.SQLParserConstants;
-import tosa.loader.parser.Token;
 import tosa.loader.parser.tree.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-/**
- * Created by IntelliJ IDEA.
- * User: alan
- * Date: 3/4/11
- * Time: 9:49 PM
- * To change this template use File | Settings | File Templates.
- */
-public class MySQL51CreateTableParser implements SQLParserConstants {
+public class DDLParser extends SQLParserBase {
 
-  private Token _currentToken;
+  // TODO - AHK - Fill out the list here
+  private static final Set<String> GOSU_RESERVED_WORDS = new HashSet<String>(Arrays.asList(
+    "new"
+  ));
 
-  public List<CreateTableStatement> parseSQLFile(String fileContents) {
-    _currentToken = Token.tokenize(fileContents);
-    List<CreateTableStatement> statements = new ArrayList<CreateTableStatement>();
-    while (!_currentToken.isEOF()) {
+  // Names of built-in Tosa properties.  Stored as lower-case, since we'll compare the lower case
+  // column name to this set
+  private static final Set<String> SPECIAL_PROPERTY_NAMES = new HashSet<String>(Arrays.asList(
+    "dbtable", "new", "_new", "Type"
+  ));
+
+  private ArrayList<CreateTableStatement> _tableStatements;
+  private ArrayList<SQLParsedElement> _createDefinitions;
+
+
+  public DDLParser(Token token) {
+    super(token);
+  }
+
+  public List<CreateTableStatement> parseDDL() {
+    _tableStatements = new ArrayList<CreateTableStatement>();
+    while (!isEOF()) {
       CreateTableStatement statement = parseCreate();
       if (statement != null) {
-        statements.add(statement);
+        _tableStatements.add(statement);
       }
     }
-    return statements;
+    return _tableStatements;
   }
 
   private CreateTableStatement parseCreate() {
@@ -39,14 +45,14 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
         match(IF, NOT, EXISTS);
         Token tableName = takeToken();
         List<SQLParsedElement> children = new ArrayList<SQLParsedElement>();
-        if (accept(LIKE)) {
+        if (match(LIKE)) {
           Token likeTableName = takeToken();
           // TODO - AHK - And what do we do with it, exactly?
-        } else if (accept(OPEN_PAREN, LIKE)) {
+        } else if (match(OPEN_PAREN, LIKE)) {
           Token likeTableName = takeToken();
           expect(CLOSE_PAREN);
           // TODO - AHK - And what do we do with it, exactly?
-        } else if (accept(OPEN_PAREN)) {
+        } else if (match(OPEN_PAREN)) {
           children.addAll(parseCreateDefinitions());
           expect(CLOSE_PAREN);
           // TODO - AHK
@@ -62,8 +68,52 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
         }
 
         expect(SEMI_COLON);
+        CreateTableStatement createTableStatement = new CreateTableStatement(start, lastMatch(), tableName, children);
+        String tableNameStr = maybeUnwrapQuotedIdentifier(tableName);
 
-        return new CreateTableStatement(start, lastMatch(), tableName, children);
+        for (CreateTableStatement tableStatement : _tableStatements) {
+          if (maybeUnwrapQuotedIdentifier(tableStatement.getTableName()).equalsIgnoreCase(tableNameStr)) {
+            createTableStatement.addParseError(new SQLParseError(tableName, "Duplicate tables were found with the names " + tableName +
+              " and " + tableStatement.getTableName().toString() +
+              ".  Table names in Tosa must be case-insensitively unique within a database."));
+          }
+        }
+
+        if (!Character.isJavaIdentifierStart(tableNameStr.charAt(0))) {
+          createTableStatement.addParseError(new SQLParseError(tableName, "The table name " + tableNameStr + " is not a valid type name.  The first character " + tableNameStr.charAt(0) + " is not a valid start to a type name."));
+        }
+
+        for (int i = 1; i < tableNameStr.length(); i++) {
+          if (!Character.isJavaIdentifierPart(tableNameStr.charAt(i))) {
+            createTableStatement.addParseError(new SQLParseError(tableName, "The table name " + tableNameStr + " is not a valid type name.  The character " + tableNameStr.charAt(i) + " is not a valid character in a type name."));
+          }
+        }
+
+        if (GOSU_RESERVED_WORDS.contains(tableNameStr.toLowerCase())) {
+          createTableStatement.addParseError(new SQLParseError(tableName, "The table name " + tableNameStr + " conflicts with a Gosu reserved word."));
+        }
+
+        if (tableNameStr.toLowerCase().equals("transaction")) {
+          createTableStatement.addParseError(new SQLParseError(tableName, "Tosa tables cannot be named Transaction (in any case), as a built-in type named Transaction is automatically created for every ddl namespace."));
+        } else if (tableNameStr.toLowerCase().equals("database")) {
+          createTableStatement.addParseError(new SQLParseError(tableName, "Tosa tables cannot be named Database (in any case), as a built-in type named Database is automatically created for every ddl namespace."));
+        }
+
+        boolean foundId = false;
+        for (SQLParsedElement createDefinition : _createDefinitions) {
+          if (createDefinition instanceof ColumnDefinition) {
+            Token name = ((ColumnDefinition) createDefinition).getName();
+            if ("id".equalsIgnoreCase(maybeUnwrapQuotedIdentifier(name))) {
+              foundId = true;
+            }
+          }
+        }
+
+        if (!foundId) {
+          createTableStatement.addParseError(new SQLParseError(tableName, "No id column was found on the table " + tableNameStr + ".  Every table in Tosa should have a column named \"id\" of type BIGINT."));
+        }
+        
+        return createTableStatement;
       }
     }
     while (!match(SEMI_COLON)) {
@@ -74,18 +124,18 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 
   private List<SQLParsedElement> parseCreateDefinitions() {
     // TODO - AHK - Is it legal to have 0 columns?
-    List<SQLParsedElement> createDefinitions = new ArrayList<SQLParsedElement>();
+    _createDefinitions = new ArrayList<SQLParsedElement>();
     SQLParsedElement createDefinition = parseCreateDefinition();
     if (createDefinition != null) {
-      createDefinitions.add(createDefinition);
+      _createDefinitions.add(createDefinition);
     }
-    while (accept(COMMA)) {
+    while (match(COMMA)) {
       createDefinition = parseCreateDefinition();
       if (createDefinition != null) {
-        createDefinitions.add(createDefinition);
+        _createDefinitions.add(createDefinition);
       }
     }
-    return createDefinitions;
+    return _createDefinitions;
   }
 
   /*create_definition:
@@ -149,7 +199,7 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
           symbol = takeToken();
         }
       } else {
-        start = _currentToken;
+        start = getCurrentToken();
       }
 
       if (match(PRIMARY, KEY)) {
@@ -249,9 +299,9 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
     }
 
     IndexColumnName.IndexColumnSortDirection sortDirection = null;
-    if (accept(ASC)) {
+    if (match(ASC)) {
       sortDirection = IndexColumnName.IndexColumnSortDirection.ASC;
-    } else if (accept(DESC)) {
+    } else if (match(DESC)) {
       sortDirection = IndexColumnName.IndexColumnSortDirection.DESC;
     }
 
@@ -281,7 +331,7 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
       match(EQUALS);
       Token value = takeToken();
       return new KeyBlockSizeIndexOption(start, value);
-    } else if (accept(WITH, PARSER)) {
+    } else if (match(WITH, PARSER)) {
       Token start = lastMatch().previous();
       Token value = takeToken();
       return new WithParserIndexOption(start, value);
@@ -310,7 +360,61 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
       }
     }
 
-    return new ColumnDefinition(columnName, lastMatch(), columnName, dataType, columnOptions);
+    ColumnDefinition columnDefinition = new ColumnDefinition(columnName, lastMatch(), columnName, dataType, columnOptions);
+
+    String actualColumnName = maybeUnwrapQuotedIdentifier(columnName);
+    
+    if (!Character.isJavaIdentifierStart(actualColumnName.charAt(0))) {
+      columnDefinition.addParseError(new SQLParseError(columnName, "The column name " + actualColumnName + " is not a valid property name.  The first character " + actualColumnName.charAt(0) + " is not a valid start to a property name."));
+    }
+
+    for (int i = 1; i < actualColumnName.length(); i++) {
+      if (!Character.isJavaIdentifierPart(actualColumnName.charAt(i))) {
+        columnDefinition.addParseError(new SQLParseError(columnName, "The column name " + actualColumnName + " is not a valid property name.  The character " + actualColumnName.charAt(i) + " is not a valid character in a property name."));
+      }
+    }
+
+    if (SPECIAL_PROPERTY_NAMES.contains(actualColumnName.toLowerCase())) {
+      columnDefinition.addParseError(new SQLParseError(columnName, "The column name \"" + actualColumnName + "\" conflicts with a built-in Tosa property or property inherited from the IDBObject interface"));
+    }
+
+    // TODO - AHK - Some more reliable way to detect this besides just matching the String "PlaceHolder"
+    // TODO cgross - is this correct?
+    if (dataType.getType() == null) {
+      columnDefinition.addParseError(new SQLParseError(columnName, "The data type for this column is not currently handled.  It will appear in Tosa as a String, but it may not function correctly.", true));
+    }
+
+    // TODO cgross - verify w/ keef that we support mixed quoting/non-quoting
+//    if (actualColumnName.charAt(0) != '"') {
+//      columnDefinition.addParseError(new SQLParseError(columnName, "The column name was not quoted in the DDL file.  Tosa will generate quoted column names in all SQL it generates, so column names should be specified quoted in the DDL as well.", true));
+//    }
+
+    if (actualColumnName.equalsIgnoreCase("id")) {
+      if (!actualColumnName.equals("id")) {
+        columnDefinition.addParseError(new SQLParseError(columnName, "The id column should always be named \"id\" but in this case it was named \"" + actualColumnName + "\""));
+      }
+
+      if (dataType.getType() != ColumnDataType.Type.BIGINT) {
+        columnDefinition.addParseError(new SQLParseError(columnName, "The id column should always be a BIGINT, since it will be represented as a Long in Tosa.  The id column was found to be of type " + dataType.getType().name()));
+      }
+
+      // TODO - AHK - Check for auto-increment
+    }
+
+    return columnDefinition;
+  }
+
+  private String maybeUnwrapQuotedIdentifier(Token token) {
+    String rawColumnName = token.toString();
+    //strip quotes
+    boolean quoted = rawColumnName.startsWith("\"");
+    String actualColumnName;
+    if (quoted) {
+      actualColumnName = rawColumnName.substring(1, rawColumnName.length() - 1);
+    } else {
+      actualColumnName = rawColumnName;
+    }
+    return actualColumnName;
   }
 
   private ColumnDataType parseDataType() {
@@ -342,45 +446,45 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
   //  | NUMERIC[(length[,decimals])] [UNSIGNED] [ZEROFILL]
   private ColumnDataType parseNumericColumnType() {
     // TODO - Handle Serial
-    if (accept(BIT)) {
+    if (match(BIT)) {
       Token start = lastMatch();
       ColumnLengthExpression length = parseLength();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.BIT, length, null);
-    } else if (accept(TINYINT)) {
+    } else if (match(TINYINT)) {
       Token start = lastMatch();
       ColumnLengthExpression length = parseLength();
       List<NumericDataTypeModifier> modifiers = parseNumericModifiers();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.TINYINT, length, modifiers);
-    } else if (accept(BOOL) || accept(BOOLEAN)) {
+    } else if (match(BOOL) || match(BOOLEAN)) {
       // BOOL and BOOLEAN are equivalent to TINYINT(1)
       Token start = lastMatch();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.BOOL, null, null);
-    } else if (accept(SMALLINT)) {
+    } else if (match(SMALLINT)) {
       Token start = lastMatch();
       ColumnLengthExpression length = parseLength();
       List<NumericDataTypeModifier> modifiers = parseNumericModifiers();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.SMALLINT, length, modifiers);
-    } else if (accept(MEDIUMINT)) {
+    } else if (match(MEDIUMINT)) {
       Token start = lastMatch();
       ColumnLengthExpression length = parseLength();
       List<NumericDataTypeModifier> modifiers = parseNumericModifiers();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.MEDIUMINT, length, modifiers);
-    } else if (accept(INT) || accept(INTEGER)) {
+    } else if (match(INT) || match(INTEGER)) {
       Token start = lastMatch();
       ColumnLengthExpression length = parseLength();
       List<NumericDataTypeModifier> modifiers = parseNumericModifiers();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.INT, length, modifiers);
-    } else if (accept(BIGINT)) {
+    } else if (match(BIGINT)) {
       Token start = lastMatch();
       ColumnLengthExpression length = parseLength();
       List<NumericDataTypeModifier> modifiers = parseNumericModifiers();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.BIGINT, length, modifiers);
-    } else if (accept(REAL)) {
+    } else if (match(REAL)) {
       Token start = lastMatch();
       ColumnLengthExpression length = parseLengthAndDecimals();
       List<NumericDataTypeModifier> modifiers = parseNumericModifiers();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.REAL, length, modifiers);
-    } else if (accept(DOUBLE, PRECISION) || accept(DOUBLE)) {
+    } else if (match(DOUBLE, PRECISION) || match(DOUBLE)) {
       Token start = lastMatch();
       if (start.match(PRECISION)) {
         start = start.previous();
@@ -388,17 +492,17 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
       ColumnLengthExpression length = parseLengthAndDecimals();
       List<NumericDataTypeModifier> modifiers = parseNumericModifiers();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.DOUBLE, length, modifiers);
-    } else if (accept(FLOAT)) {
+    } else if (match(FLOAT)) {
       Token start = lastMatch();
       ColumnLengthExpression length = parseLengthAndDecimals();
       List<NumericDataTypeModifier> modifiers = parseNumericModifiers();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.FLOAT, length, modifiers);
-    } else if (accept(DECIMAL) || accept(DEC)) {
+    } else if (match(DECIMAL) || match(DEC)) {
       Token start = lastMatch();
       ColumnLengthExpression length = parseLengthAndDecimals();
       List<NumericDataTypeModifier> modifiers = parseNumericModifiers();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.DECIMAL, length, modifiers);
-    } else if (accept(NUMERIC) || accept(FIXED)) {
+    } else if (match(NUMERIC) || match(FIXED)) {
       Token start = lastMatch();
       ColumnLengthExpression length = parseLengthAndDecimals();
       List<NumericDataTypeModifier> modifiers = parseNumericModifiers();
@@ -409,7 +513,7 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
   }
 
   private ColumnLengthExpression parseLength() {
-    if (accept(OPEN_PAREN)) {
+    if (match(OPEN_PAREN)) {
       Token start = lastMatch();
       Token length = takeToken();
       expect(CLOSE_PAREN);
@@ -433,11 +537,11 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
   }
 
   private NumericDataTypeModifier parseNumericModifier() {
-    if (accept(SIGNED)) {
+    if (match(SIGNED)) {
       return new NumericDataTypeModifier(lastMatch(), NumericDataTypeModifier.Type.SIGNED);
-    } else if (accept(UNSIGNED)) {
+    } else if (match(UNSIGNED)) {
       return new NumericDataTypeModifier(lastMatch(), NumericDataTypeModifier.Type.UNSIGNED);
-    } else if (accept(ZEROFILL)) {
+    } else if (match(ZEROFILL)) {
       return new NumericDataTypeModifier(lastMatch(), NumericDataTypeModifier.Type.ZEROFILL);
     } else {
       return null;
@@ -446,11 +550,11 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 
   private ColumnLengthExpression parseLengthAndDecimals() {
     // TODO - AHK - Sometimes the comma isn't optional, but I don't think that matters here
-    if (accept(OPEN_PAREN)) {
+    if (match(OPEN_PAREN)) {
       Token start = lastMatch();
       Token length = takeToken();
       Token decimals = null;
-      if (accept(COMMA)) {
+      if (match(COMMA)) {
         decimals = takeToken();
       }
       expect(CLOSE_PAREN);
@@ -462,15 +566,15 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 
   // TODO - Copy in syntax
   private ColumnDataType parseDateColumnType() {
-    if (accept(DATE)) {
+    if (match(DATE)) {
       return new ColumnDataType(lastMatch(), ColumnDataType.Type.DATE);
-    } else if (accept(TIME)) {
+    } else if (match(TIME)) {
       return new ColumnDataType(lastMatch(), ColumnDataType.Type.TIME);
-    } else if (accept(TIMESTAMP)) {
+    } else if (match(TIMESTAMP)) {
       return new ColumnDataType(lastMatch(), ColumnDataType.Type.TIMESTAMP);
-    } else if (accept(DATETIME)) {
+    } else if (match(DATETIME)) {
       return new ColumnDataType(lastMatch(), ColumnDataType.Type.DATETIME);
-    } else if (accept(YEAR)) {
+    } else if (match(YEAR)) {
       return new ColumnDataType(lastMatch(), ColumnDataType.Type.YEAR);
     } else {
       return null;
@@ -500,19 +604,19 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
   //  | SET(value1,value2,value3,...)
   //      [CHARACTER SET charset_name] [COLLATE collation_name]
     private ColumnDataType parseCharacterColumnType() {
-    if (accept(CHAR, BYTE) || accept(BINARY)) {
+    if (match(CHAR, BYTE) || match(BINARY)) {
       Token start = lastMatch();
       if (start.match(BYTE)) {
         start = start.previous();
       }
       ColumnLengthExpression lengthExpression = parseLength();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.BINARY, lengthExpression, null);
-    } else if (accept(CHAR) || accept(CHARACTER)) {
+    } else if (match(CHAR) || match(CHARACTER)) {
       Token start = lastMatch();
       ColumnLengthExpression lengthExpression = parseLength();
       List<SQLParsedElement> characterTypeAttributes = parseCharTypeAttributes();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.CHAR, lengthExpression, characterTypeAttributes);
-    } else if (accept(NATIONAL, CHAR) || accept(NCHAR)) {
+    } else if (match(NATIONAL, CHAR) || match(NCHAR)) {
       Token start = lastMatch();
       if (start.match(CHAR)) {
         start = start.previous();
@@ -520,49 +624,49 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
       ColumnLengthExpression lengthExpression = parseLength();
       List<SQLParsedElement> characterTypeAttributes = parseCharTypeAttributes();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.NCHAR, lengthExpression, characterTypeAttributes);
-    } else if (accept(VARCHAR)) {
+    } else if (match(VARCHAR)) {
       Token start = lastMatch();
       ColumnLengthExpression lengthExpression = parseLength();
       List<SQLParsedElement> characterTypeAttributes = parseCharTypeAttributes();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.VARCHAR, lengthExpression, characterTypeAttributes);
-    } else if (accept(VARBINARY)) {
+    } else if (match(VARBINARY)) {
       Token start = lastMatch();
       ColumnLengthExpression lengthExpression = parseLength();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.VARBINARY, lengthExpression, null);
-    } else if (accept(TINYBLOB)) {
+    } else if (match(TINYBLOB)) {
       return new ColumnDataType(lastMatch(), ColumnDataType.Type.TINYBLOB);
-    } else if (accept(BLOB)) {
+    } else if (match(BLOB)) {
       Token start = lastMatch();
       ColumnLengthExpression lengthExpression = parseLength();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.BLOB, lengthExpression, null);
-    } else if (accept(MEDIUMBLOB)) {
+    } else if (match(MEDIUMBLOB)) {
       return new ColumnDataType(lastMatch(), ColumnDataType.Type.MEDIUMBLOB);
-    } else if (accept(LONGBLOB)) {
+    } else if (match(LONGBLOB)) {
       return new ColumnDataType(lastMatch(), ColumnDataType.Type.LONGBLOB);
-    } else if (accept(TINYTEXT)) {
+    } else if (match(TINYTEXT)) {
       Token start = lastMatch();
       List<SQLParsedElement> characterTypeAttributes = parseCharTypeAttributes();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.TINYTEXT, null, characterTypeAttributes);
-    } else if (accept(TEXT)) {
+    } else if (match(TEXT)) {
       Token start = lastMatch();
       ColumnLengthExpression lengthExpression = parseLength();
       List<SQLParsedElement> characterTypeAttributes = parseCharTypeAttributes();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.TEXT, lengthExpression, characterTypeAttributes);
-    } else if (accept(MEDIUMTEXT)) {
+    } else if (match(MEDIUMTEXT)) {
       Token start = lastMatch();
       List<SQLParsedElement> characterTypeAttributes = parseCharTypeAttributes();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.MEDIUMTEXT, null, characterTypeAttributes);
-    } else if (accept(LONGTEXT)) {
+    } else if (match(LONGTEXT)) {
       Token start = lastMatch();
       List<SQLParsedElement> characterTypeAttributes = parseCharTypeAttributes();
       return new ColumnDataType(start, lastMatch(), ColumnDataType.Type.LONGTEXT, null, characterTypeAttributes);
-    } else if (accept(ENUM)) {
+    } else if (match(ENUM)) {
       // TODO - AHK
 //      List<String> values = parseEnumOrSetValueList();
 //      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
       LoggerFactory.getLogger("Tosa").warn("***Unhandled column type " + ENUM);
       return null;
-    } else if (accept(SET)) {
+    } else if (match(SET)) {
       // TODO - AHK
 //      List<String> values = parseEnumOrSetValueList();
 //      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
@@ -587,19 +691,19 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
   }
 
   private SQLParsedElement parseCharTypeAttribute() {
-    if (accept(CHARACTER, SET)) {
+    if (match(CHARACTER, SET)) {
       Token start = lastMatch().previous();
       Token charSetName = takeToken();
       return new CharacterSetExpression(start, charSetName, charSetName);
-    } else if (accept(COLLATE)) {
+    } else if (match(COLLATE)) {
       Token start = lastMatch();
       Token collation = takeToken();
       return new CollateExpression(start, collation, collation);
-    } else if (accept(ASCII)) {
+    } else if (match(ASCII)) {
       return new CharacterTypeAttribute(lastMatch(), CharacterTypeAttribute.Attribute.ASCII);
-    } else if (accept(UNICODE)) {
+    } else if (match(UNICODE)) {
       return new CharacterTypeAttribute(lastMatch(), CharacterTypeAttribute.Attribute.UNICODE);
-    } else if (accept(BINARY)) {
+    } else if (match(BINARY)) {
       return new CharacterTypeAttribute(lastMatch(), CharacterTypeAttribute.Attribute.BINARY);
     } else {
       return null;
@@ -614,59 +718,59 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
       [STORAGE {DISK|MEMORY|DEFAULT}]
       [reference_definition]*/
   private SQLParsedElement parseColumnOption() {
-    if (accept(NOT, NULL)) {
+    if (match(NOT, NULL)) {
       return new ColumnOptionExpression(lastMatch().previous(), lastMatch(), ColumnOptionExpression.ColumnOptionType.NOT_NULL);
-    } else if (accept(NULL)) {
+    } else if (match(NULL)) {
       return new ColumnOptionExpression(lastMatch(), lastMatch(), ColumnOptionExpression.ColumnOptionType.NULL);
     }
 
-    if (accept(DEFAULT)) {
+    if (match(DEFAULT)) {
       Token start = lastMatch();
       // TODO - AHK - This is likely incorrect (i.e. it could be a quoted string or something else)
       Token value = takeToken();
       return new DefaultValueExpression(start, value, value);
     }
 
-    if (accept(AUTO_INCREMENT)) {
+    if (match(AUTO_INCREMENT)) {
       return new ColumnOptionExpression(lastMatch(), lastMatch(), ColumnOptionExpression.ColumnOptionType.AUTO_INCREMENT);
     }
 
-    if (accept(UNIQUE)) {
-      if (accept(KEY)) {
+    if (match(UNIQUE)) {
+      if (match(KEY)) {
         return new ColumnOptionExpression(lastMatch().previous(), lastMatch(), ColumnOptionExpression.ColumnOptionType.UNIQUE_KEY);
       } else {
         return new ColumnOptionExpression(lastMatch(), lastMatch(), ColumnOptionExpression.ColumnOptionType.UNIQUE);
       }
-    } else if (accept(PRIMARY)) {
+    } else if (match(PRIMARY)) {
       expect(KEY);
       return new ColumnOptionExpression(lastMatch().previous(), lastMatch(), ColumnOptionExpression.ColumnOptionType.PRIMARY_KEY);
     }
 
-    if (accept(COMMENT)) {
+    if (match(COMMENT)) {
 //      String comment = parseQuotedString();
 //      return true;
       // TODO - AHK
       return null;
     }
 
-    if (accept(COLUMN_FORMAT)) {
-      if (accept(FIXED)) {
+    if (match(COLUMN_FORMAT)) {
+      if (match(FIXED)) {
         return new ColumnOptionExpression(lastMatch().previous(), lastMatch(), ColumnOptionExpression.ColumnOptionType.COLUMN_FORMAT_FIXED);
-      } else if (accept(DYNAMIC)) {
+      } else if (match(DYNAMIC)) {
         return new ColumnOptionExpression(lastMatch().previous(), lastMatch(), ColumnOptionExpression.ColumnOptionType.COLUMN_FORMAT_DYNAMIC);
-      } else if (accept(DEFAULT)) {
+      } else if (match(DEFAULT)) {
         return new ColumnOptionExpression(lastMatch().previous(), lastMatch(), ColumnOptionExpression.ColumnOptionType.COLUMN_FORMAT_DEFAULT);
       } else {
         // TODO - Error
       }
     }
 
-    if (accept(STORAGE)) {
-      if (accept(DISK)) {
+    if (match(STORAGE)) {
+      if (match(DISK)) {
         return new ColumnOptionExpression(lastMatch().previous(), lastMatch(), ColumnOptionExpression.ColumnOptionType.STORAGE_DISK);
-      } else if (accept(MEMORY)) {
+      } else if (match(MEMORY)) {
         return new ColumnOptionExpression(lastMatch().previous(), lastMatch(), ColumnOptionExpression.ColumnOptionType.STORAGE_MEMORY);
-      } else if (accept(DEFAULT)) {
+      } else if (match(DEFAULT)) {
         return new ColumnOptionExpression(lastMatch().previous(), lastMatch(), ColumnOptionExpression.ColumnOptionType.STORAGE_DEFAULT);
       } else {
         // TODO - Error
@@ -687,68 +791,10 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
     return null;
   }
 
+  // TODO - AHK - Kill the _New property?
 
-  // ==========================================================================
-  //                            Helper Methods
-  // ==========================================================================
-
-  private Token lastMatch() {
-    return _currentToken.previous();
-  }
-
-  private boolean accept(String... tokens) {
-    return match(tokens);
-  }
-
-  private void expect(String token) {
-    expectToken(null, token);
-  }
-
-  private boolean match(String... tokens) {
-    Token matchTarget = _currentToken;
-    for (String str : tokens) {
-      if (!matchTarget.match(str)) {
-        return false;
-      }
-      // TODO - AHK - Throw if there is no next token
-      matchTarget = matchTarget.nextToken();
-    }
-
-    _currentToken = matchTarget;
-    return true;
-  }
-
-  private boolean peek(String... tokens) {
-    Token matchTarget = _currentToken;
-    for (String str : tokens) {
-      if (!matchTarget.match(str)) {
-        return false;
-      }
-      // TODO - AHK - Throw if there is no next token
-      matchTarget = matchTarget.nextToken();
-    }
-
-    return true;
-  }
-
-
-  private void expectToken(SQLParsedElement elt, String str) {
-    if (!match(str)) {
-      // TODO - AHK - This is a total hack job
-      if (elt == null) {
-        throw new IllegalArgumentException("Expected " + str);
-      }
-      elt.addParseError(new SQLParseError(_currentToken, "Expected " + str));
-    }
-  }
-
-  private Token takeToken() {
-    Token base = _currentToken;
-    _currentToken = _currentToken.nextToken();
-    return base;
-  }
 //
-//  private boolean accept(String... tokens) {
+//  private boolean match(String... tokens) {
 //    return true;
 //  }
 //
@@ -771,20 +817,20 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //  // ----------------------------
 //
 //  private TableData parseCreate() {
-//    if (accept(CREATE)) {
-//      accept(TEMPORARY); // Discard; we don't care
+//    if (match(CREATE)) {
+//      match(TEMPORARY); // Discard; we don't care
 //      expect(TABLE);
-//      accept(IF, NOT, EXISTS);
+//      match(IF, NOT, EXISTS);
 //      String tableName = stripQuotes(consumeToken());
 //      List<ColumnData> columns = null;
-//      if (accept(LIKE)) {
+//      if (match(LIKE)) {
 //        String likeTableName = consumeToken();
 //        // TODO - AHK - And what do we do with it, exactly?
-//      } else if (accept(OPEN_PAREN, LIKE)) {
+//      } else if (match(OPEN_PAREN, LIKE)) {
 //        String likeTableName = consumeToken();
 //        expect(CLOSE_PAREN);
 //        // TODO - AHK - And what do we do with it, exactly?
-//      } else if (accept(OPEN_PAREN)) {
+//      } else if (match(OPEN_PAREN)) {
 //        columns = parseCreateDefinitions();
 //        expect(CLOSE_PAREN);
 //        parseTableOptions();
@@ -812,7 +858,7 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //    if (columnData != null) {
 //      columns.add(columnData);
 //    }
-//    while (accept(COMMA)) {
+//    while (match(COMMA)) {
 //      columnData = parseCreateDefinition();
 //      if (columnData != null) {
 //        columns.add(columnData);
@@ -836,7 +882,7 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //      [index_name] (index_col_name,...) reference_definition
 //  | CHECK (expr)*/
 //  private ColumnData parseCreateDefinition() {
-//    if (accept(CONSTRAINT)) {
+//    if (match(CONSTRAINT)) {
 //      String symbolName;
 //      if (peek(PRIMARY, KEY) || peek(UNIQUE) || peek(FOREIGN, KEY)) {
 //        symbolName = null;
@@ -845,36 +891,36 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //      }
 //    }
 //
-//    if (accept(PRIMARY, KEY)) {
+//    if (match(PRIMARY, KEY)) {
 //      parseIndexType();
 //      parseIndexColumnNames();
 //      parseIndexOptions();
-//    } else if (accept(INDEX) || accept(KEY)) {
+//    } else if (match(INDEX) || match(KEY)) {
 //      parseIndexName();
 //      parseIndexType();
 //      parseIndexColumnNames();
 //      parseIndexOptions();
-//    } else if (accept(UNIQUE)) {
+//    } else if (match(UNIQUE)) {
 //      // TODO - AHK
-//      if (!accept(INDEX)) {
+//      if (!match(INDEX)) {
 //        expect(KEY);
 //      }
 //      parseIndexName();
 //      parseIndexType();
 //      parseIndexColumnNames();
 //      parseIndexOptions();
-//    } else if (accept(FULLTEXT) || accept(SPATIAL)) {
-//      if (!accept(INDEX)) {
+//    } else if (match(FULLTEXT) || match(SPATIAL)) {
+//      if (!match(INDEX)) {
 //        expect(KEY);
 //      }
 //      parseIndexName();
 //      parseIndexColumnNames();
 //      parseIndexOptions();
-//    } else if (accept(FOREIGN, KEY)) {
+//    } else if (match(FOREIGN, KEY)) {
 //      parseIndexName();
 //      parseIndexColumnNames();
 //      parseReferenceDefinition();
-//    } else if (accept(CHECK)) {
+//    } else if (match(CHECK)) {
 //      parseParenthesizedExpression();
 //    } else {
 //      return parseColumnDefinition();
@@ -890,46 +936,46 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //  }
 //
 //  private void parseIndexType() {
-//    if (accept(USING)) {
-//      if (!accept(BTREE)) {
+//    if (match(USING)) {
+//      if (!match(BTREE)) {
 //        expect(HASH);
 //      }
 //    }
 //  }
 //
 //  private void parseIndexOptions() {
-//    if (accept(KEY_BLOCK_SIZE)) {
-//      accept(EQUALS);
+//    if (match(KEY_BLOCK_SIZE)) {
+//      match(EQUALS);
 //      String value = consumeToken();
 //      parseIndexOptions();
-//    } else if (accept(USING)) {
+//    } else if (match(USING)) {
 //      // TODO - AHK - Sould there be an expect() variant for an OR situation like this?
-//      if (!accept(BTREE)) {
+//      if (!match(BTREE)) {
 //        expect(HASH);
 //      }
 //      parseIndexOptions();
-//    } else if (accept(WITH, PARSER)) {
+//    } else if (match(WITH, PARSER)) {
 //      String parserName = consumeToken();
 //    }
 //  }
 //
 //  // TODO - AHK - This needs to be order-independent
 //  private boolean parseReferenceDefinition() {
-//    if (accept(REFERENCES)) {
+//    if (match(REFERENCES)) {
 //      String tableName = consumeToken();
 //      expect(OPEN_PAREN);
 //      String columnName = consumeToken();
-//      while (accept(COMMA)) {
+//      while (match(COMMA)) {
 //        columnName = consumeToken();
 //      }
 //      expect(CLOSE_PAREN);
-//      if (accept(MATCH, FULL) || accept(MATCH, PARTIAL) || accept(MATCH, SIMPLE)) {
+//      if (match(MATCH, FULL) || match(MATCH, PARTIAL) || match(MATCH, SIMPLE)) {
 //        // Just eat it
 //      }
-//      if (accept(ON, DELETE)) {
+//      if (match(ON, DELETE)) {
 //        parseReferenceOption();
 //      }
-//      if (accept(ON, UPDATE)) {
+//      if (match(ON, UPDATE)) {
 //        parseReferenceOption();
 //      }
 //
@@ -940,7 +986,7 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //  }
 //
 //  private void parseReferenceOption() {
-//    if (accept(RESTRICT) || accept(CASCADE) || accept(SET, NULL) || accept(NO, ACTION)) {
+//    if (match(RESTRICT) || match(CASCADE) || match(SET, NULL) || match(NO, ACTION)) {
 //      // Just eat it
 //    } else {
 //      // Error case
@@ -950,7 +996,7 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //  private void parseIndexColumnNames() {
 //    expect(OPEN_PAREN);
 //    parseIndexColName();
-//    while (accept(COMMA)) {
+//    while (match(COMMA)) {
 //      parseIndexColName();
 //    }
 //    expect(CLOSE_PAREN);
@@ -958,13 +1004,13 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //
 //  private void parseIndexColName() {
 //    String columnName = consumeToken();
-//    if (accept(OPEN_PAREN)) {
+//    if (match(OPEN_PAREN)) {
 //      String length = consumeToken();
 //      expect(CLOSE_PAREN);
 //    }
-//    if (accept(ASC)) {
+//    if (match(ASC)) {
 //      // Just eat it
-//    } else if (accept(DESC)) {
+//    } else if (match(DESC)) {
 //      // Just eat it
 //    }
 //  }
@@ -997,38 +1043,38 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //      [STORAGE {DISK|MEMORY|DEFAULT}]
 //      [reference_definition]*/
 //  private boolean parseColumnOption() {
-//    if (accept(NOT, NULL)) {
+//    if (match(NOT, NULL)) {
 //      return true;
-//    } else if (accept(NULL)) {
+//    } else if (match(NULL)) {
 //      return true;
 //    }
 //
-//    if (accept(DEFAULT)) {
+//    if (match(DEFAULT)) {
 //      String defaultValue = consumeToken();
 //      return true;
 //    }
 //
-//    if (accept(AUTO_INCREMENT)) {
+//    if (match(AUTO_INCREMENT)) {
 //      return true;
 //    }
 //
-//    if (accept(UNIQUE)) {
-//      accept(KEY);
+//    if (match(UNIQUE)) {
+//      match(KEY);
 //      return true;
-//    } else if (accept(PRIMARY)) {
+//    } else if (match(PRIMARY)) {
 //      expect(KEY);
 //      return true;
-//    } else if (accept(KEY)) {
+//    } else if (match(KEY)) {
 //      return true;
 //    }
 //
-//    if (accept(COMMENT)) {
+//    if (match(COMMENT)) {
 //      String comment = parseQuotedString();
 //      return true;
 //    }
 //
-//    if (accept(COLUMN_FORMAT)) {
-//      if (accept(FIXED) || accept(DYNAMIC) || accept(DEFAULT)) {
+//    if (match(COLUMN_FORMAT)) {
+//      if (match(FIXED) || match(DYNAMIC) || match(DEFAULT)) {
 //        return true;
 //      } else {
 //        // TODO - AHK - Error case
@@ -1036,8 +1082,8 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //      }
 //    }
 //
-//    if (accept(STORAGE)) {
-//      if (accept(DISK) || accept(MEMORY) || accept(DEFAULT)) {
+//    if (match(STORAGE)) {
+//      if (match(DISK) || match(MEMORY) || match(DEFAULT)) {
 //        return true;
 //      } else {
 //        // TODO - AHK - Error case
@@ -1113,7 +1159,7 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //
 //  private DBColumnTypeImpl parseNumericColumnType() {
 //    // TODO - Handle Serial
-//    if (accept(BIT)) {
+//    if (match(BIT)) {
 //      Integer length = parseLength();
 //      if (length == null || length == 1) {
 //        return new DBColumnTypeImpl(BIT, BIT, DBColumnTypeImpl.BOOLEAN_ITYPE, Types.BIT);
@@ -1122,7 +1168,7 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //        LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + BIT);
 //        return null;
 //      }
-//    } else if (accept(TINYINT)) {
+//    } else if (match(TINYINT)) {
 //      Integer length = parseLength();
 //      boolean signed = parseNumericModifiers();
 //      if (length != null && length == 1) {
@@ -1135,10 +1181,10 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //        LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + TINYINT);
 //        return null;
 //      }
-//    } else if (accept(BOOL) || accept(BOOLEAN)) {
+//    } else if (match(BOOL) || match(BOOLEAN)) {
 //      // BOOL and BOOLEAN are equivalent to TINYINT(1)
 //      return new DBColumnTypeImpl(TINYINT, TINYINT, DBColumnTypeImpl.BOOLEAN_ITYPE, Types.TINYINT);
-//    } else if (accept(SMALLINT)) {
+//    } else if (match(SMALLINT)) {
 //      Integer length = parseLength();
 //      boolean signed = parseNumericModifiers();
 //      if (signed) {
@@ -1148,7 +1194,7 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //        LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + SMALLINT);
 //        return null;
 //      }
-//    } else if (accept(MEDIUMINT)) {
+//    } else if (match(MEDIUMINT)) {
 //      Integer length = parseLength();
 //      boolean signed = parseNumericModifiers();
 //      if (signed) {
@@ -1158,7 +1204,7 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //        LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + MEDIUMINT);
 //        return null;
 //      }
-//    } else if (accept(INT) || accept(INTEGER)) {
+//    } else if (match(INT) || match(INTEGER)) {
 //      Integer length = parseLength();
 //      boolean signed = parseNumericModifiers();
 //      if (signed) {
@@ -1168,7 +1214,7 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //        LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + INTEGER);
 //        return null;
 //      }
-//    } else if (accept(BIGINT)) {
+//    } else if (match(BIGINT)) {
 //      Integer length = parseLength();
 //      boolean signed = parseNumericModifiers();
 //      if (signed) {
@@ -1178,17 +1224,17 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //        LoggerFactory.getLogger("Tosa").debug("***Unhandled column type UNSIGNED " + BIGINT);
 //        return null;
 //      }
-//    } else if (accept(DOUBLE, PRECISION) || accept(DOUBLE) || accept(REAL)) {
+//    } else if (match(DOUBLE, PRECISION) || match(DOUBLE) || match(REAL)) {
 //      // TODO - AHK - If the REAL_AS_FLOAT mode is set on the DB, this will be incorrect
 //      parseLengthAndDecimals();
 //      boolean signed = parseNumericModifiers();
 //      return new DBColumnTypeImpl(DOUBLE, DOUBLE, DBColumnTypeImpl.DOUBLE_ITYPE, Types.DOUBLE);
-//    } else if (accept(FLOAT)) {
+//    } else if (match(FLOAT)) {
 //      // TODO - AHK - It's a different deal if there's a length and a precision versus just a single number
 //      parseLengthAndDecimals();
 //      boolean signed = parseNumericModifiers();
 //      return new DBColumnTypeImpl(FLOAT, FLOAT, DBColumnTypeImpl.FLOAT_ITYPE, Types.FLOAT);
-//    } else if (accept(DECIMAL) || accept(DEC) || accept(NUMERIC) || accept(FIXED)) {
+//    } else if (match(DECIMAL) || match(DEC) || match(NUMERIC) || match(FIXED)) {
 //      parseLengthAndDecimals();
 //      boolean signed = parseNumericModifiers();
 //      // TODO - AHK - The precision and size are probably important here
@@ -1200,16 +1246,16 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //  }
 //
 //  private DBColumnTypeImpl parseDateColumnType() {
-//    if (accept(DATE)) {
+//    if (match(DATE)) {
 //      return new DBColumnTypeImpl(DATE, DATE, DBColumnTypeImpl.DATE_ITYPE, Types.DATE, new DateColumnTypePersistenceHandler());
-//    } else if (accept(TIME)) {
+//    } else if (match(TIME)) {
 //      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + TIME);
 //      return null;
-//    } else if (accept(TIMESTAMP)) {
+//    } else if (match(TIMESTAMP)) {
 //      return new DBColumnTypeImpl(TIMESTAMP, TIMESTAMP, DBColumnTypeImpl.DATE_ITYPE, Types.TIMESTAMP, new TimestampColumnTypePersistenceHandler());
-//    } else if (accept(DATETIME)) {
+//    } else if (match(DATETIME)) {
 //      return new DBColumnTypeImpl(DATETIME, DATETIME, DBColumnTypeImpl.DATE_ITYPE, Types.TIMESTAMP, new TimestampColumnTypePersistenceHandler());
-//    } else if (accept(YEAR)) {
+//    } else if (match(YEAR)) {
 //      return new DBColumnTypeImpl(YEAR, YEAR, DBColumnTypeImpl.INTEGER_ITYPE, Types.INTEGER);
 //    } else {
 //      return null;
@@ -1217,43 +1263,43 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //  }
 //
 //  private DBColumnTypeImpl parseCharacterColumnType() {
-//    if (accept(CHAR, BYTE) || accept(BINARY)) {
+//    if (match(CHAR, BYTE) || match(BINARY)) {
 //      Integer length = parseLength();
 //      return new DBColumnTypeImpl(BINARY, BINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BINARY);
-//    } else if (accept(CHAR) || accept(CHARACTER)) {
+//    } else if (match(CHAR) || match(CHARACTER)) {
 //      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
 //      if ("binary".equals(characterTypeAttributes._charSet)) {
 //        return new DBColumnTypeImpl(BINARY, BINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BINARY);
 //      } else {
 //        return new DBColumnTypeImpl(CHAR, CHAR, DBColumnTypeImpl.STRING_ITYPE, Types.CHAR);
 //      }
-//    } else if (accept(NATIONAL, CHAR) || accept(NCHAR)) {
+//    } else if (match(NATIONAL, CHAR) || match(NCHAR)) {
 //      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
 //      return new DBColumnTypeImpl(NCHAR, NCHAR, DBColumnTypeImpl.STRING_ITYPE, Types.CHAR);
-//    } else if (accept(VARCHAR)) {
+//    } else if (match(VARCHAR)) {
 //      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
 //      if ("binary".equals(characterTypeAttributes._charSet)) {
 //        return new DBColumnTypeImpl(VARBINARY, VARBINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.VARBINARY);
 //      } else {
 //        return new DBColumnTypeImpl(VARCHAR, VARCHAR, DBColumnTypeImpl.STRING_ITYPE, Types.VARCHAR);
 //      }
-//    } else if (accept(VARBINARY)) {
+//    } else if (match(VARBINARY)) {
 //      Integer length = parseLength();
 //      return new DBColumnTypeImpl(VARBINARY, VARBINARY, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.VARBINARY);
-//    } else if (accept(TINYBLOB)) {
+//    } else if (match(TINYBLOB)) {
 //      // Max length is 255
 //      return new DBColumnTypeImpl(TINYBLOB, TINYBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
-//    } else if (accept(BLOB)) {
+//    } else if (match(BLOB)) {
 //      // Max length is 2^16 - 1 if not otherwise specified
 //      Integer length = parseLength();
 //      return new DBColumnTypeImpl(BLOB, BLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
-//    } else if (accept(MEDIUMBLOB)) {
+//    } else if (match(MEDIUMBLOB)) {
 //      // Max length is 2^24 - 1
 //      return new DBColumnTypeImpl(MEDIUMBLOB, MEDIUMBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
-//    } else if (accept(LONGBLOB)) {
+//    } else if (match(LONGBLOB)) {
 //      // Max length is 2^32 - 1
 //      return new DBColumnTypeImpl(LONGBLOB, LONGBLOB, DBColumnTypeImpl.pBYTE_ARRAY_ITYPE, Types.BLOB);
-//    } else if (accept(TINYTEXT)) {
+//    } else if (match(TINYTEXT)) {
 //      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
 //      // Max length is 255
 //      if ("binary".equals(characterTypeAttributes._charSet)) {
@@ -1261,7 +1307,7 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //      } else {
 //        return new DBColumnTypeImpl(TINYTEXT, TINYTEXT, DBColumnTypeImpl.STRING_ITYPE, Types.CLOB);
 //      }
-//    } else if (accept(TEXT)) {
+//    } else if (match(TEXT)) {
 //      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
 //      // Max length is 2^16 - 1 if not otherwise specified
 //      if ("binary".equals(characterTypeAttributes._charSet)) {
@@ -1269,7 +1315,7 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //      } else {
 //        return new DBColumnTypeImpl(TEXT, TEXT, DBColumnTypeImpl.STRING_ITYPE, Types.CLOB);
 //      }
-//    } else if (accept(MEDIUMTEXT)) {
+//    } else if (match(MEDIUMTEXT)) {
 //      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
 //      // Max length is 2^24 - 1
 //      if ("binary".equals(characterTypeAttributes._charSet)) {
@@ -1277,7 +1323,7 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //      } else {
 //        return new DBColumnTypeImpl(MEDIUMTEXT, MEDIUMTEXT, DBColumnTypeImpl.STRING_ITYPE, Types.CLOB);
 //      }
-//    } else if (accept(LONGTEXT)) {
+//    } else if (match(LONGTEXT)) {
 //      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
 //      // Max length is 2^32 - 1
 //      if ("binary".equals(characterTypeAttributes._charSet)) {
@@ -1285,12 +1331,12 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //      } else {
 //        return new DBColumnTypeImpl(LONGTEXT, LONGTEXT, DBColumnTypeImpl.STRING_ITYPE, Types.CLOB);
 //      }
-//    } else if (accept(ENUM)) {
+//    } else if (match(ENUM)) {
 //      List<String> values = parseEnumOrSetValueList();
 //      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
 //      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + ENUM);
 //      return null;
-//    } else if (accept(SET)) {
+//    } else if (match(SET)) {
 //      List<String> values = parseEnumOrSetValueList();
 //      CharacterTypeAttributes characterTypeAttributes = parseCharTypeAttributes();
 //      LoggerFactory.getLogger("Tosa").debug("***Unhandled column type " + SET);
@@ -1317,19 +1363,19 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //
 //  private boolean parseCharTypeAttribute(CharacterTypeAttributes charTypeAttributes) {
 //    // TODO - AHK - Should be an error if the char set or collation is already set
-//    if (accept(CHARACTER, SET)) {
+//    if (match(CHARACTER, SET)) {
 //      charTypeAttributes._charSet = consumeToken();
 //      return true;
-//    } else if (accept(COLLATE)) {
+//    } else if (match(COLLATE)) {
 //      charTypeAttributes._collation = consumeToken();
 //      return true;
-//    } else if (accept(ASCII)) {
+//    } else if (match(ASCII)) {
 //      charTypeAttributes._charSet = "latin1";
 //      return true;
-//    } else if (accept(UNICODE)) {
+//    } else if (match(UNICODE)) {
 //      charTypeAttributes._charSet = "ucs2";
 //      return true;
-//    } else if (accept(BINARY)) {
+//    } else if (match(BINARY)) {
 //      charTypeAttributes._collation = "binary";
 //      return true;
 //    } else {
@@ -1339,7 +1385,7 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //
 //  // TODO - AHK - Maybe return an int instead?
 //  private Integer parseLength() {
-//    if (accept(OPEN_PAREN)) {
+//    if (match(OPEN_PAREN)) {
 //      String length = consumeToken();
 //      expect(CLOSE_PAREN);
 //      return Integer.valueOf(length);
@@ -1350,14 +1396,14 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //
 //  private boolean parseNumericModifiers() {
 //    boolean signed = true;
-//    if (accept(SIGNED)) {
+//    if (match(SIGNED)) {
 //      signed = true;
-//    } else if (accept(UNSIGNED)) {
+//    } else if (match(UNSIGNED)) {
 //      signed = false;
 //    }
 //
 //    // Zerofill columns are automatically treated as unsigned
-//    if (accept(ZEROFILL)) {
+//    if (match(ZEROFILL)) {
 //      signed = false;
 //    }
 //
@@ -1366,9 +1412,9 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //
 //  private void parseLengthAndDecimals() {
 //    // TODO - AHK - Sometimes the comma isn't optional, but I don't think that matters here
-//    if (accept(OPEN_PAREN)) {
+//    if (match(OPEN_PAREN)) {
 //      String length = consumeToken();
-//      if (accept(COMMA)) {
+//      if (match(COMMA)) {
 //        String decimals = consumeToken();
 //      }
 //      expect(CLOSE_PAREN);
@@ -1376,7 +1422,7 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //  }
 //
 //  private String parseCharSet() {
-//    if (accept(CHARACTER, SET)) {
+//    if (match(CHARACTER, SET)) {
 //      return consumeToken();
 //    } else {
 //      return null;
@@ -1384,7 +1430,7 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //  }
 //
 //  private String parseCollation() {
-//    if (accept(COLLATE)) {
+//    if (match(COLLATE)) {
 //      return consumeToken();
 //    } else {
 //      return null;
@@ -1395,7 +1441,7 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //    List<String> values = new ArrayList<String>();
 //    expect(OPEN_PAREN);
 //    values.add(consumeToken());
-//    while (accept(COMMA)) {
+//    while (match(COMMA)) {
 //      values.add(consumeToken());
 //    }
 //    expect(CLOSE_PAREN);
@@ -1408,7 +1454,7 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //    parseTableOption();
 //    // TODO - AHK - Are the commas required?  If not, we'll need to see if a table option was
 //    // actually parsed or not
-//    while (accept(COMMA)) {
+//    while (match(COMMA)) {
 //      parseTableOption();
 //    }
 //  }
@@ -1437,69 +1483,69 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //  | UNION [=] (tbl_name[,tbl_name]...)
 //  */
 //  private void parseTableOption() {
-//    if (accept(ENGINE)) {
-//      accept(EQUALS);
+//    if (match(ENGINE)) {
+//      match(EQUALS);
 //      String engineName = consumeToken();
-//    } else if (accept(AUTO_INCREMENT)) {
-//      accept(EQUALS);
+//    } else if (match(AUTO_INCREMENT)) {
+//      match(EQUALS);
 //      String value = consumeToken();
-//    } else if (accept(AVG_ROW_LENGTH)) {
-//      accept(EQUALS);
+//    } else if (match(AVG_ROW_LENGTH)) {
+//      match(EQUALS);
 //      String value = consumeToken();
-//    } else if (accept(DEFAULT, CHARACTER, SET) || accept(CHARACTER, SET)) {
-//      accept(EQUALS);
+//    } else if (match(DEFAULT, CHARACTER, SET) || match(CHARACTER, SET)) {
+//      match(EQUALS);
 //      String charsetName = consumeToken();
-//    } else if (accept(CHECKSUM)) {
-//      accept(EQUALS);
+//    } else if (match(CHECKSUM)) {
+//      match(EQUALS);
 //      String value = consumeToken();
-//    } else if (accept(DEFAULT, COLLATE) || accept(COLLATE)) {
-//      accept(EQUALS);
+//    } else if (match(DEFAULT, COLLATE) || match(COLLATE)) {
+//      match(EQUALS);
 //      String collationName = consumeToken();
-//    } else if (accept(COMMENT)) {
-//      accept(EQUALS);
+//    } else if (match(COMMENT)) {
+//      match(EQUALS);
 //      String comment = consumeToken();
-//    } else if (accept(CONNECTION)) {
-//      accept(EQUALS);
+//    } else if (match(CONNECTION)) {
+//      match(EQUALS);
 //      String connection = consumeToken();
-//    } else if (accept(DATA, DICTIONARY)) {
-//      accept(EQUALS);
+//    } else if (match(DATA, DICTIONARY)) {
+//      match(EQUALS);
 //      String path = consumeToken();
-//    } else if (accept(DELAY_KEY_WRITE)) {
-//      accept(EQUALS);
+//    } else if (match(DELAY_KEY_WRITE)) {
+//      match(EQUALS);
 //      String value = consumeToken();
-//    } else if (accept(INDEX, DIRECTORY)) {
-//      accept(EQUALS);
+//    } else if (match(INDEX, DIRECTORY)) {
+//      match(EQUALS);
 //      String path = consumeToken();
-//    } else if (accept(INSERT_METHOD)) {
-//      accept(EQUALS);
+//    } else if (match(INSERT_METHOD)) {
+//      match(EQUALS);
 //      String method = consumeToken();
-//    } else if (accept(KEY_BLOCK_SIZE)) {
-//      accept(EQUALS);
+//    } else if (match(KEY_BLOCK_SIZE)) {
+//      match(EQUALS);
 //      String value = consumeToken();
-//    } else if (accept(MAX_ROWS)) {
-//      accept(EQUALS);
+//    } else if (match(MAX_ROWS)) {
+//      match(EQUALS);
 //      String value = consumeToken();
-//    } else if (accept(MIN_ROWS)) {
-//      accept(EQUALS);
+//    } else if (match(MIN_ROWS)) {
+//      match(EQUALS);
 //      String value = consumeToken();
-//    } else if (accept(PACK_KEYS)) {
-//      accept(EQUALS);
+//    } else if (match(PACK_KEYS)) {
+//      match(EQUALS);
 //      String value = consumeToken();
-//    } else if (accept(PASSWORD)) {
-//      accept(EQUALS);
+//    } else if (match(PASSWORD)) {
+//      match(EQUALS);
 //      String value = consumeToken();
-//    } else if (accept(ROW_FORMAT)) {
-//      accept(EQUALS);
+//    } else if (match(ROW_FORMAT)) {
+//      match(EQUALS);
 //      String value = consumeToken();
-//    } else if (accept(TABLESPACE)) {
+//    } else if (match(TABLESPACE)) {
 //      String tablespaceName = consumeToken();
-//      if (accept(STORAGE)) {
+//      if (match(STORAGE)) {
 //        // TODO - AHK - Do we care if it's one of the correct tokens?
 //        consumeToken();
 //      }
-//    } else if (accept(UNION)) {
+//    } else if (match(UNION)) {
 //      String unionName = consumeToken();
-//      while (accept(COMMA)) {
+//      while (match(COMMA)) {
 //        unionName = consumeToken();
 //      }
 //    }
@@ -1521,39 +1567,39 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //    [(partition_definition [, partition_definition] ...)]
 //   */
 //  private void parsePartitionOptions() {
-//    if (accept(PARTITION, BY)) {
-//      if (accept(LINEAR, HASH) || accept(HASH)) {
+//    if (match(PARTITION, BY)) {
+//      if (match(LINEAR, HASH) || match(HASH)) {
 //        parseParenthesizedExpression();
-//      } else if (accept(KEY) || accept(LINEAR, KEY)) {
+//      } else if (match(KEY) || match(LINEAR, KEY)) {
 //        parseParenthesizedExpression();
-//      } else if (accept(RANGE)) {
+//      } else if (match(RANGE)) {
 //        parseParenthesizedExpression();
-//      } else if (accept(LIST)) {
+//      } else if (match(LIST)) {
 //        parseParenthesizedExpression();
 //      } else {
 //        // TODO - AHK - Error case?
 //      }
 //
-//      if (accept(PARTITIONS)) {
+//      if (match(PARTITIONS)) {
 //        String num = consumeToken();
 //      }
 //
-//      if (accept(SUBPARTITION, BY)) {
-//        if (accept(HASH) || accept(LINEAR, HASH)) {
+//      if (match(SUBPARTITION, BY)) {
+//        if (match(HASH) || match(LINEAR, HASH)) {
 //          parseParenthesizedExpression();
-//        } else if (accept(KEY) || accept(LINEAR, KEY)) {
+//        } else if (match(KEY) || match(LINEAR, KEY)) {
 //          parseParenthesizedExpression();
 //        } else {
 //          // TODO - AHK - Error case?
 //        }
 //
-//        if (accept(SUBPARTITIONS)) {
+//        if (match(SUBPARTITIONS)) {
 //          String num = consumeToken();
 //        }
 //      }
 //
 //      parsePartitionDefinition();
-//      while (accept(COMMA)) {
+//      while (match(COMMA)) {
 //        parsePartitionDefinition();
 //      }
 //    }
@@ -1588,16 +1634,16 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //        [(subpartition_definition [, subpartition_definition] ...)]
 //   */
 //  private void parsePartitionDefinition() {
-//    if (accept(PARTITION)) {
+//    if (match(PARTITION)) {
 //      String partitionName = consumeToken();
-//      if (accept(VALUES)) {
-//        if (accept(LESS, THAN)) {
-//          if (accept(MAXVALUE)) {
+//      if (match(VALUES)) {
+//        if (match(LESS, THAN)) {
+//          if (match(MAXVALUE)) {
 //            // Nothing to do
 //          } else {
 //            parseParenthesizedExpression();
 //          }
-//        } else if (accept(IN)) {
+//        } else if (match(IN)) {
 //          expect(OPEN_PAREN);
 //          parseValueList();
 //          expect(CLOSE_PAREN);
@@ -1606,48 +1652,48 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //        }
 //      }
 //
-//      if (accept(ENGINE) || accept(STORAGE, ENGINE)) {
-//        accept(EQUALS);
+//      if (match(ENGINE) || match(STORAGE, ENGINE)) {
+//        match(EQUALS);
 //        String engineName = consumeToken();
 //      }
 //
-//      if (accept(COMMENT)) {
-//        accept(EQUALS);
+//      if (match(COMMENT)) {
+//        match(EQUALS);
 //        String commentText = parseQuotedString();
 //      }
 //
-//      if (accept(DATA, DIRECTORY)) {
-//        accept(EQUALS);
+//      if (match(DATA, DIRECTORY)) {
+//        match(EQUALS);
 //        String dataDir = parseQuotedString();
 //      }
 //
-//      if (accept(INDEX, DIRECTORY)) {
-//        accept(EQUALS);
+//      if (match(INDEX, DIRECTORY)) {
+//        match(EQUALS);
 //        String indexDir = parseQuotedString();
 //      }
 //
-//      if (accept(MAX_ROWS)) {
-//        accept(EQUALS);
+//      if (match(MAX_ROWS)) {
+//        match(EQUALS);
 //        String value = consumeToken();
 //      }
 //
-//      if (accept(MIN_ROWS)) {
-//        accept(EQUALS);
+//      if (match(MIN_ROWS)) {
+//        match(EQUALS);
 //        String value = consumeToken();
 //      }
 //
-//      if (accept(TABLESPACE)) {
-//        accept(EQUALS);
+//      if (match(TABLESPACE)) {
+//        match(EQUALS);
 //        String tablespaceName = consumeToken();
 //      }
 //
-//      if (accept(NODEGROUP)) {
-//        accept(EQUALS);
+//      if (match(NODEGROUP)) {
+//        match(EQUALS);
 //        String nodeGroupID = consumeToken();
 //      }
 //
 //      parseSubpartitionDefinition();
-//      while (accept(COMMA)) {
+//      while (match(COMMA)) {
 //        parseSubpartitionDefinition();
 //      }
 //    }
@@ -1675,46 +1721,46 @@ public class MySQL51CreateTableParser implements SQLParserConstants {
 //        [NODEGROUP [=] node_group_id]
 //   */
 //  private void parseSubpartitionDefinition() {
-//    if (accept(SUBPARTITION)) {
+//    if (match(SUBPARTITION)) {
 //      String logicalName = consumeToken();
 //
-//      if (accept(ENGINE) || accept(STORAGE, ENGINE)) {
-//        accept(EQUALS);
+//      if (match(ENGINE) || match(STORAGE, ENGINE)) {
+//        match(EQUALS);
 //        String engineName = consumeToken();
 //      }
 //
-//      if (accept(COMMENT)) {
-//        accept(EQUALS);
+//      if (match(COMMENT)) {
+//        match(EQUALS);
 //        String commentText = parseQuotedString();
 //      }
 //
-//      if (accept(DATA, DIRECTORY)) {
-//        accept(EQUALS);
+//      if (match(DATA, DIRECTORY)) {
+//        match(EQUALS);
 //        String dataDir = parseQuotedString();
 //      }
 //
-//      if (accept(INDEX, DIRECTORY)) {
-//        accept(EQUALS);
+//      if (match(INDEX, DIRECTORY)) {
+//        match(EQUALS);
 //        String indexDir = parseQuotedString();
 //      }
 //
-//      if (accept(MAX_ROWS)) {
-//        accept(EQUALS);
+//      if (match(MAX_ROWS)) {
+//        match(EQUALS);
 //        String value = consumeToken();
 //      }
 //
-//      if (accept(MIN_ROWS)) {
-//        accept(EQUALS);
+//      if (match(MIN_ROWS)) {
+//        match(EQUALS);
 //        String value = consumeToken();
 //      }
 //
-//      if (accept(TABLESPACE)) {
-//        accept(EQUALS);
+//      if (match(TABLESPACE)) {
+//        match(EQUALS);
 //        String tablespaceName = consumeToken();
 //      }
 //
-//      if (accept(NODEGROUP)) {
-//        accept(EQUALS);
+//      if (match(NODEGROUP)) {
+//        match(EQUALS);
 //        String nodeGroupID = consumeToken();
 //      }
 //    }

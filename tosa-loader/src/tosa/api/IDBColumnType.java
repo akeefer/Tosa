@@ -21,6 +21,7 @@ public interface IDBColumnType {
   String getGosuTypeName();
   IType getGosuType();
   int getJdbcType();
+  boolean isList();
   Object readFromResultSet(ResultSet resultSet, String name) throws SQLException;
   void setParameter(PreparedStatement statement, int index, Object value) throws SQLException;
   // TODO - AHK - Validation

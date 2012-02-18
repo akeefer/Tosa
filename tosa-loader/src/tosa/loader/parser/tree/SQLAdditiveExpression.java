@@ -1,6 +1,9 @@
 package tosa.loader.parser.tree;
 
 import gw.lang.reflect.IType;
+import tosa.api.IDBColumnType;
+import tosa.api.IDBTable;
+import tosa.loader.IDBType;
 import tosa.loader.data.DBColumnTypeImpl;
 import tosa.loader.data.DBData;
 import tosa.loader.parser.Token;
@@ -32,8 +35,8 @@ public class SQLAdditiveExpression extends SQLParsedElement{
   }
 
   @Override
-  public IType getVarTypeForChild() {
-    return getDBType().getGosuType();
+  public IDBColumnType getVarTypeForChild() {
+    return getDBType();
   }
 
   @Override

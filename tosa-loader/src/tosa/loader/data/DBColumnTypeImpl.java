@@ -2,6 +2,7 @@ package tosa.loader.data;
 
 import gw.lang.reflect.IType;
 import gw.lang.reflect.TypeSystem;
+import gw.lang.reflect.java.JavaTypes;
 import tosa.api.IDBColumnType;
 import tosa.loader.data.types.GenericDBColumnTypePersistenceHandler;
 
@@ -29,12 +30,19 @@ public class DBColumnTypeImpl implements IDBColumnType {
   public static final String SHORT_ITYPE = "java.lang.Short";
   public static final String STRING_ITYPE = "java.lang.String";
   public static final String pBYTE_ARRAY_ITYPE = "byte[]";
+  public static final String LIST_PREFIX = "LIST_OF_";
 
   public static final DBColumnTypeImpl OBJECT = new DBColumnTypeImpl("OBJECT", "OBJECT", "java.lang.Object", Types.JAVA_OBJECT);
   public static final DBColumnTypeImpl BOOLEAN = new DBColumnTypeImpl("BOOL", "BOOL", BOOLEAN_ITYPE, Types.BOOLEAN);
   public static final DBColumnTypeImpl INT = new DBColumnTypeImpl("INT", "INT", INTEGER_ITYPE, Types.INTEGER);
   public static final DBColumnTypeImpl DOUBLE = new DBColumnTypeImpl("DOUBLE", "DOUBLE", DBColumnTypeImpl.DOUBLE_ITYPE, Types.DOUBLE);
   public static final DBColumnTypeImpl STRING = new DBColumnTypeImpl("VARCHAR", "VARCHAR", STRING_ITYPE, Types.VARCHAR);
+  public static DBColumnTypeImpl getListType(IDBColumnType component) {
+    if (component == null) {
+      component = OBJECT;
+    }
+    return new DBColumnTypeImpl(LIST_PREFIX + component.getName(), "List of " + component.getDescription(), component.getGosuTypeName(), Types.JAVA_OBJECT);
+  }
 
   private final String _name;
   private final String _description;
@@ -72,7 +80,15 @@ public class DBColumnTypeImpl implements IDBColumnType {
   @Override
   public IType getGosuType() {
     // TODO - AHK - We might want to consider caching this
-    return TypeSystem.getByFullName(_gosuTypeName);
+    if (isList()) {
+      return JavaTypes.LIST().getParameterizedType(TypeSystem.getByFullName(_gosuTypeName));
+    } else {
+      return TypeSystem.getByFullName(_gosuTypeName);
+    }
+  }
+
+  public boolean isList() {
+    return getName().startsWith(LIST_PREFIX);
   }
 
   @Override

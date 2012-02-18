@@ -1,0 +1,60 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+
+  <groupId>org.gosu-lang.tosa</groupId>
+  <artifactId>tosa-proj</artifactId>
+  <version>0.3-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <name>Tosa-Proj</name>
+
+  <parent>
+    <groupId>org.gosu-lang</groupId>
+    <artifactId>gosu-project-parent</artifactId>
+    <version>4</version>
+  </parent>
+
+  <repositories>
+    <repository>
+      <id>gosu-lang.org-releases</id>
+      <name>Official Gosu website (releases)</name>
+      <url>http://gosu-lang.org/nexus/content/groups/releases</url>
+    </repository>
+  </repositories>
+
+  <scm>
+    <connection>scm:git:git@github.com:carsongross/Tosa.git</connection>
+    <url>scm:git:git@github.com:carsongross/Tosa.git</url>
+    <developerConnection>scm:git:git@github.com:carsongross/Tosa.git</developerConnection>
+  </scm>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.gosu-lang</groupId>
+          <artifactId>maven-gosu-plugin</artifactId>
+          <configuration>
+            <gosuVersion>0.9-10</gosuVersion>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.2.2</version>
+        <configuration>
+          <autoVersionSubmodules>true</autoVersionSubmodules>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <modules>
+    <module>tosa-loader</module>
+    <module>tosa-runtime</module>
+  </modules>
+</project>
