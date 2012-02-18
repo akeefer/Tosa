@@ -151,7 +151,7 @@ public class DDLParsingValidationTest extends TosaLoaderTestBase {
         ");");
 
     assertEquals(1, validationResult.size());
-    assertEquals("No id column was found on the table Bar.  Every table in Tosa should have a table named \"id\" of type BIGINT.", validationResult.get(0).getMessage());
+    assertEquals("No id column was found on the table Bar.  Every table in Tosa should have a column named \"id\" of type BIGINT.", validationResult.get(0).getMessage());
   }
 
   @Test

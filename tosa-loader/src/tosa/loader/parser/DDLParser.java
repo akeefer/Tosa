@@ -110,7 +110,7 @@ public class DDLParser extends SQLParserBase {
         }
 
         if (!foundId) {
-          createTableStatement.addParseError(new SQLParseError(tableName, "No id column was found on the table " + tableNameStr + ".  Every table in Tosa should have a table named \"id\" of type BIGINT."));
+          createTableStatement.addParseError(new SQLParseError(tableName, "No id column was found on the table " + tableNameStr + ".  Every table in Tosa should have a column named \"id\" of type BIGINT."));
         }
         
         return createTableStatement;
