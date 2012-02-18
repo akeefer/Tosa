@@ -45,11 +45,13 @@ CREATE TABLE "Baz"(
 );
 
 CREATE TABLE "join_Foo_Baz"(
+    "id" BIGINT PRIMARY KEY AUTO_INCREMENT,
     "Foo_id" BIGINT,
     "Baz_id" BIGINT
 );
 
 CREATE TABLE Relatives_join_Bar_Baz(
+    "id" BIGINT PRIMARY KEY AUTO_INCREMENT,
     Bar_id BIGINT,
     Baz_id BIGINT
 );
