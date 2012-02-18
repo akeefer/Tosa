@@ -22,31 +22,46 @@ uses java.lang.StringBuilder
 uses tosa.impl.query.SqlStringSubstituter
 
 /**
- * Created by IntelliJ IDEA.
- * User: akeefer
- * Date: 2/9/12
- * Time: 2:57 PM
- * To change this template use File | Settings | File Templates.
+ * This is the real implementation of the IDBObject interface.  The CachedDBObject itself is just
+ * a wrapper that calls through to this class.
  */
 class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
-  private var _columns : Map<String, Object>;
-  private var _cachedFks : Map<String, IDBObject>;
-  private var _cachedArrays : Map<String, EntityCollection>;
-  private var _queryExecutor : QueryExecutor;
-  private var _type : IDBType;
-  private var _new : boolean;
+
+  // The column values associated with this object
+  private var _columns : Map<String, Object>
+
+  // Cached IDBObjects for fks on this object.  Note that the _columns
+  // map also reflects these values, but that it's possible for a value
+  // to be in _columns but not be loaded into _cachedFks yet
+  private var _cachedFks : Map<String, IDBObject>
+
+  // Cached EntityCollection objects for any "arrays" hanging off
+  // of this object
+  private var _cachedArrays : Map<String, EntityCollection>
+
+  // The QueryExecutor used to issue any update/insert/delete
+  // queries, and that's passed down to any EntityCollections
+  private var _queryExecutor : QueryExecutor
+
+  // The IDBType for this entity
+  private var _type : IDBType
+
+  // True if this object is newly constructed and hasn't yet been committed
+  // to the database, false otherwise
+  private var _new : boolean
+
+  // The actual IDBObject that is delegating to this class.  We need it so
+  // we can pass it through to any EntityCollections we construct
   private var _owner : CachedDBObject
 
   construct(type : IDBType, isNew : boolean, owner : CachedDBObject) {
     _type = type
     _new = isNew
     _owner = owner
-    // TODO - AHK
-    _columns = new HashMap<String, Object>();
-    _cachedFks = new HashMap<String, IDBObject>();
-    _cachedArrays = new HashMap<String, EntityCollection>();
-    _queryExecutor = new QueryExecutorImpl(_type.getTable().getDatabase());
-    // TODO - AHK - There's room for perf improvements here
+    _columns = new HashMap<String, Object>()
+    _cachedFks = new HashMap<String, IDBObject>()
+    _cachedArrays = new HashMap<String, EntityCollection>()
+    _queryExecutor = new QueryExecutorImpl(_type.Table.Database)
   }
 
   private property get TableName() : String {
@@ -54,7 +69,7 @@ class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
   }
 
   override property get DBTable() : IDBTable {
-    return _type.getTable();
+    return _type.Table
   }
 
   override property get Id() : Long {
@@ -62,7 +77,7 @@ class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
   }
 
   override property get New() : boolean {
-    return _new;
+    return _new
   }
 
   override function getColumnValue(columnName : String) : Object {
@@ -81,63 +96,63 @@ class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
   
     var fkObject = _cachedFks.get(columnName)
     if (fkObject != null) {
-      return fkObject;
+      return fkObject
     }
   
     var fkID = _columns.get(columnName) as Long
     if (fkID == null) {
-      return null;
+      return null
     }
   
-    fkObject = loadEntity(column.getFKTarget(), fkID);
+    fkObject = loadEntity(column.FKTarget, fkID)
     if (fkObject == null) {
-      throw new IllegalStateException("Column " + columnName + " on table " + _type.getTable().getName() + " has a value of " + fkID + ", but no corresponding row was found in the database");
+      throw new IllegalStateException("Column " + columnName + " on table " + _type.Table.Name + " has a value of " + fkID + ", but no corresponding row was found in the database")
     }
   
-    return fkObject;  
+    return fkObject  
   }
   
   override function setFkValue(columnName : String, value : IDBObject) {
-    var column = getAndValidateFkColumn(columnName);
+    var column = getAndValidateFkColumn(columnName)
     // TODO - AHK - Validate that the value is of the correct type
     if (value == null) {
-      _columns.put(columnName, null);
-      _cachedFks.put(columnName, null);
+      _columns.put(columnName, null)
+      _cachedFks.put(columnName, null)
     } else {
-      _columns.put(columnName, value.getId());
-      _cachedFks.put(columnName, value);
+      _columns.put(columnName, value.Id)
+      _cachedFks.put(columnName, value)
     }
   }
 
   private function getAndValidateFkColumn(columnName : String) : IDBColumn {
-    var column = _type.getTable().getColumn(columnName);
+    var column = _type.Table.getColumn(columnName)
     if (column == null) {
-      throw new IllegalArgumentException("Column name " + columnName + " is not a valid column on the  " + _type.getTable().getName() + " table");
+      throw new IllegalArgumentException("Column name " + columnName + " is not a valid column on the  " + _type.Table.Name + " table")
     }
     if (!column.isFK()) {
-      throw new IllegalArgumentException("Column " + columnName + " on table " + _type.getTable().getName() + " is not a foreign key");
+      throw new IllegalArgumentException("Column " + columnName + " on table " + _type.Table.Name + " is not a foreign key")
     }
-    return column;
+    return column
   }
   
   override function getArray(arrayName : String) : EntityCollection {
-    return getArray(_type.getTable().getArray(arrayName));  
+    return getArray(_type.Table.getArray(arrayName))
   }
 
   override function getArray(dbArray : IDBArray) : EntityCollection {
-    var result = _cachedArrays.get(dbArray.getPropertyName());
+    var result = _cachedArrays.get(dbArray.PropertyName)
     if (result == null) {
       if (dbArray typeis IDBFkArray) {
-        var fkColumn = dbArray.getFkColumn();
-        var fkType = TypeSystem.getByFullName(fkColumn.getTable().getDatabase().getNamespace() + "." + fkColumn.getTable().getName()) as IDBType
-        result = new ReverseFkEntityCollectionImpl(_owner, fkType, fkColumn, new QueryExecutorImpl(fkColumn.getTable().getDatabase()));
+        var fkColumn = dbArray.FkColumn
+        var fkType = TypeSystem.getByFullName(fkColumn.Table.Database.Namespace + "." + fkColumn.Table.Name) as IDBType
+        result = new ReverseFkEntityCollectionImpl(_owner, fkType, fkColumn, _queryExecutor)
       } else if (dbArray typeis IDBJoinArray) {
-        var targetType = TypeSystem.getByFullName(getDBTable().getDatabase().getNamespace() + "." + dbArray.getTargetTable().getName()) as IDBType
-        result = new JoinArrayEntityCollectionImpl(_owner, targetType, dbArray.getSrcColumn(), dbArray.getTargetColumn(), new QueryExecutorImpl(getDBTable().getDatabase()));
+        var targetType = TypeSystem.getByFullName(DBTable.Database.Namespace + "." + dbArray.TargetTable.Name) as IDBType
+        result = new JoinArrayEntityCollectionImpl(_owner, targetType, dbArray.SrcColumn, dbArray.TargetColumn, _queryExecutor)
       }
-      _cachedArrays.put(dbArray.getPropertyName(), result);
+      _cachedArrays.put(dbArray.PropertyName, result)
     }
-    return result;
+    return result
   }
 
   override function toID() : Long {
@@ -150,90 +165,90 @@ class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
   }
 
   override function update() {
-    var columnValues = gatherChangedValues();
+    var columnValues = gatherChangedValues()
     if (_new) {
-      var columns = new ArrayList<IDBColumn>();
-      var values = new ArrayList<String>();
-      var parameters = new IPreparedStatementParameter[columnValues.size()];
+      var columns = new ArrayList<IDBColumn>()
+      var values = new ArrayList<String>()
+      var parameters = new IPreparedStatementParameter[columnValues.size()]
       for (pair in columnValues index i) {
-        columns.add(pair._column);
-        values.add("?");
-        parameters[i] = pair._parameter;
+        columns.add(pair._column)
+        values.add("?")
+        parameters[i] = pair._parameter
       }
       var query = "INSERT INTO " + DBTable.PossiblyQuotedName + " (" + columns.map(\c -> c.PossiblyQuotedName).join(", ") + ") VALUES (" + values.join(", ") + ")"
-      var id = _queryExecutor.insert(_type.getName() + ".update()", query, parameters);
+      var id = _queryExecutor.insert(_type.Name + ".update()", query, parameters)
       if (id != null) {
-        _columns.put(DBTypeInfo.ID_COLUMN, id);
-        _new = false;
+        _columns.put(DBTypeInfo.ID_COLUMN, id)
+        _new = false
       }
     } else {
-      var values = new StringBuilder();
-      var params = new ArrayList<IPreparedStatementParameter>();
+      var values = new StringBuilder()
+      var params = new ArrayList<IPreparedStatementParameter>()
       for (i in 0..|columnValues.size()) {
         if (i > 0) {
-          values.append(", ");
+          values.append(", ")
         }
-        values.append(columnValues.get(i)._column.PossiblyQuotedName).append(" = ?");
-        params.add(columnValues.get(i)._parameter);
+        values.append(columnValues.get(i)._column.PossiblyQuotedName).append(" = ?")
+        params.add(columnValues.get(i)._parameter)
       }
-      var idColumn = getDBTable().getColumn(DBTypeInfo.ID_COLUMN);
-      params.add(idColumn.wrapParameterValue(getId()));
+      var idColumn = DBTable.getColumn(DBTypeInfo.ID_COLUMN)
+      params.add(idColumn.wrapParameterValue(Id))
       var query = "UPDATE " + DBTable.PossiblyQuotedName + " SET " + values + " WHERE " + idColumn.PossiblyQuotedName + " = ?"
-      _queryExecutor.update(_type.getName() + ".update()", query, params.toArray(new IPreparedStatementParameter[params.size()]));
+      _queryExecutor.update(_type.Name + ".update()", query, params.toArray(new IPreparedStatementParameter[params.size()]))
     }
   }
 
   private function gatherChangedValues(): List <ColumnValuePair> {
     // TODO - AHK - Actually compare to some stored-off map of the original values
-    var columnValues = new ArrayList <ColumnValuePair>();
+    var columnValues = new ArrayList <ColumnValuePair>()
     // Note:  We iterate over the columns, in order, so that the query is always the same for a given set
     // of columns.  Iterating over the map keys might be more efficient, but could lead to different
     // orderings within the query, which would be less optimal on the database side
-    for (column in getDBTable().getColumns()) {
-      if (_columns.containsKey(column.getName())) {
-        columnValues.add(new ColumnValuePair(column, column.wrapParameterValue(_columns.get(column.getName()))));
+    for (column in DBTable.Columns) {
+      if (_columns.containsKey(column.Name)) {
+        columnValues.add(new ColumnValuePair(column, column.wrapParameterValue(_columns.get(column.Name))))
       }
     }
-    return columnValues;
+    return columnValues
   }
 
   private static class ColumnValuePair {
-    private var _column : IDBColumn;
-    private var _parameter : IPreparedStatementParameter;
+    private var _column : IDBColumn
+    private var _parameter : IPreparedStatementParameter
 
     private construct(column : IDBColumn, parameter : IPreparedStatementParameter) {
-      _column = column;
-      _parameter = parameter;
+      _column = column
+      _parameter = parameter
     }
   }
 
   override function delete() {
     // TODO - AHK - Determine if we need to quote the table name or column names or not
     // TODO - AHK - What do we do if the table doesn't have an id?
-    var idColumn = DBTable.getColumn(DBTypeInfo.ID_COLUMN);
+    var idColumn = DBTable.getColumn(DBTypeInfo.ID_COLUMN)
     var query = SqlStringSubstituter.substitute("DELETE FROM :table WHERE :idColumn = :id",
         {"table" -> DBTable,
          "idColumn" -> idColumn,
-         "id" -> Id});
-    _queryExecutor.delete(_type.getName() + ".delete()", query.Sql, query.Params);
+         "id" -> Id})
+    _queryExecutor.delete(_type.Name + ".delete()", query.Sql, query.Params)
   }
 
   override function toString() : String {
-    return _columns.toString();
+    return _columns.toString()
   }
 
   override function hashCode() : int {
-    var hashCode = _type.hashCode();
-    var keys = new ArrayList<String>(_columns.keySet());
-    Collections.sort(keys);
+    var hashCode = _type.hashCode()
+    var keys = new ArrayList<String>(_columns.keySet())
+    Collections.sort(keys)
     for (columnName in keys) {
       if (_columns.get(columnName) != null) {
-        hashCode = hashCode * 17 + _columns.get(columnName).hashCode();
+        hashCode = hashCode * 17 + _columns.get(columnName).hashCode()
       } else {
-        hashCode *= 17;
+        hashCode *= 17
       }
     }
-    return hashCode;
+    return hashCode
   }
 
   override function equals(obj: Object): boolean {
@@ -246,39 +261,39 @@ class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
         for (columnName in _columns.keySet()) {
           if (_columns.get(columnName) != null) {
             if (!_columns.get(columnName).equals(obj._columns.get(columnName))) {
-              return false;
+              return false
             }
           }
         }
         for (columnName in obj._columns.keySet()) {
           if (obj._columns.get(columnName) != null) {
             if (!obj._columns.get(columnName).equals(_columns.get(columnName))) {
-              return false;
+              return false
             }
           }
         }
-        return true;
+        return true
       }
     }
-    return false;
+    return false
   }
 
   private function loadEntity(table : IDBTable, id : Long) : IDBObject {
-    var idColumn = table.getColumn(DBTypeInfo.ID_COLUMN);
+    var idColumn = table.getColumn(DBTypeInfo.ID_COLUMN)
     // TODO - AHK - Need some better way to convert between the two
-    var resultType = TypeSystem.getByFullName(table.getDatabase().getNamespace() + "." + table.getName()) as IDBType
+    var resultType = TypeSystem.getByFullName(table.Database.Namespace + "." + table.Name) as IDBType
     var query = SqlStringSubstituter.substitute("SELECT * FROM :table WHERE :idColumn = :id",
         {"table" -> table,
          "idColumn" -> idColumn,
          "id" -> id})
     // TODO - AHK - Fetch this from somewhere?
-    var results = new QueryExecutorImpl(table.getDatabase()).selectEntity("CachedDBObject.loadEntity()", resultType, query.Sql, query.Params);
-    if (results.isEmpty()) {
-      return null;
+    var results = _queryExecutor.selectEntity("CachedDBObjectDelegateImpl.loadEntity()", resultType, query.Sql, query.Params)
+    if (results.Empty) {
+      return null
     } else if (results.size() == 1) {
-      return results.get(0);
+      return results.get(0)
     } else {
-      throw new IllegalStateException("Expected to get one result back from query " + query.Sql + " (" + query.Params + ") but got " + results.size() );
+      throw new IllegalStateException("Expected to get one result back from query " + query.Sql + " (" + query.Params + ") but got " + results.size() )
     }
   }
 
