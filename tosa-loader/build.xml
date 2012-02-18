@@ -1,0 +1,22 @@
+<project name="tosa-loader" default="dist" basedir="." xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+    <description>
+        simple example build file
+    </description>
+    <!-- set global properties for this build -->
+    <property name="src" location="src"/>
+    <property name="build" location="build"/>
+    <property name="dist"  location="dist"/>
+
+    <target name="mvn-install">
+        <artifact:mvn pom="pom.xml" mavenHome="C:\\devtools\\apache-maven-3.0.3">
+            <arg value="-DskipTests"/>
+            <arg value="package"/>
+        </artifact:mvn>
+
+        <artifact:mvn pom="pom.xml" mavenHome="C:\\devtools\\apache-maven-3.0.3">
+            <arg value="-DskipTests"/>
+            <arg value="install"/>
+        </artifact:mvn>
+    </target>
+
+</project>
