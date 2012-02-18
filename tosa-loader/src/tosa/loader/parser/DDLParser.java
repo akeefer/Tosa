@@ -1,28 +1,40 @@
 package tosa.loader.parser;
 
 import org.slf4j.LoggerFactory;
-import tosa.loader.parser.SQLParserConstants;
-import tosa.loader.parser.Token;
 import tosa.loader.parser.tree.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class DDLParser extends SQLParserBase {
+
+  // TODO - AHK - Fill out the list here
+  private static final Set<String> GOSU_RESERVED_WORDS = new HashSet<String>(Arrays.asList(
+    "new"
+  ));
+
+  // Names of built-in Tosa properties.  Stored as lower-case, since we'll compare the lower case
+  // column name to this set
+  private static final Set<String> SPECIAL_PROPERTY_NAMES = new HashSet<String>(Arrays.asList(
+    "dbtable", "new", "_new", "Type"
+  ));
+
+  private ArrayList<CreateTableStatement> _tableStatements;
+  private ArrayList<SQLParsedElement> _createDefinitions;
+
 
   public DDLParser(Token token) {
     super(token);
   }
 
   public List<CreateTableStatement> parseDDL() {
-    List<CreateTableStatement> statements = new ArrayList<CreateTableStatement>();
+    _tableStatements = new ArrayList<CreateTableStatement>();
     while (!isEOF()) {
       CreateTableStatement statement = parseCreate();
       if (statement != null) {
-        statements.add(statement);
+        _tableStatements.add(statement);
       }
     }
-    return statements;
+    return _tableStatements;
   }
 
   private CreateTableStatement parseCreate() {
@@ -56,8 +68,52 @@ public class DDLParser extends SQLParserBase {
         }
 
         expect(SEMI_COLON);
+        CreateTableStatement createTableStatement = new CreateTableStatement(start, lastMatch(), tableName, children);
+        String tableNameStr = maybeUnwrapQuotedIdentifier(tableName);
 
-        return new CreateTableStatement(start, lastMatch(), tableName, children);
+        for (CreateTableStatement tableStatement : _tableStatements) {
+          if (maybeUnwrapQuotedIdentifier(tableStatement.getTableName()).equalsIgnoreCase(tableNameStr)) {
+            createTableStatement.addParseError(new SQLParseError(tableName, "Duplicate tables were found with the names " + tableName +
+              " and " + tableStatement.getTableName().toString() +
+              ".  Table names in Tosa must be case-insensitively unique within a database."));
+          }
+        }
+
+        if (!Character.isJavaIdentifierStart(tableNameStr.charAt(0))) {
+          createTableStatement.addParseError(new SQLParseError(tableName, "The table name " + tableNameStr + " is not a valid type name.  The first character " + tableNameStr.charAt(0) + " is not a valid start to a type name."));
+        }
+
+        for (int i = 1; i < tableNameStr.length(); i++) {
+          if (!Character.isJavaIdentifierPart(tableNameStr.charAt(i))) {
+            createTableStatement.addParseError(new SQLParseError(tableName, "The table name " + tableNameStr + " is not a valid type name.  The character " + tableNameStr.charAt(i) + " is not a valid character in a type name."));
+          }
+        }
+
+        if (GOSU_RESERVED_WORDS.contains(tableNameStr.toLowerCase())) {
+          createTableStatement.addParseError(new SQLParseError(tableName, "The table name " + tableNameStr + " conflicts with a Gosu reserved word."));
+        }
+
+        if (tableNameStr.toLowerCase().equals("transaction")) {
+          createTableStatement.addParseError(new SQLParseError(tableName, "Tosa tables cannot be named Transaction (in any case), as a built-in type named Transaction is automatically created for every ddl namespace."));
+        } else if (tableNameStr.toLowerCase().equals("database")) {
+          createTableStatement.addParseError(new SQLParseError(tableName, "Tosa tables cannot be named Database (in any case), as a built-in type named Database is automatically created for every ddl namespace."));
+        }
+
+        boolean foundId = false;
+        for (SQLParsedElement createDefinition : _createDefinitions) {
+          if (createDefinition instanceof ColumnDefinition) {
+            Token name = ((ColumnDefinition) createDefinition).getName();
+            if ("id".equalsIgnoreCase(maybeUnwrapQuotedIdentifier(name))) {
+              foundId = true;
+            }
+          }
+        }
+
+        if (!foundId) {
+          createTableStatement.addParseError(new SQLParseError(tableName, "No id column was found on the table " + tableNameStr + ".  Every table in Tosa should have a table named \"id\" of type BIGINT."));
+        }
+        
+        return createTableStatement;
       }
     }
     while (!match(SEMI_COLON)) {
@@ -68,18 +124,18 @@ public class DDLParser extends SQLParserBase {
 
   private List<SQLParsedElement> parseCreateDefinitions() {
     // TODO - AHK - Is it legal to have 0 columns?
-    List<SQLParsedElement> createDefinitions = new ArrayList<SQLParsedElement>();
+    _createDefinitions = new ArrayList<SQLParsedElement>();
     SQLParsedElement createDefinition = parseCreateDefinition();
     if (createDefinition != null) {
-      createDefinitions.add(createDefinition);
+      _createDefinitions.add(createDefinition);
     }
     while (match(COMMA)) {
       createDefinition = parseCreateDefinition();
       if (createDefinition != null) {
-        createDefinitions.add(createDefinition);
+        _createDefinitions.add(createDefinition);
       }
     }
-    return createDefinitions;
+    return _createDefinitions;
   }
 
   /*create_definition:
@@ -304,7 +360,61 @@ public class DDLParser extends SQLParserBase {
       }
     }
 
-    return new ColumnDefinition(columnName, lastMatch(), columnName, dataType, columnOptions);
+    ColumnDefinition columnDefinition = new ColumnDefinition(columnName, lastMatch(), columnName, dataType, columnOptions);
+
+    String actualColumnName = maybeUnwrapQuotedIdentifier(columnName);
+    
+    if (!Character.isJavaIdentifierStart(actualColumnName.charAt(0))) {
+      columnDefinition.addParseError(new SQLParseError(columnName, "The column name " + actualColumnName + " is not a valid property name.  The first character " + actualColumnName.charAt(0) + " is not a valid start to a property name."));
+    }
+
+    for (int i = 1; i < actualColumnName.length(); i++) {
+      if (!Character.isJavaIdentifierPart(actualColumnName.charAt(i))) {
+        columnDefinition.addParseError(new SQLParseError(columnName, "The column name " + actualColumnName + " is not a valid property name.  The character " + actualColumnName.charAt(i) + " is not a valid character in a property name."));
+      }
+    }
+
+    if (SPECIAL_PROPERTY_NAMES.contains(actualColumnName.toLowerCase())) {
+      columnDefinition.addParseError(new SQLParseError(columnName, "The column name \"" + actualColumnName + "\" conflicts with a built-in Tosa property or property inherited from the IDBObject interface"));
+    }
+
+    // TODO - AHK - Some more reliable way to detect this besides just matching the String "PlaceHolder"
+    // TODO cgross - is this correct?
+    if (dataType.getType() == null) {
+      columnDefinition.addParseError(new SQLParseError(columnName, "The data type for this column is not currently handled.  It will appear in Tosa as a String, but it may not function correctly.", true));
+    }
+
+    // TODO cgross - verify w/ keef that we support mixed quoting/non-quoting
+//    if (actualColumnName.charAt(0) != '"') {
+//      columnDefinition.addParseError(new SQLParseError(columnName, "The column name was not quoted in the DDL file.  Tosa will generate quoted column names in all SQL it generates, so column names should be specified quoted in the DDL as well.", true));
+//    }
+
+    if (actualColumnName.equalsIgnoreCase("id")) {
+      if (!actualColumnName.equals("id")) {
+        columnDefinition.addParseError(new SQLParseError(columnName, "The id column should always be named \"id\" but in this case it was named \"" + actualColumnName + "\""));
+      }
+
+      if (dataType.getType() != ColumnDataType.Type.BIGINT) {
+        columnDefinition.addParseError(new SQLParseError(columnName, "The id column should always be a BIGINT, since it will be represented as a Long in Tosa.  The id column was found to be of type " + dataType.getType().name()));
+      }
+
+      // TODO - AHK - Check for auto-increment
+    }
+
+    return columnDefinition;
+  }
+
+  private String maybeUnwrapQuotedIdentifier(Token token) {
+    String rawColumnName = token.toString();
+    //strip quotes
+    boolean quoted = rawColumnName.startsWith("\"");
+    String actualColumnName;
+    if (quoted) {
+      actualColumnName = rawColumnName.substring(1, rawColumnName.length() - 1);
+    } else {
+      actualColumnName = rawColumnName;
+    }
+    return actualColumnName;
   }
 
   private ColumnDataType parseDataType() {
@@ -681,6 +791,7 @@ public class DDLParser extends SQLParserBase {
     return null;
   }
 
+  // TODO - AHK - Kill the _New property?
 
 //
 //  private boolean match(String... tokens) {

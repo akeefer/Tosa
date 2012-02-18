@@ -1,6 +1,9 @@
 package tosa.api;
 
+import tosa.loader.parser.tree.SQLParseError;
+
 import java.util.Collection;
+import java.util.List;
 
 /**
  * An interface that represents a database table.
@@ -67,4 +70,6 @@ public interface IDBTable {
   Collection<? extends IDBArray> getArrays();
 
   // TODO - AHK - Some attribute to indicate it's a join table?
+
+  List<SQLParseError> getErrors();
 }

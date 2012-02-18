@@ -2,6 +2,7 @@ package tosa.loader.data;
 
 import gw.lang.reflect.IType;
 import gw.lang.reflect.TypeSystem;
+import gw.lang.reflect.java.JavaTypes;
 import tosa.api.IDBColumnType;
 import tosa.loader.data.types.GenericDBColumnTypePersistenceHandler;
 
@@ -40,7 +41,7 @@ public class DBColumnTypeImpl implements IDBColumnType {
     if (component == null) {
       component = OBJECT;
     }
-    return new DBColumnTypeImpl(LIST_PREFIX + component.getName(), "List of " + component.getDescription(), "java.util.List<" + component.getGosuTypeName() + ">", Types.JAVA_OBJECT);
+    return new DBColumnTypeImpl(LIST_PREFIX + component.getName(), "List of " + component.getDescription(), component.getGosuTypeName(), Types.JAVA_OBJECT);
   }
 
   private final String _name;
@@ -79,8 +80,8 @@ public class DBColumnTypeImpl implements IDBColumnType {
   @Override
   public IType getGosuType() {
     // TODO - AHK - We might want to consider caching this
-    if (_gosuTypeName.contains("<")) {
-      return TypeSystem.parseType(_gosuTypeName);
+    if (isList()) {
+      return JavaTypes.LIST().getParameterizedType(TypeSystem.getByFullName(_gosuTypeName));
     } else {
       return TypeSystem.getByFullName(_gosuTypeName);
     }

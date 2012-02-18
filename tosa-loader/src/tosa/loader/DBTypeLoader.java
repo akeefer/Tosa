@@ -13,18 +13,13 @@ import gw.util.concurrent.LockingLazyVar;
 import tosa.api.IDBObject;
 import tosa.api.IDBTable;
 import tosa.api.IDatabase;
+import tosa.dbmd.DBTableImpl;
 import tosa.dbmd.DatabaseImpl;
 import tosa.impl.md.DatabaseImplSource;
 
 import java.io.File;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class DBTypeLoader extends BaseService implements IExtendedTypeLoader {
 
@@ -168,7 +163,23 @@ public class DBTypeLoader extends BaseService implements IExtendedTypeLoader {
 
   @Override
   public List<IType> getTypesForFile(IFile iFile) {
-    return Collections.emptyList();
+    List<IType> typesForFile = new ArrayList<IType>();
+    if (iFile.getExtension().equals("ddl")) {
+      Collection<DatabaseImpl> values = _typeDataByNamespace.get().values();
+      for (DatabaseImpl value : values) {
+        if (value.getDdlFile().equals(iFile)) {
+          Collection<DBTableImpl> allTables = value.getAllTables();
+          for (DBTableImpl table : allTables) {
+            String tableTypeName = value.getNamespace() + "." + table.getName();
+            IType type = TypeSystem.getByFullNameIfValid(tableTypeName);
+            if (type != null) {
+              typesForFile.add(type);
+            }
+          }
+        }
+      }
+    }
+    return typesForFile;
   }
 
   @Override

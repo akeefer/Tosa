@@ -75,4 +75,8 @@ public class DBType extends TypeBase implements IDBType {
     return _typeInfo.get();
   }
 
+  @Override
+  public List<CustomErrorInfo> getCustomErrors() {
+    return (List) _table.getErrors();
+  }
 }

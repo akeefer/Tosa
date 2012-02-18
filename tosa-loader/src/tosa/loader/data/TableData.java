@@ -1,7 +1,9 @@
 package tosa.loader.data;
 
 import tosa.loader.parser.tree.CreateTableStatement;
+import tosa.loader.parser.tree.SQLParseError;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -57,5 +59,9 @@ public class TableData {
       str = str.substring(0, str.length() - 1);
     }
     return str;
+  }
+
+  public List<SQLParseError> getErrors() {
+    return new ArrayList<SQLParseError>(_originalDefinition.getErrors());
   }
 }

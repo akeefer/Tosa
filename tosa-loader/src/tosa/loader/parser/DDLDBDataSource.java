@@ -3,8 +3,6 @@ package tosa.loader.parser;
 import gw.fs.IFile;
 import gw.lang.reflect.module.IModule;
 import gw.util.Pair;
-import tosa.impl.md.ValidationResult;
-import tosa.impl.parser.data.DBDataValidator;
 import tosa.loader.data.DBData;
 import tosa.loader.data.IDBDataSource;
 import tosa.loader.data.DDLDataTransformer;
@@ -36,7 +34,6 @@ public class DDLDBDataSource implements IDBDataSource {
       String fileName = ddlFile.getFirst();
       String namespace = fileName.substring(0, fileName.length() - ".ddl".length()).replace("/", ".");
       DBData dbData = new DBData(namespace, tables, ddlFile.getSecond());
-      validateAndLogResults(dbData);
       results.put(namespace, dbData);
     }
     return results;
@@ -73,13 +70,4 @@ public class DDLDBDataSource implements IDBDataSource {
     return new String(result);
   }
 
-  private void validateAndLogResults(DBData dbData) {
-    ValidationResult validationResult = DBDataValidator.validate(dbData);
-    for (String error : validationResult.getErrors()) {
-//      LoggerFactory.getLogger("Tosa").error(error);
-    }
-    for (String warning : validationResult.getWarnings()) {
-//      LoggerFactory.getLogger("Tosa").warn(warning);
-    }
-  }
 }

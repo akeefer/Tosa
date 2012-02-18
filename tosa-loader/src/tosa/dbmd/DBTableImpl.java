@@ -6,6 +6,7 @@ import tosa.api.IDBTable;
 import tosa.api.IDatabase;
 import tosa.loader.data.ColumnData;
 import tosa.loader.data.TableData;
+import tosa.loader.parser.tree.SQLParseError;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -97,6 +98,11 @@ public class DBTableImpl implements IDBTable {
   @Override
   public Collection<? extends IDBArray> getArrays() {
     return _arrays;
+  }
+
+  @Override
+  public List<SQLParseError> getErrors() {
+    return _tableData.getErrors();
   }
 
   public boolean hasId() {
