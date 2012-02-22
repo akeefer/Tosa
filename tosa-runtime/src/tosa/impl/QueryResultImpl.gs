@@ -30,23 +30,19 @@ uses tosa.impl.query.SqlStringSubstituter
  */
 public class QueryResultImpl<T> implements QueryResult<T> {
 
-  var _profilerTag : String
   var _originalQuery : String
   var _parameters : IPreparedStatementParameter[]
-  var _db : IDatabase
-  var _resultProcessor : IQueryResultProcessor<T>
+  var _executor : block(sql : String, params : IPreparedStatementParameter[]) : List<T>
 
   var _results : List<T>
   var _orderBys : List<OrderByInfo>
 
   var _pagingInfo : PagingInfo
 
-  public construct(profilerTag : String, originalQuery : String, parameters : IPreparedStatementParameter[], db : IDatabase, resultProcessor : IQueryResultProcessor<T>) {
-    _profilerTag = profilerTag
+  public construct(originalQuery : String, parameters : IPreparedStatementParameter[], executor : block(sql : String, params : IPreparedStatementParameter[]) : List<T>) {
     _originalQuery = originalQuery
     _parameters = parameters
-    _db = db
-    _resultProcessor = resultProcessor
+    _executor = executor
     _orderBys = new ArrayList<OrderByInfo>()
   }
 
@@ -137,7 +133,7 @@ public class QueryResultImpl<T> implements QueryResult<T> {
   }
 
   override function clone() : QueryResult<T> {
-    var clone = new QueryResultImpl<T>(_profilerTag, _originalQuery, _parameters, _db, _resultProcessor)
+    var clone = new QueryResultImpl<T>(_originalQuery, _parameters, _executor)
     clone._orderBys.addAll(_orderBys)
     if (_pagingInfo != null) {
       clone._pagingInfo = _pagingInfo.clone()
@@ -210,16 +206,8 @@ public class QueryResultImpl<T> implements QueryResult<T> {
   }
   
   private function executeQuery() : List<T> {
-    var profiler = Util.newProfiler(_profilerTag)
     var sqlAndParameters = computeSql()
-    profiler.start(sqlAndParameters.Sql + " (" + Arrays.asList(sqlAndParameters.Params) + ")")
-    try {
-      return _db.getDBExecutionKernel().executeSelect(sqlAndParameters.Sql,
-          _resultProcessor,
-          sqlAndParameters.Params)
-    } finally {
-      profiler.stop()
-    }
+    return _executor(sqlAndParameters.Sql, sqlAndParameters.Params)
   }
   
   private function incrementPage() {

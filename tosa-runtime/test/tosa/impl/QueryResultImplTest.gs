@@ -76,12 +76,11 @@ class QueryResultImplTest extends TosaDBTestBase {
     var sql = (firstName == null ? "SELECT * FROM Foo" : "SELECT * FROM Foo WHERE FirstName = ?")
     var params : IPreparedStatementParameter[] = (firstName == null ? {} : {new PreparedStatementParameterImpl(firstName, Types.VARCHAR)})
     
+    var queryExecutor = new QueryExecutorImpl(getDB())
     return new QueryResultImpl(
-        "testTag",
             sql,
             params,
-            getDB(),
-            \r -> CoreFinder.buildObject(FooType, r))  
+            \s, p -> queryExecutor.selectEntity("tempTag", FooType, s, p))
   }
   
   private function assertException(callback : block()) {

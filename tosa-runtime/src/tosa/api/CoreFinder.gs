@@ -11,15 +11,23 @@ uses java.lang.IllegalStateException
 uses tosa.impl.QueryResultImpl
 uses java.sql.ResultSet
 uses tosa.impl.CachedDBObject
+uses tosa.impl.QueryExecutor
+uses tosa.impl.QueryExecutorImpl
 
 /**
  */
 class CoreFinder<T extends IDBObject> {
 
   var _dbType : IDBType
+  var _queryExecutor : QueryExecutor
 
   construct(dbType : IDBType) {
+    this(dbType, new QueryExecutorImpl(dbType.Table.Database))
+  }
+
+  construct(dbType : IDBType, queryExecutor : QueryExecutor) {
     _dbType = dbType
+    _queryExecutor = queryExecutor
   }
 
 
@@ -55,7 +63,7 @@ class CoreFinder<T extends IDBObject> {
     }
 
     var countArgs = subIfNecessary(sql, null, params)
-    return countImpl(_dbType.Name + ".count(String, Map)", countArgs.Sql, countArgs.Params)
+    return _queryExecutor.count(_dbType.Name + ".count(String, Map)", countArgs.Sql, countArgs.Params)
   }
 
   function countWhere(sql : String, params : Map<String, Object> = null) : long {
@@ -66,18 +74,18 @@ class CoreFinder<T extends IDBObject> {
 
     var queryPrefix = sub("SELECT count(*) as count FROM :table", {"table" -> _dbType.Table}).Sql
     var countArgs = subIfNecessary(sql, queryPrefix, params)
-    return countImpl(_dbType.Name + ".countWhere(String, Map)", countArgs.Sql, countArgs.Params)
+    return _queryExecutor.count(_dbType.Name + ".countWhere(String, Map)", countArgs.Sql, countArgs.Params)
   }
 
   function countAll() : long {
     var sql = sub("SELECT count(*) as count FROM :table", {"table" -> _dbType.Table}).Sql
-    return countImpl(_dbType.Name + ".countAll()", sql, {});
+    return _queryExecutor.count(_dbType.Name + ".countAll()", sql, {});
   }
 
   function countLike(template: T) : long {
     var queryPrefix = sub("SELECT count(*) as count FROM :table", {"table" -> _dbType.Table}).Sql
     var whereClause = buildWhereClause(template)
-    return countImpl(_dbType.Name + ".countLike(" + _dbType.Name + ")", queryPrefix + whereClause.Sql, whereClause.Params)
+    return _queryExecutor.count(_dbType.Name + ".countLike(" + _dbType.Name + ")", queryPrefix + whereClause.Sql, whereClause.Params)
   }
 
   function select(sql : String, params : Map<String, Object> = null) : QueryResult<T> {
@@ -158,44 +166,11 @@ class CoreFinder<T extends IDBObject> {
     }
   }
 
-  private function countImpl(profilerTag : String, sqlStatement : String, parameters : IPreparedStatementParameter[]) : long {
-    // TODO - AHK - Verify that it starts with "SELECT count(*) as count"
-    var profiler = Util.newProfiler(profilerTag)
-    profiler.start(sqlStatement + " (" + Arrays.asList(parameters) + ")");
-    try {
-      var results = _dbType.Table.Database.DBExecutionKernel.executeSelect(
-          sqlStatement,
-          \ resultSet -> resultSet.getInt("count"),
-          parameters);
-      if (results.size() == 0) {
-        return 0;
-      } else if (results.size() == 1) {
-        return results.get(0);
-      } else {
-        throw new IllegalStateException("Expected count query " + sqlStatement + " to return 0 or 1 result, but got " + results.size());
-      }
-    } finally {
-      profiler.stop();
-    }
-  }
-
   private function selectEntity(profilerTag : String, sqlStatement : String, parameters : IPreparedStatementParameter[]) : QueryResult<IDBObject> {
     // TODO - AHK - Validate the input string here?
     return new QueryResultImpl<IDBObject>(
-        profilerTag,
         sqlStatement,
         parameters,
-        _dbType.Table.Database,
-        \r -> buildObject(_dbType, r));
-  }
-
-  static function buildObject(type : IDBType, resultSet : ResultSet) : CachedDBObject {
-    var obj = new CachedDBObject(type, false);
-    var table = type.Table;
-    for (column in table.Columns) {
-      var resultObject = column.getColumnType().readFromResultSet(resultSet, table.getName() + "." + column.getName());
-      obj.setColumnValue(column.getName(), resultObject);
-    }
-    return obj;
+        \s, p -> _queryExecutor.selectEntity(profilerTag, _dbType, s, p));
   }
 }
