@@ -10,6 +10,8 @@ import tosa.api.IDatabase;
 import tosa.loader.DBTypeInfoDelegate;
 import tosa.loader.IDBType;
 
+import java.util.Map;
+
 /**
  * Created by IntelliJ IDEA.
  * User: akeefer
@@ -24,8 +26,8 @@ public class RuntimeBridge {
   }
 
   // TODO - AHK - Ideally we'd completely kill the need for this in tosa-loader
-  public static IDBObject createDBObject(IDBType type, boolean isNew) {
-    return ReflectUtil.construct("tosa.impl.CachedDBObject", type, isNew);
+  public static IDBObject createDBObject(IDBType type, Map<String, Object> originalValues) {
+    return ReflectUtil.construct("tosa.impl.CachedDBObject", type, originalValues);
   }
 
   public static DBTypeInfoDelegate createTypeInfoDelegate() {

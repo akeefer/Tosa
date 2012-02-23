@@ -52,7 +52,7 @@ class DBTypeInfoDelegateImpl implements DBTypeInfoDelegate {
     return new CoreFinder(dbType).selectLike(template)
   }
 
-  override function newInstance(dbType : IDBType, isNew : boolean) : IDBObject {
-    return new CachedDBObject(dbType, isNew)
+  override function newInstance(dbType : IDBType, originalColumnValues : Map<String, Object>) : IDBObject {
+    return new CachedDBObject(dbType, originalColumnValues)
   }
 }

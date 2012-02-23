@@ -31,5 +31,5 @@ public interface DBTypeInfoDelegate {
   
   Object selectLike(IDBType dbType, IDBObject template);
   
-  IDBObject newInstance(IDBType dbType, boolean newInstance);
+  IDBObject newInstance(IDBType dbType, Map<String, Object> originalValues);
 }

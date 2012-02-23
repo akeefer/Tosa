@@ -8,6 +8,7 @@ uses java.lang.IllegalStateException
 uses tosa.api.IDBObject
 uses tosa.loader.IDBType
 uses java.sql.ResultSet
+uses java.util.HashMap
 
 /**
  *
@@ -97,14 +98,14 @@ class QueryExecutorImpl implements QueryExecutor {
   // TODO - AHK - Find a home for this function.  Maybe on CachedDBObject?  Or somewhere else?
 
   static function buildObject(type : IDBType, resultSet : ResultSet) : IDBObject {
-    var obj = new CachedDBObject(type, false)
+    var columnValues = new HashMap<String, Object>()
     var table = type.getTable();
     for (column in table.getColumns()) {
       // TODO - AHK - This is a little sketch, perhaps
       var resultObject = column.getColumnType().readFromResultSet(resultSet, table.getName() + "." + column.getName());
-      obj.setColumnValue(column.getName(), resultObject);
+      columnValues.put(column.getName(), resultObject);
     }
-    return obj;
+    return new CachedDBObject(type, columnValues);
   }
 
 }

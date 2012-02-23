@@ -8,6 +8,8 @@ import tosa.loader.IDBType;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -21,12 +23,12 @@ public class QueryExecutor {
   // TODO - AHK - Kill this/move it somewhere else
 
   public static IDBObject buildObject(IDBType type, ResultSet resultSet) throws SQLException {
-    IDBObject obj = RuntimeBridge.createDBObject(type, false);
+    Map<String, Object> originalValues = new HashMap<String, Object>();
     IDBTable table = type.getTable();
     for (IDBColumn column : table.getColumns()) {
       Object resultObject = column.getColumnType().readFromResultSet(resultSet, table.getName() + "." + column.getName());
-      obj.setColumnValue(column.getName(), resultObject);
+      originalValues.put(column.getName(), resultObject);
     }
-    return obj;
+    return RuntimeBridge.createDBObject(type, originalValues);
   }
 }

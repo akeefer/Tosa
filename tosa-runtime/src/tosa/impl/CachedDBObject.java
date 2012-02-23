@@ -11,6 +11,8 @@ import tosa.api.IDBTable;
 import tosa.loader.DBTypeInfo;
 import tosa.loader.IDBType;
 
+import java.util.Map;
+
 /**
  * Created by IntelliJ IDEA.
  * User: akeefer
@@ -23,7 +25,7 @@ public class CachedDBObject implements IDBObject {
   // We've got a factory that we can just call through to, and a lazy static instance of that factory,
   // so that we don't have to reflectively-construct the delegate every time we create one of these objects
   public static interface DelegateFactory {
-    Delegate createDelegate(IDBType type, boolean isNew, CachedDBObject owner);
+    Delegate createDelegate(IDBType type, Map<String, Object> originalValues, CachedDBObject owner);
   }
 
   private static LocklessLazyVar<DelegateFactory> DELEGATE_FACTORY = new LocklessLazyVar<DelegateFactory>() {
@@ -36,9 +38,9 @@ public class CachedDBObject implements IDBObject {
   private IDBType _type;
   private Delegate _delegate;
   
-  public CachedDBObject(IDBType type, boolean isNew) {
+  public CachedDBObject(IDBType type, Map<String, Object> originalValues) {
     _type = type;
-    _delegate = DELEGATE_FACTORY.get().createDelegate(type, isNew, this);
+    _delegate = DELEGATE_FACTORY.get().createDelegate(type, originalValues, this);
   }
   
   @Override

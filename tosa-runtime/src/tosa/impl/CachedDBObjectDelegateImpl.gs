@@ -20,6 +20,7 @@ uses java.util.Collections
 uses java.util.ArrayList
 uses java.lang.StringBuilder
 uses tosa.impl.query.SqlStringSubstituter
+uses java.lang.System
 
 /**
  * This is the real implementation of the IDBObject interface.  The CachedDBObject itself is just
@@ -28,7 +29,7 @@ uses tosa.impl.query.SqlStringSubstituter
 class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
 
   // The column values associated with this object
-  private var _columns : Map<String, Object>
+  private var _tempColumns : ColumnMap
 
   // Cached IDBObjects for fks on this object.  Note that the _columns
   // map also reflects these values, but that it's possible for a value
@@ -46,19 +47,14 @@ class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
   // The IDBType for this entity
   private var _type : IDBType
 
-  // True if this object is newly constructed and hasn't yet been committed
-  // to the database, false otherwise
-  private var _new : boolean
-
   // The actual IDBObject that is delegating to this class.  We need it so
   // we can pass it through to any EntityCollections we construct
   private var _owner : CachedDBObject
 
-  construct(type : IDBType, isNew : boolean, owner : CachedDBObject) {
+  construct(type : IDBType, originalColumnValues : Map<String, Object>, owner : CachedDBObject) {
     _type = type
-    _new = isNew
+    _tempColumns = new ColumnMap(originalColumnValues)
     _owner = owner
-    _columns = new HashMap<String, Object>()
     _cachedFks = new HashMap<String, IDBObject>()
     _cachedArrays = new HashMap<String, EntityCollection>()
     _queryExecutor = new QueryExecutorImpl(_type.Table.Database)
@@ -77,18 +73,18 @@ class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
   }
 
   override property get New() : boolean {
-    return _new
+    return !_tempColumns.HasOriginalValues
   }
 
   override function getColumnValue(columnName : String) : Object {
-    // TODO - AHK - Validate that the column name is actually a legal column   
-    return _columns.get(columnName)
+    // TODO - AHK - Validate that the column name is actually a legal column
+    return _tempColumns.get(columnName)
   }
 
   override function setColumnValue(columnName : String, value : Object) {
     // TODO - AHK - Validate that the column name is legal and that the value is legal
     // TODO - AHK - Invalidate any fk back-pointers associated with that column if the value has changed
-    _columns.put(columnName, value)  
+    _tempColumns.put(columnName, value)
   }
 
   override function getFkValue(columnName : String ) : IDBObject {
@@ -99,7 +95,7 @@ class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
       return fkObject
     }
   
-    var fkID = _columns.get(columnName) as Long
+    var fkID = _tempColumns.get(columnName) as Long
     if (fkID == null) {
       return null
     }
@@ -116,10 +112,11 @@ class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
     var column = getAndValidateFkColumn(columnName)
     // TODO - AHK - Validate that the value is of the correct type
     if (value == null) {
-      _columns.put(columnName, null)
+      // TODO - AHK - Do something around removing the key entirely if it matches the original value
+      _tempColumns.put(columnName, null)
       _cachedFks.put(columnName, null)
     } else {
-      _columns.put(columnName, value.Id)
+      _tempColumns.put(columnName, value.Id)
       _cachedFks.put(columnName, value)
     }
   }
@@ -159,14 +156,9 @@ class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
     return Id
   }
 
-  // TODO - AHK - Kill this
-  property get Columns() : Map<String, Object> {
-    return _columns
-  }
-
   override function update() {
     var columnValues = gatherChangedValues()
-    if (_new) {
+    if (New) {
       var columns = new ArrayList<IDBColumn>()
       var values = new ArrayList<String>()
       var parameters = new IPreparedStatementParameter[columnValues.size()]
@@ -178,10 +170,10 @@ class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
       var query = "INSERT INTO " + DBTable.PossiblyQuotedName + " (" + columns.map(\c -> c.PossiblyQuotedName).join(", ") + ") VALUES (" + values.join(", ") + ")"
       var id = _queryExecutor.insert(_type.Name + ".update()", query, parameters)
       if (id != null) {
-        _columns.put(DBTypeInfo.ID_COLUMN, id)
-        _new = false
+        _tempColumns.put(DBTypeInfo.ID_COLUMN, id)
       }
-    } else {
+      _tempColumns.acceptChanges()
+    } else if (!columnValues.Empty) {
       var values = new StringBuilder()
       var params = new ArrayList<IPreparedStatementParameter>()
       for (i in 0..|columnValues.size()) {
@@ -195,6 +187,9 @@ class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
       params.add(idColumn.wrapParameterValue(Id))
       var query = "UPDATE " + DBTable.PossiblyQuotedName + " SET " + values + " WHERE " + idColumn.PossiblyQuotedName + " = ?"
       _queryExecutor.update(_type.Name + ".update()", query, params.toArray(new IPreparedStatementParameter[params.size()]))
+      _tempColumns.acceptChanges()
+    } else {
+      // No-op:  nothing's changed
     }
   }
 
@@ -205,8 +200,8 @@ class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
     // of columns.  Iterating over the map keys might be more efficient, but could lead to different
     // orderings within the query, which would be less optimal on the database side
     for (column in DBTable.Columns) {
-      if (_columns.containsKey(column.Name)) {
-        columnValues.add(new ColumnValuePair(column, column.wrapParameterValue(_columns.get(column.Name))))
+      if (_tempColumns.isValueChanged(column.Name)) {
+        columnValues.add(new ColumnValuePair(column, column.wrapParameterValue(_tempColumns.get(column.Name))))
       }
     }
     return columnValues
@@ -234,20 +229,17 @@ class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
   }
 
   override function toString() : String {
-    return _columns.toString()
+    return _tempColumns.toString()
   }
 
   override function hashCode() : int {
     var hashCode = _type.hashCode()
-    var keys = new ArrayList<String>(_columns.keySet())
-    Collections.sort(keys)
-    for (columnName in keys) {
-      if (_columns.get(columnName) != null) {
-        hashCode = hashCode * 17 + _columns.get(columnName).hashCode()
-      } else {
-        hashCode *= 17
-      }
+    if (Id != null) {
+      hashCode *= Id.hashCode()  
+    } else {
+      hashCode *= System.identityHashCode(this)
     }
+    
     return hashCode
   }
 
@@ -256,25 +248,10 @@ class CachedDBObjectDelegateImpl implements CachedDBObject.Delegate {
       return true
     }
 
-    if (obj typeis CachedDBObjectDelegateImpl) {
-      if (_type.equals(obj._type)) {
-        for (columnName in _columns.keySet()) {
-          if (_columns.get(columnName) != null) {
-            if (!_columns.get(columnName).equals(obj._columns.get(columnName))) {
-              return false
-            }
-          }
-        }
-        for (columnName in obj._columns.keySet()) {
-          if (obj._columns.get(columnName) != null) {
-            if (!obj._columns.get(columnName).equals(_columns.get(columnName))) {
-              return false
-            }
-          }
-        }
-        return true
-      }
+    if (Id != null && obj typeis CachedDBObjectDelegateImpl) {
+      return Id == obj.Id  
     }
+   
     return false
   }
 

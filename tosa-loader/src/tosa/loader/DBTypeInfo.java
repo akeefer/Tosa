@@ -176,7 +176,7 @@ public class DBTypeInfo extends TosaBaseTypeInfo implements ITypeInfo {
         .withConstructorHandler(new IConstructorHandler() {
           @Override
           public Object newInstance(Object... args) {
-            return getDelegate().newInstance(getDBType(), true);
+            return getDelegate().newInstance(getDBType(), null);
           }
         }).build(this));
 
