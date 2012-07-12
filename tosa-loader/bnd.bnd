@@ -1,0 +1,4 @@
+Bundle-SymbolicName=org.gosu-lang.tosa
+Export-Package=tosa.*
+Gosu-Typeloaders=tosa.loader.DBTypeLoader
+Contains-Sources=gs, gsx
