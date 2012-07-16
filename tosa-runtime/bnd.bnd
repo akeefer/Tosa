@@ -1,0 +1,4 @@
+Bundle-SymbolicName=org.gosu-lang.tosa.runtime
+Export-Package=tosa.*
+Fragment-Host=org.gosu-lang.tosa
+Import-Package=!tosa.*,*
