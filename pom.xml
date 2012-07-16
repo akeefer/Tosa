@@ -24,9 +24,9 @@
   </repositories>
 
   <scm>
-    <connection>scm:git:git@github.com:carsongross/Tosa.git</connection>
-    <url>scm:git:git@github.com:carsongross/Tosa.git</url>
-    <developerConnection>scm:git:git@github.com:carsongross/Tosa.git</developerConnection>
+    <connection>scm:git:git@github.com:akeefer/Tosa.git</connection>
+    <url>scm:git:git@github.com:akeefer/Tosa.git</url>
+    <developerConnection>scm:git:git@github.com:akeefer/Tosa.git</developerConnection>
   </scm>
 
   <build>
