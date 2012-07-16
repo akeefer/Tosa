@@ -9,7 +9,7 @@ uses tosa.loader.IDBType
  * To change this template use File | Settings | File Templates.
  */
 class CachedDBObjectDelegateFactoryImpl implements CachedDBObject.DelegateFactory {
-  override function createDelegate(type : IDBType, isNew : boolean, owner : CachedDBObject) : CachedDBObject.Delegate {
+  override function createDelegate(type : IDBType, isNew : boolean, owner : CachedDBObject) : CachedDBObject.CachedDBObjectDelegate {
     return new CachedDBObjectDelegateImpl(type, isNew, owner)
   }
 }

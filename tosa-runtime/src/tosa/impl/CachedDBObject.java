@@ -23,7 +23,7 @@ public class CachedDBObject implements IDBObject {
   // We've got a factory that we can just call through to, and a lazy static instance of that factory,
   // so that we don't have to reflectively-construct the delegate every time we create one of these objects
   public static interface DelegateFactory {
-    Delegate createDelegate(IDBType type, boolean isNew, CachedDBObject owner);
+    CachedDBObjectDelegate createDelegate(IDBType type, boolean isNew, CachedDBObject owner);
   }
 
   private static LocklessLazyVar<DelegateFactory> DELEGATE_FACTORY = new LocklessLazyVar<DelegateFactory>() {
@@ -34,7 +34,7 @@ public class CachedDBObject implements IDBObject {
   };
 
   private IDBType _type;
-  private Delegate _delegate;
+  private CachedDBObjectDelegate _delegate;
   
   public CachedDBObject(IDBType type, boolean isNew) {
     _type = type;
@@ -129,7 +129,7 @@ public class CachedDBObject implements IDBObject {
     return _delegate.toString();
   }
 
-  public interface Delegate {
+  public interface CachedDBObjectDelegate {
     tosa.api.IDBTable getDBTable();
 
     java.lang.Object getColumnValue(java.lang.String s);
