@@ -9,14 +9,14 @@
   <parent>
     <groupId>org.gosu-lang.tosa</groupId>
     <artifactId>tosa-proj</artifactId>
-    <version>0.2.1</version>
+    <version>0.3-SNAPSHOT</version>
   </parent>
 
   <dependencies>
     <dependency>
       <groupId>org.gosu-lang.tosa</groupId>
       <artifactId>tosa-loader</artifactId>
-      <version>0.2.1</version>
+      <version>0.3-SNAPSHOT</version>
     </dependency>
       <dependency>
           <groupId>commons-dbcp</groupId>
